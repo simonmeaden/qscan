@@ -1,17 +1,17 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2019-04-06T09:11:49
+# Project created by QtCreator 2019-04-06T10:05:27
 #
 #-------------------------------------------------
 
-QT       += widgets svg xml multimedia
+QT       += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += printsupport
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = scan
-TEMPLATE = lib
+TARGET = Scanner
+TEMPLATE = app
 
-DEFINES += SCAN_LIBRARY
+CONFIG += c++14
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -25,17 +25,24 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-        scan.cpp \
-    scansane.cpp \
-    scantwain.cpp
+        main.cpp \
+        mainwindow.cpp
 
 HEADERS += \
-        scan.h \
-        scan_global.h \ 
-    scansane.h \
-    scantwain.h
+        mainwindow.h
 
-unix {
-    target.path = /usr/lib
-    INSTALLS += target
-}
+FORMS +=
+
+# Default rules for deployment.
+qnx: target.path = /tmp/$${TARGET}/bin
+else: unix:!android: target.path = /opt/$${TARGET}/bin
+!isEmpty(target.path): INSTALLS += target
+
+unix|win32: LIBS += -llog4qt
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qscan/release/ -lqscan
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../qscan/debug/ -lqscan
+else:unix: LIBS += -L$$OUT_PWD/../qscan/ -lqscan
+
+INCLUDEPATH += $$PWD/../qscan
+DEPENDPATH += $$PWD/../qscan
