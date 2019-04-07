@@ -33,7 +33,6 @@ SOURCES += \
 HEADERS += \
     scanlib.h \
     qscan.h \
-    scan_global_copy.h \
     qscan_global.h \
     version.h
 
