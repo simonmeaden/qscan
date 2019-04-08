@@ -19,22 +19,28 @@
 #include "mainwindow.h"
 
 #include "qscan.h"
+#include "scaninterface.h"
 
 MainWindow::MainWindow(QWidget* parent)
   : QMainWindow(parent)
   , m_selected(false)
 {
+  m_logger = Log4Qt::Logger::logger(QStringLiteral("Scanner"));
 
   initGui();
 
   m_scan = new QScan(this);
-  m_scan->init();
+  connect(m_scan, &QScan::scanCompleted, this, &MainWindow::scanIsCompleted);
+  connect(m_scan, &QScan::scanProgress, this, &MainWindow::scanProgressed);
+  connect(m_scan, &QScan::scanFailed, this, &MainWindow::scanHasFailed);
 
+  m_scan->init();
   QStringList scanners = m_scan->getDevices();
 
   for (int i = 0; i < scanners.size(); i++) {
     QString name = scanners.at(i);
     Device s = m_scan->getDevice(name);
+
     int row = m_scanners->rowCount();
     m_scanners->insertRow(row);
     m_scanners->setItem(row, 0, new QTableWidgetItem(s->name));
@@ -60,7 +66,7 @@ MainWindow::initGui()
   QFrame* main_frame = new QFrame(this);
   setCentralWidget(main_frame);
 
-  QGridLayout* main_layout = new QGridLayout(this);
+  QGridLayout* main_layout = new QGridLayout;
   main_frame->setLayout(main_layout);
 
   m_splitter = new QSplitter(this);
@@ -90,7 +96,7 @@ MainWindow::initGui()
   main_layout->addWidget(m_splitter, 0, 0);
 
   QFrame* btn_frame = new QFrame(this);
-  QHBoxLayout* btn_layout = new QHBoxLayout(this);
+  QHBoxLayout* btn_layout = new QHBoxLayout;
   btn_frame->setLayout(btn_layout);
   main_layout->addWidget(btn_frame, 1, 0);
 
@@ -105,9 +111,13 @@ MainWindow::initGui()
   btn_layout->addWidget(m_scan_btn);
   m_cancel_btn = new QPushButton(QStringLiteral("Cancel Scanning"), this);
   m_cancel_btn->setEnabled(false);
+  connect(
+    m_cancel_btn, &QPushButton::clicked, this, &MainWindow::cancelScanning);
   btn_layout->addWidget(m_cancel_btn);
   m_close_btn = new QPushButton(QStringLiteral("Close"), this);
   btn_layout->addWidget(m_close_btn);
+  //  connect(
+  //    m_close_btn, &QPushButton::clicked, this, &MainWindow::cancelScanning);
   connect(m_close_btn, &QPushButton::clicked, this, &MainWindow::close);
 }
 
@@ -123,16 +133,20 @@ void
 MainWindow::selectionChanged()
 {
   QObject* obj = sender();
+
   if (obj == m_scanners) {
     QList<QTableWidgetItem*> list = m_scanners->selectedItems();
+
     if (!list.isEmpty()) {
       QTableWidgetItem* item = list.at(0);
       m_selected_name = item->data(Qt::DisplayRole).toString();
       m_selected = true;
+
     } else {
       m_selected = false;
     }
   }
+
   if (m_selected) {
     m_select_btn->setEnabled(true);
   }
@@ -141,12 +155,43 @@ MainWindow::selectionChanged()
 void
 MainWindow::selectScanner()
 {
-  bool rst = m_scan->openDevice(m_selected_name);
-  if (rst) {
+  if (m_scan->openDevice(m_selected_name)) {
     m_scan_btn->setEnabled(true);
+
+  } else {
+    m_logger->debug(QString("Unable to open %1").arg(m_selected_name));
   }
 }
 
 void
 MainWindow::startScanning()
+{
+  m_cancel_btn->setEnabled(true);
+  if (m_scan->startScanning(m_selected_name)) {
+  }
+}
+
+void
+MainWindow::cancelScanning()
+{
+  m_scan->cancelScan(m_selected_name);
+}
+
+void
+MainWindow::scanIsCompleted(Image image)
+{
+  int w = m_image->width();
+  int h = m_image->height();
+  QPixmap pixmap =
+    QPixmap::fromImage(*image.data()).scaled(w, h, Qt::KeepAspectRatio);
+  m_image->setPixmap(pixmap);
+  //  m_image->adjustSize();
+}
+
+void
+MainWindow::scanHasFailed()
+{}
+
+void
+MainWindow::scanProgressed(double)
 {}

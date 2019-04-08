@@ -24,7 +24,7 @@
 #include "log4qt/logger.h"
 
 #include "qscan_global.h"
-#include "scanlib.h"
+#include "scaninterface.h"
 
 class SCANSHARED_EXPORT QScan : public QObject
 {
@@ -37,6 +37,14 @@ public:
   QStringList getDevices();
   Device getDevice(QString name);
   bool openDevice(QString name);
+  bool startScanning(QString name);
+  void cancelScan(QString name);
+  ScanOptions options();
+
+signals:
+  void scanCompleted(Image);
+  void scanFailed();
+  void scanProgress(double);
 
 protected:
   Log4Qt::Logger* m_logger;
@@ -47,6 +55,7 @@ protected:
 #include "win/scantwain.h"
 
 #endif
+  Device m_current_device;
 };
 
 #endif // SCAN_H

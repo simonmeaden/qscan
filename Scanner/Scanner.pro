@@ -40,9 +40,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 unix|win32: LIBS += -llog4qt
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qscan/release/ -lqscan
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../qscan/debug/ -lqscan
-else:unix: LIBS += -L$$OUT_PWD/../qscan/ -lqscan
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qscan/ -lqscan
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../qscan/ -lqscan
+else:unix: LIBS += -L$$OUT_PWD/../qscan -lqscan
 
 INCLUDEPATH += $$PWD/../qscan
 DEPENDPATH += $$PWD/../qscan

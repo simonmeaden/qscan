@@ -28,17 +28,26 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     qscan.cpp \
-    version.cpp
+    version.cpp \
+    unix/saneworker.cpp \
+    unix/sanelibrary.cpp \
+    win/twainlibrary.cpp \
+    scaninterface.cpp \
+    scanoptions.cpp
 
 HEADERS += \
-    scanlib.h \
     qscan.h \
     qscan_global.h \
-    version.h
+    version.h \
+    scaninterface.h \
+    unix/saneworker.h \
+    unix/sanelibrary.h \
+    win/twainlibrary.h \
+    scanoptions.h
 
 unix {
-    SOURCES += unix/scansane.cpp
-    HEADERS += unix/scansane.h
+    SOURCES +=
+    HEADERS +=
     LIBS += -lsane
 
     target.path = /usr/lib
@@ -46,8 +55,8 @@ unix {
 }
 
 win32:win64 {
-    SOURCES += win/scantwain.cpp
-    HEADERS += win/scantwain.h
+    SOURCES +=
+    HEADERS +=
 }
 
 unix|win32: LIBS += -llog4qt

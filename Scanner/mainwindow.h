@@ -22,7 +22,10 @@
 #include <QMainWindow>
 #include <QtWidgets>
 
+#include <log4qt/logger.h>
+
 class QScan;
+typedef QSharedPointer<QImage> Image;
 
 class MainWindow : public QMainWindow
 {
@@ -33,6 +36,7 @@ public:
   ~MainWindow();
 
 protected:
+  Log4Qt::Logger* m_logger;
   QScan* m_scan;
   QFrame* m_main;
   QLabel* m_image;
@@ -51,6 +55,10 @@ protected:
   void selectionChanged();
   void selectScanner();
   void startScanning();
+  void cancelScanning();
+  void scanIsCompleted(Image image);
+  void scanHasFailed();
+  void scanProgressed(double);
 
 private:
 };

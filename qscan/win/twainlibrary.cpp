@@ -16,27 +16,16 @@
     along with QScan.  If not, see <http://www.gnu.org/licenses/>.
     It is also available on request from Simon Meaden simonmeaden@sky.com.
 */
-#ifndef SCANTWAIN_H
-#define SCANTWAIN_H
-
-#include <QObject>
-
-#include "scanlib.h"
+#include "twainlibrary.h"
 
 #if defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
 
-class ScanTwain
-  : public QObject
-  , public ScanLib
-{
-public:
-  ScanTwain(QObject* parent = nullptr);
+ScanTwain::ScanTwain(QObject* parent)
+  : ScanLibrary(parent)
+{}
 
-  bool init() override;
-  QStringList getDevices() override;
-  Scanner getDevice(QString name) override;
-};
+bool
+ScanTwain::init()
+{}
 
 #endif
-
-#endif // SCANTWAIN_H

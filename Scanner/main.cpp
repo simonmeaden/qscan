@@ -18,6 +18,7 @@
 */
 #include "mainwindow.h"
 #include <QApplication>
+#include <QImage>
 #include <QLoggingCategory>
 
 #include <log4qt/consoleappender.h>
@@ -25,11 +26,16 @@
 #include <log4qt/logmanager.h>
 #include <log4qt/ttcclayout.h>
 
+typedef QSharedPointer<QImage> Image;
+Q_DECLARE_METATYPE(Image)
+
 using namespace Log4Qt;
 int
 main(int argc, char* argv[])
 {
   QApplication a(argc, argv);
+
+  qRegisterMetaType<Image>();
 
   LogManager::rootLogger();
   TTCCLayout* p_layout = new TTCCLayout();

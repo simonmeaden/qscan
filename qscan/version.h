@@ -47,8 +47,9 @@ protected:
   quint8 m_minor_version;  /**< Minor Version */
   quint16 m_build_version; /**< Build Version */
 
-  friend class ScanSane; /**< friend declaration for using version in scansane
-                          */
+  friend class SaneLibrary; /**< friend declaration for using version in
+                             * sanelibrary
+                             */
   friend bool operator>(
     const Version& lhs,
     const Version& rhs); /**< friend declaration for logical Operators */

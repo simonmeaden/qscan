@@ -19,12 +19,15 @@
 #ifndef SCANLIB_H
 #define SCANLIB_H
 
+#include <QImage>
 #include <QSharedPointer>
 #include <QStringList>
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
 #include <sane/sane.h>
 #endif
+
+typedef QSharedPointer<QImage> Image;
 
 struct ScanDevice final
 {
@@ -39,7 +42,9 @@ struct ScanDevice final
 #endif
 };
 typedef QSharedPointer<ScanDevice> Device;
-typedef QMap<QString, Device> Devices;
+typedef QMap<QString, Device> DeviceMap;
+
+class ScanOptions;
 
 class ScanInterface
 {
@@ -66,8 +71,27 @@ public:
   virtual QStringList getDevices() = 0;
   virtual Device getDevice(QString name) = 0;
   virtual bool openDevice(QString name) = 0;
+  virtual bool startScan(QString name) = 0;
+  virtual void cancelScan(QString name) = 0;
+  virtual ScanOptions* options(QString name) = 0;
+  virtual void setOptions(QString name, ScanOptions* options) = 0;
 
 protected:
+};
+
+class ScanLibrary
+  : public QObject
+  , public ScanInterface
+{
+  Q_OBJECT
+public:
+  ScanLibrary(QObject* parent = nullptr);
+  ~ScanLibrary();
+
+signals:
+  void scanCompleted(Image image);
+  void scanFailed();
+  void scanProgress(double);
 };
 
 #endif // SCANLIB_H

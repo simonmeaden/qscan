@@ -19,7 +19,7 @@
 #include "qscan.h"
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
-#include "unix/scansane.h"
+#include "unix/sanelibrary.h"
 #elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
 #include "unix/scantwain.h"
 #endif
@@ -30,10 +30,24 @@ QScan::QScan(QObject* parent)
   m_logger = Log4Qt::Logger::logger(QStringLiteral("Scan"));
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
-  m_lib = new ScanSane(this);
+  m_lib = new SaneLibrary(this);
+
 #elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
   m_lib = new ScanTwain(this);
+
 #endif
+  connect(static_cast<ScanLibrary*>(m_lib),
+          &ScanLibrary::scanCompleted,
+          this,
+          &QScan::scanCompleted);
+  connect(static_cast<ScanLibrary*>(m_lib),
+          &ScanLibrary::scanFailed,
+          this,
+          &QScan::scanFailed);
+  connect(static_cast<ScanLibrary*>(m_lib),
+          &ScanLibrary::scanProgress,
+          this,
+          &QScan::scanProgress);
 }
 
 bool
@@ -45,7 +59,8 @@ QScan::init()
 QStringList
 QScan::getDevices()
 {
-  return m_lib->getDevices();
+  QStringList names = m_lib->getDevices();
+  return names;
 }
 
 Device
@@ -64,5 +79,24 @@ QScan::openDevice(QString name)
                    .arg(device->vendor)
                    .arg(device->type));
 
-  return m_lib->openDevice(name);
+  if (m_lib->openDevice(name)) {
+    m_current_device = device;
+    ScanOptions* o = m_lib->options(name);
+    return true;
+  }
+
+  return false;
+}
+
+bool
+QScan::startScanning(QString name)
+{
+  if (m_lib->startScan(name)) {
+  }
+}
+
+void
+QScan::cancelScan(QString name)
+{
+  m_lib->cancelScan(name);
 }
