@@ -2,7 +2,7 @@
 
 PaperSize::PaperSize() {}
 
-qreal
+int
 PaperSize::width(const Type type, Layout layout) const
 {
   if (layout == Landscape) {
@@ -841,9 +841,10 @@ PaperSize::width(const Type type, Layout layout) const
   case US_Arch_E3:
     return 686;
   }
+  return -1;
 }
 
-qreal
+int
 PaperSize::height(const Type type, Layout layout) const
 {
   if (layout == Landscape) {
@@ -1281,7 +1282,7 @@ PaperSize::height(const Type type, Layout layout) const
     return 279;
 
   case Columbian_Extra_Tabloide:
-    return 457.2;
+    return 457; // Actual size is 457.2mm
 
   case Columbian_Oficio:
     return 330;
@@ -1682,6 +1683,7 @@ PaperSize::height(const Type type, Layout layout) const
   case US_Arch_E3:
     return 991;
   }
+  return -1;
 }
 
 QString
