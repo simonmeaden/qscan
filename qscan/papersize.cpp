@@ -2,6 +2,11 @@
 
 PaperSize::PaperSize() {}
 
+/*!
+ * \brief Portrait width in mm, or Landscape width if the \c Layout parameter is set to \c
+ * PageSize::Landscape. \param type the PageSize::Type to get the width of. \param layout the
+ * optional Layout value, default Portrait. \return the width in mm.
+ */
 int
 PaperSize::width(const Type type, Layout layout) const
 {
@@ -844,6 +849,11 @@ PaperSize::width(const Type type, Layout layout) const
   return -1;
 }
 
+/*!
+ * \brief Portrait height in mm, or Landscape height if the \c Layout parameter is set to \c
+ * PageSize::Landscape. \param type the PageSize::Type to get the height of. \param layout the
+ * optional Layout value, default Portrait. \return the height in mm.
+ */
 int
 PaperSize::height(const Type type, Layout layout) const
 {
@@ -1686,6 +1696,11 @@ PaperSize::height(const Type type, Layout layout) const
   return -1;
 }
 
+/*!
+ * \brief A \c QString description.
+ * \param type the PageSize::Type to get the description for.
+ * \return the description string.
+ */
 QString
 PaperSize::description(const Type type) const
 {

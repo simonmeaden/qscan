@@ -20,11 +20,18 @@
   Yotsu-giri". These, however, are all simple enough that they could be used in a descriptive
   drop-down combo box or similar.
 
+  If no value of \c Layout is supplied then Portrait is assumed and ISO_A4 will return 210mm.
+  However if \c PaperSize::Landscape is supplied then the value of 297mm is returned, the rotated
+  width. The same applies to the \c height() method.
+
+  If you want the sizes in Inches you can use the static \c toInches(int) method which returns a
+  \c double value.
+
   This set is by no means complete and if there are any others that you need, or you notice a
   mistake in these existing values, let me know at simonmeaden@virginmedia.com. OK I was bored and
   got a bit carried away as a lot of these are not available except for specialists, Washi papers,
   for instance are made from the fibers of special plants and are unlikely to be used by computers,
-  although they could possibly be used in a scanner, the reason I started this.
+  although they could possibly be used in a scanner, the reason I initially started this.
 */
 class PaperSize
 {
@@ -34,6 +41,11 @@ public:
     Landscape,
     Portrait,
   };
+  /*!
+     \brief The \c PaperSize::Type defines the selected paper size type.
+
+    For example \c width(PaperSize::ISO_A4) will return a value of 210mm.
+  */
   enum Type
   {
     ISO_4A0,                           /*!< ISO 4A0 page size */
@@ -318,13 +330,33 @@ public:
   };
   PaperSize();
 
+  /*!
+   * \brief Portrait width in mm, or Landscape width if the \c Layout parameter is set to \c
+   * PageSize::Landscape. \param type the PageSize::Type to get the width of. \param layout the
+   * optional Layout value, default Portrait. \return the width in mm.
+   */
   int
   width(const Type type, Layout layout = Portrait) const;
+  /*!
+   * \brief Portrait height in mm, or Landscape height if the \c Layout parameter is set to \c
+   * PageSize::Landscape. \param type the PageSize::Type to get the height of. \param layout the
+   * optional Layout value, default Portrait. \return the height in mm.
+   */
   int
   height(const Type type, Layout layout = Portrait) const;
+  /*!
+   * \brief A \c QString description.
+   * \param type the PageSize::Type to get the description for.
+   * \return the description string.
+   */
   QString
   description(const Type type) const;
 
+  /*!
+   * \brief static \c toInches method. Converts mm to inches.
+   * \param value the mm value.
+   * \return the inch value as a double.
+   */
   static double
   toInches(int value)
   {
