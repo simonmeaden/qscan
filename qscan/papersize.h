@@ -270,6 +270,51 @@ public:
     Transitional_F8,             /*!< Transtional F8 page size */
     Transitional_F9,             /*!< Transtional F9 page size */
     Transitional_F10,            /*!< Transtional F10 page size */
+    ISO_Envelope_DL,             /*!< ISO Envelope DL size */
+    ISO_Envelope_B4,             /*!< ISO Envelope B4 size */
+    ISO_Envelope_B5,             /*!< ISO Envelope B5 size */
+    ISO_Envelope_B6,             /*!< ISO Envelope B6 size */
+    ISO_Envelope_C3,             /*!< ISO Envelope C3 size */
+    ISO_Envelope_C4,             /*!< ISO Envelope C4 size */
+    ISO_Envelope_C5,             /*!< ISO Envelope C5 size */
+    ISO_Envelope_C6_C5,          /*!< ISO Envelope C6/C5 size */
+    ISO_Envelope_C6,             /*!< ISO Envelope C6 size */
+    ISO_Envelope_C7_C6,          /*!< ISO Envelope C7/C6 size */
+    ISO_Envelope_C7,             /*!< ISO Envelope C7 size */
+    ISO_Envelope_E4,             /*!< ISO Envelope E4 size */
+    US_Envelope_6_14,
+    US_Envelope_6_34,
+    US_Envelope_7,
+    US_Envelope_7_34_Monarch,
+    US_Envelope_8_58,
+    US_Envelope_9,
+    US_Envelope_10,
+    US_Envelope_11,
+    US_Envelope_12,
+    US_Envelope_14,
+    US_Envelope_16,
+    US_Envelope_A1,
+    US_Envelope_A2_Lady_Grey,
+    US_Envelope_A4,
+    US_Envelope_A6_Thompsons_Standard,
+    US_Envelope_A7_Besselheim,
+    US_Envelope_A8_Carrs,
+    US_Envelope_A9_Diplomat,
+    US_Envelope_A10_Willow,
+    US_Envelope_A_Long,
+    US_Envelope_1,
+    US_Envelope_1_34,
+    US_Envelope_3,
+    US_Envelope_6,
+    US_Envelope_8,
+    US_Envelope_9_34,
+    US_Envelope_10_12,
+    US_Envelope_12_12,
+    US_Envelope_13_12,
+    US_Envelope_14_12,
+    US_Envelope_15,
+    US_Envelope_15_12,
+
   };
   PaperSize();
 

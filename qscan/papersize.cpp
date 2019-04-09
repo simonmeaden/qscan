@@ -10,6 +10,138 @@ PaperSize::width(const Type type, Layout layout) const
   }
 
   switch (type) {
+  case US_Envelope_6_14:
+    return 152;
+
+  case US_Envelope_6_34:
+    return 165;
+
+  case US_Envelope_7:
+    return 172;
+
+  case US_Envelope_7_34_Monarch:
+    return 191;
+
+  case US_Envelope_8_58:
+    return 219;
+
+  case US_Envelope_9:
+    return 225;
+
+  case US_Envelope_10:
+    return 241;
+
+  case US_Envelope_11:
+    return 264;
+
+  case US_Envelope_12:
+    return 279;
+
+  case US_Envelope_14:
+    return 292;
+
+  case US_Envelope_16:
+    return 305;
+
+  case US_Envelope_A1:
+    return 92;
+
+  case US_Envelope_A2_Lady_Grey:
+    return 146;
+
+  case US_Envelope_A4:
+    return 159;
+
+  case US_Envelope_A6_Thompsons_Standard:
+    return 165;
+
+  case US_Envelope_A7_Besselheim:
+    return 184;
+
+  case US_Envelope_A8_Carrs:
+    return 206;
+
+  case US_Envelope_A9_Diplomat:
+    return 222;
+
+  case US_Envelope_A10_Willow:
+    return 241;
+
+  case US_Envelope_A_Long:
+    return 225;
+
+  case US_Envelope_1:
+    return 229;
+
+  case US_Envelope_1_34:
+    return 241;
+
+  case US_Envelope_3:
+    return 254;
+
+  case US_Envelope_6:
+    return 267;
+
+  case US_Envelope_8:
+    return 286;
+
+  case US_Envelope_9_34:
+    return 286;
+
+  case US_Envelope_10_12:
+    return 305;
+
+  case US_Envelope_12_12:
+    return 318;
+
+  case US_Envelope_13_12:
+    return 330;
+
+  case US_Envelope_14_12:
+    return 368;
+
+  case US_Envelope_15:
+    return 381;
+
+  case US_Envelope_15_12:
+    return 394;
+
+  case ISO_Envelope_DL:
+    return 220;
+
+  case ISO_Envelope_B4:
+    return 353;
+
+  case ISO_Envelope_B5:
+    return 250;
+
+  case ISO_Envelope_B6:
+    return 176;
+
+  case ISO_Envelope_C3:
+    return 458;
+
+  case ISO_Envelope_C4:
+    return 324;
+
+  case ISO_Envelope_C5:
+    return 229;
+
+  case ISO_Envelope_C6_C5:
+    return 229;
+
+  case ISO_Envelope_C6:
+    return 162;
+
+  case ISO_Envelope_C7_C6:
+    return 162;
+
+  case ISO_Envelope_C7:
+    return 114;
+
+  case ISO_Envelope_E4:
+    return 400;
+
   case Transitional_PA0:
     return 840;
 
@@ -719,6 +851,138 @@ PaperSize::height(const Type type, Layout layout) const
   }
 
   switch (type) {
+  case US_Envelope_6_14:
+    return 89;
+
+  case US_Envelope_6_34:
+    return 92;
+
+  case US_Envelope_7:
+    return 95;
+
+  case US_Envelope_7_34_Monarch:
+    return 98;
+
+  case US_Envelope_8_58:
+    return 92;
+
+  case US_Envelope_9:
+    return 98;
+
+  case US_Envelope_10:
+    return 104;
+
+  case US_Envelope_11:
+    return 114;
+
+  case US_Envelope_12:
+    return 121;
+
+  case US_Envelope_14:
+    return 127;
+
+  case US_Envelope_16:
+    return 152;
+
+  case US_Envelope_A1:
+    return 130;
+
+  case US_Envelope_A2_Lady_Grey:
+    return 111;
+
+  case US_Envelope_A4:
+    return 108;
+
+  case US_Envelope_A6_Thompsons_Standard:
+    return 121;
+
+  case US_Envelope_A7_Besselheim:
+    return 133;
+
+  case US_Envelope_A8_Carrs:
+    return 140;
+
+  case US_Envelope_A9_Diplomat:
+    return 146;
+
+  case US_Envelope_A10_Willow:
+    return 152;
+
+  case US_Envelope_A_Long:
+    return 98;
+
+  case US_Envelope_1:
+    return 152;
+
+  case US_Envelope_1_34:
+    return 152;
+
+  case US_Envelope_3:
+    return 178;
+
+  case US_Envelope_6:
+    return 191;
+
+  case US_Envelope_8:
+    return 210;
+
+  case US_Envelope_9_34:
+    return 222;
+
+  case US_Envelope_10_12:
+    return 229;
+
+  case US_Envelope_12_12:
+    return 241;
+
+  case US_Envelope_13_12:
+    return 254;
+
+  case US_Envelope_14_12:
+    return 292;
+
+  case US_Envelope_15:
+    return 254;
+
+  case US_Envelope_15_12:
+    return 305;
+
+  case ISO_Envelope_DL:
+    return 110;
+
+  case ISO_Envelope_B4:
+    return 250;
+
+  case ISO_Envelope_B5:
+    return 176;
+
+  case ISO_Envelope_B6:
+    return 125;
+
+  case ISO_Envelope_C3:
+    return 324;
+
+  case ISO_Envelope_C4:
+    return 229;
+
+  case ISO_Envelope_C5:
+    return 162;
+
+  case ISO_Envelope_C6_C5:
+    return 114;
+
+  case ISO_Envelope_C6:
+    return 114;
+
+  case ISO_Envelope_C7_C6:
+    return 81;
+
+  case ISO_Envelope_C7:
+    return 81;
+
+  case ISO_Envelope_E4:
+    return 280;
+
   case Transitional_PA0:
     return 1120;
 
@@ -1424,6 +1688,138 @@ QString
 PaperSize::description(const Type type) const
 {
   switch (type) {
+  case US_Envelope_6_14:
+    return QStringLiteral("US Envelope 6¼");
+
+  case US_Envelope_6_34:
+    return QStringLiteral("US Envelope 6¾");
+
+  case US_Envelope_7:
+    return QStringLiteral("US Envelope 7");
+
+  case US_Envelope_7_34_Monarch:
+    return QStringLiteral("US Envelope 7¾");
+
+  case US_Envelope_8_58:
+    return QStringLiteral("US Envelope 8⅝");
+
+  case US_Envelope_9:
+    return QStringLiteral("US Envelope 9");
+
+  case US_Envelope_10:
+    return QStringLiteral("US Envelope 10");
+
+  case US_Envelope_11:
+    return QStringLiteral("US Envelope 11");
+
+  case US_Envelope_12:
+    return QStringLiteral("US Envelope 12");
+
+  case US_Envelope_14:
+    return QStringLiteral("US Envelope 14");
+
+  case US_Envelope_16:
+    return QStringLiteral("US Envelope 16");
+
+  case US_Envelope_A1:
+    return QStringLiteral("US Envelope A1");
+
+  case US_Envelope_A2_Lady_Grey:
+    return QStringLiteral("US Envelope A2 (Lady Grey)");
+
+  case US_Envelope_A4:
+    return QStringLiteral("US Envelope A4");
+
+  case US_Envelope_A6_Thompsons_Standard:
+    return QStringLiteral("US Envelope A6 (Thompsons Standard)");
+
+  case US_Envelope_A7_Besselheim:
+    return QStringLiteral("US Envelope A7 (Besselheim)");
+
+  case US_Envelope_A8_Carrs:
+    return QStringLiteral("US Envelope A8 (Carrs)");
+
+  case US_Envelope_A9_Diplomat:
+    return QStringLiteral("US Envelope A9 (Diplomat)");
+
+  case US_Envelope_A10_Willow:
+    return QStringLiteral("US Envelope A10 (Willow)");
+
+  case US_Envelope_A_Long:
+    return QStringLiteral("US Envelope A Long");
+
+  case US_Envelope_1:
+    return QStringLiteral("US Envelope 1");
+
+  case US_Envelope_1_34:
+    return QStringLiteral("US Envelope 1¾");
+
+  case US_Envelope_3:
+    return QStringLiteral("US Envelope 3");
+
+  case US_Envelope_6:
+    return QStringLiteral("US Envelope 6");
+
+  case US_Envelope_8:
+    return QStringLiteral("US Envelope 8");
+
+  case US_Envelope_9_34:
+    return QStringLiteral("US Envelope 9¾");
+
+  case US_Envelope_10_12:
+    return QStringLiteral("US Envelope 10½");
+
+  case US_Envelope_12_12:
+    return QStringLiteral("US Envelope 12½");
+
+  case US_Envelope_13_12:
+    return QStringLiteral("US Envelope 13½");
+
+  case US_Envelope_14_12:
+    return QStringLiteral("US Envelope 14½");
+
+  case US_Envelope_15:
+    return QStringLiteral("US Envelope 15");
+
+  case US_Envelope_15_12:
+    return QStringLiteral("US Envelope 15½");
+
+  case ISO_Envelope_DL:
+    return QStringLiteral("ISO Envelope DL");
+
+  case ISO_Envelope_B4:
+    return QStringLiteral("ISO Envelope B4");
+
+  case ISO_Envelope_B5:
+    return QStringLiteral("ISO Envelope B5");
+
+  case ISO_Envelope_B6:
+    return QStringLiteral("ISO Envelope B6");
+
+  case ISO_Envelope_C3:
+    return QStringLiteral("ISO Envelope C3");
+
+  case ISO_Envelope_C4:
+    return QStringLiteral("ISO Envelope C4");
+
+  case ISO_Envelope_C5:
+    return QStringLiteral("ISO Envelope C5");
+
+  case ISO_Envelope_C6_C5:
+    return QStringLiteral("ISO Envelope C6/C5");
+
+  case ISO_Envelope_C6:
+    return QStringLiteral("ISO Envelope C6");
+
+  case ISO_Envelope_C7_C6:
+    return QStringLiteral("ISO Envelope C7/C6");
+
+  case ISO_Envelope_C7:
+    return QStringLiteral("ISO Envelope DL");
+
+  case ISO_Envelope_E4:
+    return QStringLiteral("ISO Envelope DL");
+
   case Transitional_PA0:
     return QStringLiteral("Transitional ISO PA0");
 
@@ -1921,274 +2317,208 @@ PaperSize::description(const Type type) const
 
   case JIS_B1:
     return QStringLiteral("JIS B1");
-    ;
 
   case JIS_B2:
     return QStringLiteral("JIS B2");
-    ;
 
   case JIS_B3:
     return QStringLiteral("JIS B3");
-    ;
 
   case JIS_B4:
     return QStringLiteral("JIS B4");
-    ;
 
   case JIS_B5:
     return QStringLiteral("JIS B5");
-    ;
 
   case JIS_B6:
     return QStringLiteral("JIS B6");
-    ;
 
   case JIS_B7:
     return QStringLiteral("JIS B7");
-    ;
 
   case JIS_B8:
     return QStringLiteral("JIS B8");
-    ;
 
   case JIS_B9:
     return QStringLiteral("JIS B9");
-    ;
 
   case JIS_B10:
     return QStringLiteral("JIS B10");
-    ;
 
   case JIS_A_ban:
     return QStringLiteral("JIS A ban");
-    ;
 
   case JIS_B_ban:
     return QStringLiteral("JIS B ban");
-    ;
 
   case Chinese_D0:
     return QStringLiteral("Chinese D0");
-    ;
 
   case Chinese_D1:
     return QStringLiteral("Chinese D1");
-    ;
 
   case Chinese_D2:
     return QStringLiteral("Chinese D2");
-    ;
 
   case Chinese_D3:
     return QStringLiteral("Chinese D3");
-    ;
 
   case Chinese_D4:
     return QStringLiteral("Chinese D4");
-    ;
 
   case Chinese_D5:
     return QStringLiteral("Chinese D5");
-    ;
 
   case Chinese_D6:
     return QStringLiteral("Chinese D6");
-    ;
 
   case Chinese_RD0:
     return QStringLiteral("Chinese RD0");
-    ;
 
   case Chinese_RD1:
     return QStringLiteral("Chinese RD1");
-    ;
 
   case Chinese_RD2:
     return QStringLiteral("Chinese RD2");
-    ;
 
   case Chinese_RD3:
     return QStringLiteral("Chinese RD3");
-    ;
 
   case Chinese_RD4:
     return QStringLiteral("Chinese RD4");
-    ;
 
   case Chinese_RD5:
     return QStringLiteral("Chinese RD5");
-    ;
 
   case Chinese_RD6:
     return QStringLiteral("Chinese RD6");
-    ;
 
   case Canadian_P1:
     return QStringLiteral("Canadian P1");
-    ;
 
   case Canadian_P2:
     return QStringLiteral("Canadian P2");
-    ;
 
   case Canadian_P3:
     return QStringLiteral("Canadian P3");
-    ;
 
   case Canadian_P4:
     return QStringLiteral("Canadian P4");
-    ;
 
   case Canadian_P5:
     return QStringLiteral("Canadian P5");
-    ;
 
   case Canadian_P6:
     return QStringLiteral("Canadian P6");
-    ;
 
   case Japanese_AB:
     return QStringLiteral("Japanese AB");
-    ;
 
   case Japanese_B40:
     return QStringLiteral("Japanese B40");
-    ;
 
   case Japanese_Shikisen:
     return QStringLiteral("Japanese Shikisen");
-    ;
 
   case Japanese_A_Koban:
     return QStringLiteral("Japanese A Koban");
-    ;
 
   case Japanese_B_Koban:
     return QStringLiteral("Japanese B Koban");
-    ;
 
   case Japanese_Shirokuban_4:
     return QStringLiteral("Japanese Shirokuban 4");
-    ;
 
   case Japanese_Shirokuban_5:
     return QStringLiteral("Japanese Shirokuban 5");
-    ;
 
   case Japanese_Shirokuban_6:
     return QStringLiteral("Japanese Shirokuban 6");
-    ;
 
   case Japanese_Kiku_4:
     return QStringLiteral("Japanese Kiku 4");
-    ;
 
   case Japanese_Kiku_5:
     return QStringLiteral("Japanese Kiku 5");
-    ;
 
   case Japanese_Zenshi:
     return QStringLiteral("Japanese Zenshi");
-    ;
 
   case Japanese_Han_Kiri:
     return QStringLiteral("Japanese Han-kiri");
-    ;
 
   case Japanese_Yatsu_giri:
     return QStringLiteral("Japanese Yatsu-giri");
-    ;
 
   case Japanese_Matsu_giri:
     return QStringLiteral("Japanese Matsu-giri");
-    ;
 
   case Japanese_Yotsu_giri:
     return QStringLiteral("Japanese Yotsu-giri");
-    ;
 
   case Japanese_Dai_Kyabine:
     return QStringLiteral("Japanese Dai Kyabine");
-    ;
 
   case Japanese_Kyabine:
     return QStringLiteral("Japanese Kyabine");
-    ;
 
   case Japanese_Nimai_gake:
     return QStringLiteral("Japanese Nimai-gake");
-    ;
 
   case Japanese_Potsutokaado:
     return QStringLiteral("Japanese Potsutokaado");
-    ;
 
   case Japanese_Dai_Tefuda:
     return QStringLiteral("Japanese  Dai Tefuda");
-    ;
 
   case Japanese_Saabisu:
     return QStringLiteral("Japanese Saabisu");
-    ;
 
   case Japanese_Tefuda:
     return QStringLiteral("Japanese Tefuda");
-    ;
 
   case Japanese_Dai_meishi:
     return QStringLiteral("Japanese Dai Meishi");
-    ;
 
   case Japanese_Kokusai_ban:
     return QStringLiteral("Japanese Kosusai-ban");
-    ;
 
   case Japanese_Hyoujun_gata:
     return QStringLiteral("Japanese Hyoujun-gata");
-    ;
 
   case Japanese_Oo_gata:
     return QStringLiteral("Oo-gata");
-    ;
 
   case Japanese_Chuu_gata:
     return QStringLiteral("Chuu-gata");
-    ;
 
   case Japanese_Ko_gata:
     return QStringLiteral("Japanese Ko-gata");
-    ;
 
   case Japanese_Ippitsu_sen:
     return QStringLiteral("Japanese Ippitsu-sen");
-    ;
 
   case Japanese_Hanshi:
     return QStringLiteral("Japanese Washi Hanshi");
-    ;
 
   case Japanese_Mino:
     return QStringLiteral("Japanese Washi Mino");
-    ;
 
   case Japanese_Oohousho:
     return QStringLiteral("Japanese Washi Oohousho");
-    ;
 
   case Japanese_Chuuhousho:
     return QStringLiteral("Japanese Washi Chuuhousho");
-    ;
 
   case Japanese_Kohousho:
     return QStringLiteral("Japanese Washi Kohousho");
-    ;
 
   case Japanese_Nisho_no_uchi:
     return QStringLiteral("Japanese Washi Nishi no uchi");
-    ;
 
   case Japanese_Kusuma:
     return QStringLiteral("Japanese Washi Kusuma");
-    ;
   }
+
+  return QString();
 }
