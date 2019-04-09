@@ -27,6 +27,8 @@
 #include <sane/sane.h>
 #endif
 
+#include "scanoptions.h"
+
 typedef QSharedPointer<QImage> Image;
 
 struct ScanDevice final
@@ -73,8 +75,8 @@ public:
   virtual bool openDevice(QString name) = 0;
   virtual bool startScan(QString name) = 0;
   virtual void cancelScan(QString name) = 0;
-  virtual ScanOptions* options(QString name) = 0;
-  virtual void setOptions(QString name, ScanOptions* options) = 0;
+  virtual Options options(QString name) = 0;
+  virtual void setOptions(QString name, Options options) = 0;
 
 protected:
 };

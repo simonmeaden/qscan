@@ -81,7 +81,7 @@ QScan::openDevice(QString name)
 
   if (m_lib->openDevice(name)) {
     m_current_device = device;
-    ScanOptions* o = m_lib->options(name);
+    Options o = m_lib->options(name);
     return true;
   }
 

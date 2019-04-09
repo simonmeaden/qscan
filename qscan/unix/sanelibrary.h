@@ -62,8 +62,8 @@ public:
   bool startScan(QString name) override;
   void cancelScan(QString name) override;
   void exit();
-  ScanOptions* options(QString name) override;
-  void setOptions(QString name, ScanOptions* options) override;
+  Options options(QString name) override;
+  void setOptions(QString name, Options options) override;
 
   const Version& version() const;
 
@@ -71,7 +71,7 @@ protected:
   SANE_Status doScan(const char* fileName);
   Log4Qt::Logger* m_logger;
   DeviceMap m_scanners;
-  OptionsMap m_options;
+  ScanOptions m_options;
   QImage* m_image;
   Version m_version;
 

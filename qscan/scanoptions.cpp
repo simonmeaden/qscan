@@ -4,50 +4,112 @@ ScanOptions::ScanOptions(QObject* parent)
   : QObject(parent)
 {}
 
+ScanOptions::~ScanOptions() {}
+
 int
-ScanOptions::id() const
+ScanOptions::dpi() const
 {
-  return m_id;
+  return m_dpi;
 }
 
 void
-ScanOptions::setId(int id)
+ScanOptions::setDpi(int dpi)
 {
-  m_id = id;
+  m_dpi = dpi;
 }
 
-QString
-ScanOptions::name() const
+ScanMode
+ScanOptions::mode() const
 {
-  return m_name;
-}
-
-void
-ScanOptions::setName(const QString& name)
-{
-  m_name = name;
-}
-
-QString
-ScanOptions::title() const
-{
-  return m_title;
+  return m_mode;
 }
 
 void
-ScanOptions::setTitle(const QString& title)
+ScanOptions::setMode(const ScanMode& mode)
 {
-  m_title = title;
+  m_mode = mode;
 }
 
-QString
-ScanOptions::description() const
+int
+ScanOptions::depth() const
 {
-  return m_description;
+  return m_depth;
 }
 
 void
-ScanOptions::setDescription(const QString& description)
+ScanOptions::setDepth(int depth)
 {
-  m_description = description;
+  m_depth = depth;
+}
+
+ScanType
+ScanOptions::type() const
+{
+  return m_type;
+}
+
+void
+ScanOptions::setType(const ScanType& type)
+{
+  m_type = type;
+}
+
+int
+ScanOptions::paperWidth() const
+{
+  return m_paper_width;
+}
+
+void
+ScanOptions::setPaperWidth(int paper_width)
+{
+  m_paper_width = paper_width;
+}
+
+int
+ScanOptions::paperHeight() const
+{
+  return m_paper_height;
+}
+
+void
+ScanOptions::setPaperHeight(int paper_height)
+{
+  m_paper_height = paper_height;
+}
+
+int
+ScanOptions::brightness() const
+{
+  return m_brightness;
+}
+
+void
+ScanOptions::setBrightness(int brightness)
+{
+  m_brightness = brightness;
+}
+
+int
+ScanOptions::contrast() const
+{
+  return m_contrast;
+}
+
+void
+ScanOptions::setContrast(int contrast)
+{
+  m_contrast = contrast;
+}
+
+int
+ScanOptions::pageDelay() const
+{
+  return m_page_delay;
+}
+
+void
+ScanOptions::setPageDelay(int page_delay)
+{
+  m_page_delay = page_delay;
 }

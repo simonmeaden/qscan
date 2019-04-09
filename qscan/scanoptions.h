@@ -1,32 +1,74 @@
 #ifndef SCANOPTIONS_H
 #define SCANOPTIONS_H
 
+#include <QMap>
 #include <QObject>
+
+#include <sane/sane.h>
+#include <sane/saneopts.h>
+
+enum ScanMode
+{
+  Default, /*!< Default - normally colour */
+  Color,   /*!< Colour scan */
+  Gray,    /*!< Greyscale */
+  Mono,    /*!< Monochromatic */
+};
+
+enum ScanType
+{
+  Single,    /*!< Single page */
+  ADF_Front, /*!< Auto Document Feeder front page only */
+  ADF_Back,  /*!< Auto Document Feeder rear page only */
+  ADF_Both,  /*!< Auto Document Feeder both front and rear pages */
+  Batch,     /*!< A batch scan */
+};
 
 class ScanOptions : public QObject
 {
+  Q_OBJECT
 public:
-  ScanOptions(QObject* parent = nullptr);
+  explicit ScanOptions(QObject* parent = nullptr);
+  ~ScanOptions();
 
-  int id() const;
-  void setId(int id);
+  int dpi() const;
+  void setDpi(int dpi);
 
-  QString name() const;
-  void setName(const QString& name);
+  ScanMode mode() const;
+  void setMode(const ScanMode& mode);
 
-  QString title() const;
-  void setTitle(const QString& title);
+  int depth() const;
+  void setDepth(int depth);
 
-  QString description() const;
-  void setDescription(const QString& description);
+  ScanType type() const;
+  void setType(const ScanType& type);
+
+  int paperWidth() const;
+  void setPaperWidth(int paperWidth);
+
+  int paperHeight() const;
+  void setPaperHeight(int paperHeight);
+
+  int brightness() const;
+  void setBrightness(int brightness);
+
+  int contrast() const;
+  void setContrast(int contrast);
+
+  int pageDelay() const;
+  void setPageDelay(int pageDelay);
 
 protected:
-  int m_id;
-  QString m_name;
-  QString m_title;
-  QString m_description;
+  int m_dpi;
+  ScanMode m_mode;
+  int m_depth;
+  ScanType m_type;
+  int m_paper_width;
+  int m_paper_height;
+  int m_brightness;
+  int m_contrast;
+  int m_page_delay;
 };
 typedef QSharedPointer<ScanOptions> Options;
-typedef QMap<QString, ScanOptions> OptionsMap;
 
 #endif // SCANOPTIONS_H

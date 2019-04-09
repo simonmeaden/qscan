@@ -33,7 +33,8 @@ SOURCES += \
     unix/sanelibrary.cpp \
     win/twainlibrary.cpp \
     scaninterface.cpp \
-    scanoptions.cpp
+    scanoptions.cpp \
+    papersize.cpp
 
 HEADERS += \
     qscan.h \
@@ -43,7 +44,8 @@ HEADERS += \
     unix/saneworker.h \
     unix/sanelibrary.h \
     win/twainlibrary.h \
-    scanoptions.h
+    scanoptions.h \
+    papersize.h
 
 unix {
     SOURCES +=

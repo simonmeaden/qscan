@@ -181,7 +181,7 @@ SaneLibrary::exit()
   sane_exit();
 }
 
-ScanOptions*
+Options
 SaneLibrary::options(QString name)
 {
   QMutexLocker locker(&_mutex);
@@ -207,59 +207,66 @@ SaneLibrary::options(QString name)
         int size = current_option->size;
         int type = current_option->type;
 
-        bool bool_value;
-        int int_value;
-        SANE_Word word_value;
-        std::string string_value;
+        m_logger->debug("");
+        //        QString cap(current_option->cap);
 
-        switch (type) {
-          case SANE_TYPE_BOOL:
-            if (current_option->size == sizeof(SANE_Bool)) {
-              current_status = sane_control_option(device->sane_handle,
-                                                   id,
-                                                   SANE_ACTION_GET_VALUE,
-                                                   &bool_value,
-                                                   nullptr);
-            }
-            break;
-          case SANE_TYPE_INT:
-            if (current_option->size == sizeof(SANE_Int)) {
-              if (current_option->size == sizeof(SANE_Bool)) {
-                current_status = sane_control_option(device->sane_handle,
-                                                     id,
-                                                     SANE_ACTION_GET_VALUE,
-                                                     &int_value,
-                                                     nullptr);
-              }
-              break;
-              case SANE_TYPE_FIXED:
-                if (current_option->size == sizeof(SANE_Fixed)) {
-                  if (current_option->size == sizeof(SANE_Bool)) {
-                    current_status = sane_control_option(device->sane_handle,
-                                                         id,
-                                                         SANE_ACTION_GET_VALUE,
-                                                         &word_value,
-                                                         nullptr);
-                  }
-                  break;
-                  case SANE_TYPE_STRING:
-                    current_status = sane_control_option(device->sane_handle,
-                                                         id,
-                                                         SANE_ACTION_GET_VALUE,
-                                                         &string_value,
-                                                         nullptr);
-                    break;
-                    //                    case SANE_TYPE_BUTTON:
-                    //                      m_options.emplace_back(m_device_handle,
-                    //                      Button{}, info); break;
-                    //                    case SANE_TYPE_GROUP:
-                    //                      m_options.emplace_back(m_device_handle,
-                    //                      Group{}, info); break;
-                  default:
-                    break;
-                }
-            }
-        }
+        //        bool bool_value;
+        //        int int_value;
+        //        SANE_Word word_value;
+        //        std::string string_value;
+
+        //        switch (type) {
+        //          case SANE_TYPE_BOOL:
+        //            if (current_option->size == sizeof(SANE_Bool)) {
+        //              current_status =
+        //              sane_control_option(device->sane_handle,
+        //                                                   id,
+        //                                                   SANE_ACTION_GET_VALUE,
+        //                                                   &bool_value,
+        //                                                   nullptr);
+        //            }
+        //            break;
+        //          case SANE_TYPE_INT:
+        //            if (current_option->size == sizeof(SANE_Int)) {
+        //              if (current_option->size == sizeof(SANE_Bool)) {
+        //                current_status =
+        //                sane_control_option(device->sane_handle,
+        //                                                     id,
+        //                                                     SANE_ACTION_GET_VALUE,
+        //                                                     &int_value,
+        //                                                     nullptr);
+        //              }
+        //              break;
+        //              case SANE_TYPE_FIXED:
+        //                if (current_option->size == sizeof(SANE_Fixed)) {
+        //                  if (current_option->size == sizeof(SANE_Bool)) {
+        //                    current_status =
+        //                    sane_control_option(device->sane_handle,
+        //                                                         id,
+        //                                                         SANE_ACTION_GET_VALUE,
+        //                                                         &word_value,
+        //                                                         nullptr);
+        //                  }
+        //                  break;
+        //                  case SANE_TYPE_STRING:
+        //                    current_status =
+        //                    sane_control_option(device->sane_handle,
+        //                                                         id,
+        //                                                         SANE_ACTION_GET_VALUE,
+        //                                                         &string_value,
+        //                                                         nullptr);
+        //                    break;
+        //                    //                    case SANE_TYPE_BUTTON:
+        //                    // m_options.emplace_back(m_device_handle,
+        //                    //                      Button{}, info); break;
+        //                    //                    case SANE_TYPE_GROUP:
+        //                    // m_options.emplace_back(m_device_handle,
+        //                    //                      Group{}, info); break;
+        //                  default:
+        //                    break;
+        //                }
+        //            }
+        //        }
 
         ++i;
       }
@@ -268,7 +275,7 @@ SaneLibrary::options(QString name)
 }
 
 void
-SaneLibrary::setOptions(QString name, ScanOptions* options)
+SaneLibrary::setOptions(QString name, Options options)
 {
   QMutexLocker locker(&_mutex);
 
