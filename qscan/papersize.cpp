@@ -126,6 +126,15 @@ PaperSize::width(const Type type, Layout layout) const
   case ISO_Envelope_B6:
     return 176;
 
+  case ISO_Envelope_C0:
+    return 917;
+
+  case ISO_Envelope_C1:
+    return 648;
+
+  case ISO_Envelope_C2:
+    return 458;
+
   case ISO_Envelope_C3:
     return 458;
 
@@ -672,6 +681,93 @@ PaperSize::width(const Type type, Layout layout) const
   case JIS_B10:
     return 32;
 
+  case JIS_B11:
+    return 22;
+
+  case JIS_B12:
+    return 16;
+
+  case Japanese_Envelope_Chou1:
+    return 142;
+
+  case JIS_Envelope_Chou2:
+    return 119;
+
+  case JIS_Envelope_Chou3:
+    return 120;
+
+  case Japanese_Envelope_Chou31:
+    return 105;
+
+  case Japanese_Envelope_Chou30:
+    return 92;
+
+  case Japanese_Envelope_Chou40:
+    return 90;
+
+  case JIS_Envelope_Chou4:
+    return 90;
+
+  case Japanese_Envelope_KakuA3:
+    return 320;
+
+  case Japanese_Envelope_Kaku0:
+    return 287;
+
+  case Japanese_Envelope_Kaku1:
+    return 270;
+
+  case JIS_Envelope_Kaku2:
+    return 240;
+
+  case Japanese_Envelope_Kaku_KokusaiA4:
+    return 229;
+
+  case JIS_Kaku3:
+    return 216;
+
+  case JIS_Kaku4:
+    return 197;
+
+  case JIS_Kaku5:
+    return 190;
+
+  case JIS_Kaku6:
+    return 162;
+
+  case JIS_Kaku7:
+    return 142;
+
+  case JIS_Kaku8:
+    return 119;
+
+  case Japanese_Envelope_You0:
+    return 173;
+
+  case JIS_You0:
+    return 235;
+
+  case JIS_You1:
+    return 173;
+
+  case JIS_You2:
+    return 162;
+
+  case JIS_You3:
+    return 148;
+
+  case JIS_You4:
+    return 235;
+
+  case JIS_You5:
+    return 217;
+
+  case JIS_You6:
+    return 190;
+
+  case JIS_You7:
+    return 165;
+
   case ISO_4A0:
     return 1682;
 
@@ -976,6 +1072,15 @@ PaperSize::height(const Type type, Layout layout) const
 
   case ISO_Envelope_B6:
     return 125;
+
+  case ISO_Envelope_C0:
+    return 1297;
+
+  case ISO_Envelope_C1:
+    return 914;
+
+  case ISO_Envelope_C2:
+    return 648;
 
   case ISO_Envelope_C3:
     return 324;
@@ -1520,6 +1625,96 @@ PaperSize::height(const Type type, Layout layout) const
   case JIS_B9:
     return 64;
 
+  case JIS_B10:
+    return 45;
+
+  case JIS_B11:
+    return 32;
+
+  case JIS_B12:
+    return 22;
+
+  case Japanese_Envelope_Chou1:
+    return 332;
+
+  case JIS_Envelope_Chou2:
+    return 277;
+
+  case JIS_Envelope_Chou3:
+    return 235;
+
+  case Japanese_Envelope_Chou31:
+    return 235;
+
+  case Japanese_Envelope_Chou30:
+    return 235;
+
+  case Japanese_Envelope_Chou40:
+    return 225;
+
+  case JIS_Envelope_Chou4:
+    return 205;
+
+  case Japanese_Envelope_KakuA3:
+    return 440;
+
+  case Japanese_Envelope_Kaku0:
+    return 382;
+
+  case Japanese_Envelope_Kaku1:
+    return 382;
+
+  case JIS_Envelope_Kaku2:
+    return 332;
+
+  case Japanese_Envelope_Kaku_KokusaiA4:
+    return 324;
+
+  case JIS_Kaku3:
+    return 277;
+
+  case JIS_Kaku4:
+    return 267;
+
+  case JIS_Kaku5:
+    return 240;
+
+  case JIS_Kaku6:
+    return 229;
+
+  case JIS_Kaku7:
+    return 205;
+
+  case JIS_Kaku8:
+    return 197;
+
+  case Japanese_Envelope_You0:
+    return 118;
+
+  case JIS_You0:
+    return 120;
+
+  case JIS_You1:
+    return 118;
+
+  case JIS_You2:
+    return 114;
+
+  case JIS_You3:
+    return 98;
+
+  case JIS_You4:
+    return 105;
+
+  case JIS_You5:
+    return 95;
+
+  case JIS_You6:
+    return 98;
+
+  case JIS_You7:
+    return 92;
+
   case ISO_A0_Plus:
     return 1292;
 
@@ -1528,9 +1723,6 @@ PaperSize::height(const Type type, Layout layout) const
 
   case ISO_A3_Plus:
     return 483;
-
-  case JIS_B10:
-    return 45;
 
   case ISO_4A0:
     return 2378;
@@ -1823,6 +2015,15 @@ PaperSize::description(const Type type) const
 
   case ISO_Envelope_B6:
     return QStringLiteral("ISO Envelope B6");
+
+  case ISO_Envelope_C0:
+    return QStringLiteral("ISO Envelope C0");
+
+  case ISO_Envelope_C1:
+    return QStringLiteral("ISO Envelope C1");
+
+  case ISO_Envelope_C2:
+    return QStringLiteral("ISO Envelope C2");
 
   case ISO_Envelope_C3:
     return QStringLiteral("ISO Envelope C3");
@@ -2372,6 +2573,93 @@ PaperSize::description(const Type type) const
 
   case JIS_B10:
     return QStringLiteral("JIS B10");
+
+  case JIS_B11:
+    return QStringLiteral("JIS B11");
+
+  case JIS_B12:
+    return QStringLiteral("JIS B12");
+
+  case Japanese_Envelope_Chou1:
+    return QStringLiteral("Japanese Envelope Chou1");
+
+  case JIS_Envelope_Chou2:
+    return QStringLiteral("JIS Envelope Chou2");
+
+  case JIS_Envelope_Chou3:
+    return QStringLiteral("JIS Envelope Chou3");
+
+  case Japanese_Envelope_Chou31:
+    return QStringLiteral("Japanese Envelope Chou31");
+
+  case Japanese_Envelope_Chou30:
+    return QStringLiteral("Japanese Envelope Chou30");
+
+  case Japanese_Envelope_Chou40:
+    return QStringLiteral("Japanese Envelope Chou40");
+
+  case JIS_Envelope_Chou4:
+    return QStringLiteral("JIS Envelope Chou4");
+
+  case Japanese_Envelope_KakuA3:
+    return QStringLiteral("Japanese Envelope KakuA3");
+
+  case Japanese_Envelope_Kaku0:
+    return QStringLiteral("Japanese Envelope Kaku0");
+
+  case Japanese_Envelope_Kaku1:
+    return QStringLiteral("Japanese Envelope Kaku1");
+
+  case JIS_Envelope_Kaku2:
+    return QStringLiteral("JIS Envelope Kaku2");
+
+  case Japanese_Envelope_Kaku_KokusaiA4:
+    return QStringLiteral("Japanese Envelope Kaku Koku-sai A4");
+
+  case JIS_Kaku3:
+    return QStringLiteral("JIS Envelope Kaku3");
+
+  case JIS_Kaku4:
+    return QStringLiteral("JIS Envelope Kaku4");
+
+  case JIS_Kaku5:
+    return QStringLiteral("JIS Envelope Kaku5");
+
+  case JIS_Kaku6:
+    return QStringLiteral("JIS Envelope Kaku6");
+
+  case JIS_Kaku7:
+    return QStringLiteral("JIS Envelope Kaku7");
+
+  case JIS_Kaku8:
+    return QStringLiteral("JIS Envelope Kaku8");
+
+  case Japanese_Envelope_You0:
+    return QStringLiteral("Japanese Envelope You0");
+
+  case JIS_You0:
+    return QStringLiteral("JIS Envelope You0");
+
+  case JIS_You1:
+    return QStringLiteral("JIS Envelope You1");
+
+  case JIS_You2:
+    return QStringLiteral("JIS Envelope You2");
+
+  case JIS_You3:
+    return QStringLiteral("JIS Envelope You3");
+
+  case JIS_You4:
+    return QStringLiteral("JIS Envelope You4");
+
+  case JIS_You5:
+    return QStringLiteral("JIS Envelope You5");
+
+  case JIS_You6:
+    return QStringLiteral("JIS Envelope You6");
+
+  case JIS_You7:
+    return QStringLiteral("JIS Envelope You7");
 
   case JIS_A_ban:
     return QStringLiteral("JIS A ban");

@@ -120,6 +120,8 @@ public:
     JIS_B8,                            /*!< Japanese B8 page size */
     JIS_B9,                            /*!< Japanese B9 page size */
     JIS_B10,                           /*!< Japanese B10 page size */
+    JIS_B11,                           /*!< Japanese B11 page size */
+    JIS_B12,                           /*!< Japanese B12 page size */
     JIS_A_ban,                         /*!< Japanese A-ban page size */
     JIS_B_ban,                         /*!< Japanese B-ban page size */
     Chinese_D0,                        /*!< Chinese D0 page size */
@@ -179,6 +181,33 @@ public:
     Japanese_Nisho_no_uchi,            /*!< Japanese Traditional Washi Nisho-no-uchi page
                                           size */
     Japanese_Kusuma,                   /*!< Japanese Traditional Washi Kusuma page size */
+    Japanese_Envelope_Chou1,           /*!< Japanese Non-JIS Envelope Chou1 */
+    JIS_Envelope_Chou2,                /*!< Japanese JIS Envelope Chou2*/
+    JIS_Envelope_Chou3,                /*!< Japanese JIS Envelope Chou3 */
+    Japanese_Envelope_Chou31,          /*!< Japanese Non-JIS Envelope Chou31 */
+    Japanese_Envelope_Chou30,          /*!< Japanese Non-JIS Envelope Chou30 */
+    Japanese_Envelope_Chou40,          /*!< Japanese Non-JIS Envelope Chou40 */
+    JIS_Envelope_Chou4,                /*!< Japanese JIS Envelope Chou4 */
+    Japanese_Envelope_KakuA3,          /*!< Japanese Non-JIS Envelope KakuA3 */
+    Japanese_Envelope_Kaku0,           /*!< Japanese Non-JIS Envelope Kaku0 */
+    Japanese_Envelope_Kaku1,           /*!< Japanese Non-JIS Envelope Kaku1 */
+    JIS_Envelope_Kaku2,                /*!< Japanese JIS Envelope Kaku2 */
+    Japanese_Envelope_Kaku_KokusaiA4,  /*!< Japanese Non-JIS Envelope KakuA3 */
+    JIS_Kaku3,                         /*!< Japanese JIS Envelope Kaku3 */
+    JIS_Kaku4,                         /*!< Japanese JIS Envelope Kaku4 */
+    JIS_Kaku5,                         /*!< Japanese JIS Envelope Kaku5 */
+    JIS_Kaku6,                         /*!< Japanese JIS Envelope Kaku6 */
+    JIS_Kaku7,                         /*!< Japanese JIS Envelope Kaku7 */
+    JIS_Kaku8,                         /*!< Japanese JIS Envelope Kaku8 */
+    Japanese_Envelope_You0,            /*!< Japanese Non-JIS Envelope You1 */
+    JIS_You0,                          /*!< Japanese JIS Envelope You0 */
+    JIS_You1,                          /*!< Japanese JIS Envelope You1 */
+    JIS_You2,                          /*!< Japanese JIS Envelope You2 */
+    JIS_You3,                          /*!< Japanese JIS Envelope You3 */
+    JIS_You4,                          /*!< Japanese JIS Envelope You4 */
+    JIS_You5,                          /*!< Japanese JIS Envelope You5 */
+    JIS_You6,                          /*!< Japanese JIS Envelope You6 */
+    JIS_You7,                          /*!< Japanese JIS Envelope You7 */
     Columbian_Carta,                   /*!< Columbian B40 page size */
     Columbian_Extra_Tabloide,          /*!< Columbian Wxtra Tabloide page size */
     Columbian_Oficio,                  /*!< Columbian Oficio page size */
@@ -288,6 +317,9 @@ public:
     ISO_Envelope_B4,                   /*!< ISO Envelope B4 size */
     ISO_Envelope_B5,                   /*!< ISO Envelope B5 size */
     ISO_Envelope_B6,                   /*!< ISO Envelope B6 size */
+    ISO_Envelope_C0,                   /*!< ISO Envelope C0 size */
+    ISO_Envelope_C1,                   /*!< ISO Envelope C1 size */
+    ISO_Envelope_C2,                   /*!< ISO Envelope C2 size */
     ISO_Envelope_C3,                   /*!< ISO Envelope C3 size */
     ISO_Envelope_C4,                   /*!< ISO Envelope C4 size */
     ISO_Envelope_C5,                   /*!< ISO Envelope C5 size */
