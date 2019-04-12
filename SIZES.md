@@ -3,10 +3,10 @@ A List osupported types with their enum selection values.
 European ISO Sizes.
 ===================
 
-* 4A4     ISO_4A0
-* 2A0     ISO_2A0
-* A0      ISO_A0,                            
-* A0+     ISO_A0_Plus,                       
+* ISO_4A0   4A0 : 2378 x 1682 mm
+* ISO_2A0   2A0 : 1682 x 1189 mm
+* ISO_A0    A0  : 1189 x 841 mm                       
+* ISO_A0_Plus,                       
 * A1      ISO_A1,                            
 * A1      ISO_A1_Plus,                       
 * A2      ISO_A2,                            
