@@ -1,11 +1,12 @@
 #ifndef PAPERSIZE_H
 #define PAPERSIZE_H
 
+#include <QList>
 #include <QString>
 
 /*!
-  class PaperSize
-   \brief The PaperSize classgives values for width, height plus a simple QString definition.
+  \class PaperSize
+  \brief The PaperSize classgives values for width, height plus a simple QString definition.
 
   Defines paper sizes for a large number of standard and non-standard paper sizes
   from a number of different countries. They include the standard European (ISO) and
@@ -41,8 +42,9 @@ public:
     Landscape,
     Portrait,
   };
+
   /*!
-     \brief The \c PaperSize::Type defines the selected paper size type.
+    \brief The \c PaperSize::Type defines the selected paper size type.
 
     For example \c width(PaperSize::ISO_A4) will return a value of 210mm.
   */
@@ -331,32 +333,43 @@ public:
   PaperSize();
 
   /*!
-   * \brief Portrait width in mm, or Landscape width if the \c Layout parameter is set to \c
-   * PageSize::Landscape. \param type the PageSize::Type to get the width of. \param layout the
-   * optional Layout value, default Portrait. \return the width in mm.
-   */
+    \brief Portrait width in mm, or Landscape width if the \c Layout parameter is set to \c
+     PageSize::Landscape.
+
+    \param type the PageSize::Type to get the width of.
+    \param layout the optional Layout value, default Portrait.
+    \return the width in mm.
+  */
   int
   width(const Type type, Layout layout = Portrait) const;
+
   /*!
-   * \brief Portrait height in mm, or Landscape height if the \c Layout parameter is set to \c
-   * PageSize::Landscape. \param type the PageSize::Type to get the height of. \param layout the
-   * optional Layout value, default Portrait. \return the height in mm.
-   */
+    \brief Portrait height in mm, or Landscape height if the \c Layout parameter is set to \c
+     PageSize::Landscape.
+
+    \param type the PageSize::Type to get the height of.
+    \param layout the optional Layout value, default Portrait.
+    \return the height in mm.
+  */
   int
   height(const Type type, Layout layout = Portrait) const;
+
   /*!
-   * \brief A \c QString description.
-   * \param type the PageSize::Type to get the description for.
-   * \return the description string.
-   */
+    \brief A \c QString description.
+
+    Supplies a simple description string, suitable for use in a drop-down menu or similar.
+
+    \param type the PageSize::Type to get the description for.
+    \return the description string.
+  */
   QString
   description(const Type type) const;
 
   /*!
-   * \brief static \c toInches method. Converts mm to inches.
-   * \param value the mm value.
-   * \return the inch value as a double.
-   */
+     \brief static \c toInches method. Converts mm to inches.
+     \param value the mm value.
+     \return the inch value as a double.
+  */
   static double
   toInches(int value)
   {

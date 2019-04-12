@@ -14,7 +14,6 @@
 --attach-extern-c
 --attach-closing-while
 
-
 --pad-oper 
 --pad-comma
 --pad-header
@@ -33,6 +32,5 @@
 --remove-comment-prefix
 --break-after-logical
 
---remove-comment-prefix
 --break-blocks#=all
 --delete-empty-lines

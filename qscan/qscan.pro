@@ -62,3 +62,6 @@ win32:win64 {
 }
 
 unix|win32: LIBS += -llog4qt
+
+DISTFILES += \
+    SIZES.md
