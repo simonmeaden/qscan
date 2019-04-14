@@ -24,15 +24,19 @@
 #include <QStringList>
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
-#include <sane/sane.h>
+#  include <sane/sane.h>
 #endif
 
 #include "scanoptions.h"
 
 typedef QSharedPointer<QImage> Image;
 
-struct ScanDevice final
+class ScanDevice final
 {
+public:
+  ScanDevice() {}
+  ~ScanDevice() {}
+
   QString name;
   QString vendor;
   QString model;
@@ -69,14 +73,28 @@ public:
 
   virtual ~ScanInterface() {}
 
-  virtual bool init() = 0;
-  virtual QStringList getDevices() = 0;
-  virtual Device getDevice(QString name) = 0;
-  virtual bool openDevice(QString name) = 0;
-  virtual bool startScan(QString name) = 0;
-  virtual void cancelScan(QString name) = 0;
-  virtual Options options(QString name) = 0;
-  virtual void setOptions(QString name, Options options) = 0;
+  virtual bool
+  init() = 0;
+  virtual QStringList
+  getDevices() = 0;
+  virtual Device
+  getDevice(QString device_name) = 0;
+  virtual bool
+  openDevice(QString device_name) = 0;
+  virtual bool
+  startScan(QString device_name) = 0;
+  virtual Options
+  options(QString device_name) = 0;
+  virtual void
+  cancelScan(QString device_name) = 0;
+  virtual void
+  getScannerOptions(QString device_name) = 0;
+  virtual QRect
+  geometry(QString device_name) = 0;
+  virtual int
+  contrast(QString device_name) = 0;
+  virtual int
+  brightness(QString device_name) = 0;
 
 protected:
 };
@@ -91,9 +109,12 @@ public:
   ~ScanLibrary();
 
 signals:
-  void scanCompleted(Image image);
-  void scanFailed();
-  void scanProgress(double);
+  void
+  scanCompleted(Image image);
+  void
+  scanFailed();
+  void
+  scanProgress(double);
 };
 
 #endif // SCANLIB_H

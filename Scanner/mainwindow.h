@@ -45,20 +45,32 @@ protected:
   QPushButton* m_scan_btn;
   QPushButton* m_cancel_btn;
   QPushButton* m_select_btn;
+  QPushButton* m_geometry_btn;
   QSplitter* m_splitter;
 
   QString m_selected_name;
   bool m_selected;
 
-  void initGui();
-  void resizeEvent(QResizeEvent*);
-  void selectionChanged();
-  void selectScanner();
-  void startScanning();
-  void cancelScanning();
-  void scanIsCompleted(Image image);
-  void scanHasFailed();
-  void scanProgressed(double);
+  void
+  initGui();
+  void
+  resizeEvent(QResizeEvent*);
+  void
+  selectionChanged();
+  void
+  selectScanner();
+  void
+  startScanning();
+  void
+  cancelScanning();
+  void
+  scanIsCompleted(Image image);
+  void
+  scanHasFailed();
+  void
+  scanProgressed(double);
+  void
+  geometry();
 
 private:
 };

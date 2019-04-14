@@ -26,21 +26,17 @@ MainWindow::MainWindow(QWidget* parent)
   , m_selected(false)
 {
   m_logger = Log4Qt::Logger::logger(QStringLiteral("Scanner"));
-
   initGui();
-
   m_scan = new QScan(this);
   connect(m_scan, &QScan::scanCompleted, this, &MainWindow::scanIsCompleted);
   connect(m_scan, &QScan::scanProgress, this, &MainWindow::scanProgressed);
   connect(m_scan, &QScan::scanFailed, this, &MainWindow::scanHasFailed);
-
   m_scan->init();
   QStringList scanners = m_scan->getDevices();
 
   for (int i = 0; i < scanners.size(); i++) {
     QString name = scanners.at(i);
     Device s = m_scan->getDevice(name);
-
     int row = m_scanners->rowCount();
     m_scanners->insertRow(row);
     m_scanners->setItem(row, 0, new QTableWidgetItem(s->name));
@@ -62,19 +58,14 @@ MainWindow::initGui()
   int x = int(w / 2.0);
   int y = int(h / 2.0);
   setGeometry(x, y, 1200, 800);
-
   QFrame* main_frame = new QFrame(this);
   setCentralWidget(main_frame);
-
   QGridLayout* main_layout = new QGridLayout;
   main_frame->setLayout(main_layout);
-
   m_splitter = new QSplitter(this);
-
   m_image = new QLabel(this);
   m_image->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   m_splitter->addWidget(m_image);
-
   QStringList labels;
   labels << "Name"
          << "Vendor"
@@ -82,37 +73,34 @@ MainWindow::initGui()
          << "Type";
   m_scanners = new QTableWidget(this);
   m_scanners->setHorizontalHeaderLabels(labels);
-  m_scanners->horizontalHeader()->setSectionResizeMode(
-    QHeaderView::ResizeToContents);
+  m_scanners->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
   m_scanners->horizontalHeader()->setStretchLastSection(true);
   m_scanners->setColumnCount(4);
   m_scanners->setSelectionMode(QAbstractItemView::SingleSelection);
   m_scanners->setSelectionBehavior(QAbstractItemView::SelectRows);
   m_scanners->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  connect(
-    m_scanners, &QTableWidget::clicked, this, &MainWindow::selectionChanged);
+  connect(m_scanners, &QTableWidget::clicked, this, &MainWindow::selectionChanged);
   m_splitter->addWidget(m_scanners);
-
   main_layout->addWidget(m_splitter, 0, 0);
-
   QFrame* btn_frame = new QFrame(this);
   QHBoxLayout* btn_layout = new QHBoxLayout;
   btn_frame->setLayout(btn_layout);
   main_layout->addWidget(btn_frame, 1, 0);
-
   m_select_btn = new QPushButton(QStringLiteral("Select Scanner"), this);
   m_select_btn->setEnabled(false);
-  connect(
-    m_select_btn, &QPushButton::clicked, this, &MainWindow::selectScanner);
+  connect(m_select_btn, &QPushButton::clicked, this, &MainWindow::selectScanner);
   btn_layout->addWidget(m_select_btn);
+  m_geometry_btn = new QPushButton("Get geometry", this);
+  m_geometry_btn->setEnabled(false);
+  connect(m_geometry_btn, &QPushButton::clicked, this, &MainWindow::geometry);
+  btn_layout->addWidget(m_geometry_btn);
   m_scan_btn = new QPushButton(QStringLiteral("Start Scanning"), this);
   m_scan_btn->setEnabled(false);
   connect(m_scan_btn, &QPushButton::clicked, this, &MainWindow::startScanning);
   btn_layout->addWidget(m_scan_btn);
   m_cancel_btn = new QPushButton(QStringLiteral("Cancel Scanning"), this);
   m_cancel_btn->setEnabled(false);
-  connect(
-    m_cancel_btn, &QPushButton::clicked, this, &MainWindow::cancelScanning);
+  connect(m_cancel_btn, &QPushButton::clicked, this, &MainWindow::cancelScanning);
   btn_layout->addWidget(m_cancel_btn);
   m_close_btn = new QPushButton(QStringLiteral("Close"), this);
   btn_layout->addWidget(m_close_btn);
@@ -157,6 +145,7 @@ MainWindow::selectScanner()
 {
   if (m_scan->openDevice(m_selected_name)) {
     m_scan_btn->setEnabled(true);
+    m_geometry_btn->setEnabled(true);
 
   } else {
     m_logger->debug(QString("Unable to open %1").arg(m_selected_name));
@@ -167,6 +156,7 @@ void
 MainWindow::startScanning()
 {
   m_cancel_btn->setEnabled(true);
+
   if (m_scan->startScanning(m_selected_name)) {
   }
 }
@@ -182,8 +172,7 @@ MainWindow::scanIsCompleted(Image image)
 {
   int w = m_image->width();
   int h = m_image->height();
-  QPixmap pixmap =
-    QPixmap::fromImage(*image.data()).scaled(w, h, Qt::KeepAspectRatio);
+  QPixmap pixmap = QPixmap::fromImage(*image.data()).scaled(w, h, Qt::KeepAspectRatio);
   m_image->setPixmap(pixmap);
   //  m_image->adjustSize();
 }
@@ -194,4 +183,8 @@ MainWindow::scanHasFailed()
 
 void
 MainWindow::scanProgressed(double)
+{}
+
+void
+MainWindow::geometry()
 {}

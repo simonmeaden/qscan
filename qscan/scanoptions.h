@@ -3,9 +3,13 @@
 
 #include <QMap>
 #include <QObject>
+#include <QRect>
 
 #include <sane/sane.h>
 #include <sane/saneopts.h>
+
+class ScanDevice;
+typedef QSharedPointer<ScanDevice> Device;
 
 enum ScanMode
 {
@@ -31,44 +35,126 @@ public:
   explicit ScanOptions(QObject* parent = nullptr);
   ~ScanOptions();
 
-  int dpi() const;
-  void setDpi(int dpi);
+  int
+  getScannerValue(Device device, int option_id);
 
-  ScanMode mode() const;
-  void setMode(const ScanMode& mode);
+  int
+  dpi() const;
+  void
+  setDpi(int dpi);
 
-  int depth() const;
-  void setDepth(int depth);
+  ScanMode
+  scanMode() const;
+  void
+  setScanMode(const ScanMode& scanMode);
 
-  ScanType type() const;
-  void setType(const ScanType& type);
+  int
+  depth() const;
+  void
+  setDepth(int depth);
 
-  int paperWidth() const;
-  void setPaperWidth(int paperWidth);
+  ScanType
+  type() const;
+  void
+  setType(const ScanType& type);
 
-  int paperHeight() const;
-  void setPaperHeight(int paperHeight);
+  int
+  paperWidth() const;
+  void
+  setPaperWidth(int paperWidth);
 
-  int brightness() const;
-  void setBrightness(int brightness);
+  int
+  paperHeight() const;
+  void
+  setPaperHeight(int paperHeight);
 
-  int contrast() const;
-  void setContrast(int contrast);
+  int
+  brightness() const;
+  void
+  setBrightness(int brightness);
 
-  int pageDelay() const;
-  void setPageDelay(int pageDelay);
+  int
+  contrast() const;
+  void
+  setContrast(int contrast);
+
+  int
+  pageDelay() const;
+  void
+  setPageDelay(int pageDelay);
+
+  int
+  topLeftX() const;
+  void
+  setTopLeftX(int topLeftX);
+
+  int
+  topLeftY() const;
+  void
+  setTopLeftY(int topLeftY);
+
+  int
+  bottomRightX() const;
+  void
+  setBottomRightX(int bottomRightX);
+
+  int
+  bottomRightY() const;
+  void
+  setBottomRightY(int bottomRightY);
+
+  QRect
+  geometry();
+  void
+  setGeometry(QRect geometry);
+
+  int
+  scanResolutionX() const;
+  void
+  setScanResolutionX(int scan_resolution_x);
+
+  int
+  scanResolutionY() const;
+  void
+  setScanResolutionY(int scan_resolution_y);
+
+  int
+  scanResolution() const;
+  void
+  setScanResolution(int scan_resolution);
+
+  QString
+  name() const;
+  void
+  setName(const QString& name);
+
+  QString
+  description() const;
+  void
+  setDescription(const QString& description);
+
+  QString
+  title() const;
+  void
+  setTitle(const QString& title);
 
 protected:
+  QString m_name, m_description, m_title;
   int m_dpi;
   ScanMode m_mode;
   int m_depth;
   ScanType m_type;
   int m_paper_width;
   int m_paper_height;
-  int m_brightness;
-  int m_contrast;
+  int m_brightness = -1;
+  int m_contrast = -1;
   int m_page_delay;
+  QRect m_geometry;
+  int m_scan_resolution = -1;
+  int m_scan_resolution_x = -1;
+  int m_scan_resolution_y = -1;
 };
 typedef QSharedPointer<ScanOptions> Options;
+typedef QMap<QString, Options> OptionsMap;
 
 #endif // SCANOPTIONS_H

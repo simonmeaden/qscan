@@ -33,18 +33,27 @@ public:
   explicit QScan(QObject* parent = nullptr);
   ~QScan() {}
 
-  bool init();
-  QStringList getDevices();
-  Device getDevice(QString name);
-  bool openDevice(QString name);
-  bool startScanning(QString name);
-  void cancelScan(QString name);
-  ScanOptions options();
+  bool
+  init();
+  QStringList
+  getDevices();
+  Device
+  getDevice(QString device_name);
+  bool
+  openDevice(QString device_name);
+  bool
+  startScanning(QString device_name);
+  void
+  cancelScan(QString device_name);
+  Options
+  options(QString device_name);
 
 signals:
   void scanCompleted(Image);
-  void scanFailed();
-  void scanProgress(double);
+  void
+  scanFailed();
+  void
+  scanProgress(double);
 
 protected:
   Log4Qt::Logger* m_logger;
@@ -52,7 +61,7 @@ protected:
   ScanInterface* m_lib;
 
 #elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
-#include "win/scantwain.h"
+#  include "win/scantwain.h"
 
 #endif
   Device m_current_device;

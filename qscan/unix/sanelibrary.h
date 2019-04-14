@@ -23,25 +23,25 @@
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
 
-#include <QImage>
-#include <QMutexLocker>
-#include <QThread>
+#  include <QImage>
+#  include <QMutexLocker>
+#  include <QThread>
 
-#include <sane/sane.h>
-#include <sane/saneopts.h>
+#  include <sane/sane.h>
+#  include <sane/saneopts.h>
 
-#include <log4qt/consoleappender.h>
-#include <log4qt/logger.h>
-#include <log4qt/logmanager.h>
-#include <log4qt/ttcclayout.h>
+#  include <log4qt/consoleappender.h>
+#  include <log4qt/logger.h>
+#  include <log4qt/logmanager.h>
+#  include <log4qt/ttcclayout.h>
 
-#include "scaninterface.h"
-#include "scanoptions.h"
-#include "version.h"
+#  include "scaninterface.h"
+#  include "scanoptions.h"
+#  include "version.h"
 
-#ifndef PATH_MAX
-#define PATH_MAX 1024
-#endif
+#  ifndef PATH_MAX
+#    define PATH_MAX 1024
+#  endif
 
 class SaneLibrary final : public ScanLibrary
 {
@@ -54,34 +54,71 @@ public:
   explicit SaneLibrary(QObject* parent = nullptr);
   ~SaneLibrary() override;
 
-  bool init() override;
+  bool
+  init() override;
 
-  QStringList getDevices() override;
-  Device getDevice(QString name) override;
-  bool openDevice(QString device) override;
-  bool startScan(QString name) override;
-  void cancelScan(QString name) override;
-  void exit();
-  Options options(QString name) override;
-  void setOptions(QString name, Options options) override;
+  // ScanInterface interface
+  QStringList
+  getDevices() override;
+  Device
+  getDevice(QString device_name) override;
+  Options
+  options(QString device_name) override;
+  bool
+  openDevice(QString device_name) override;
+  bool
+  startScan(QString device_name) override;
+  void
+  cancelScan(QString device_name) override;
+  void
+  exit();
+  void
+  getScannerOptions(QString device_name) override;
+  //  void
+  //  setOptions(QString device_name, Options getScannerOptions) override;
+  QRect
+  geometry(QString device_name) override;
+  int
+  contrast(QString device_name) override;
+  int
+  brightness(QString device_name) override;
 
-  const Version& version() const;
+  const Version&
+  version() const;
 
 protected:
-  SANE_Status doScan(const char* fileName);
+  SANE_Status
+  doScan(const char* fileName);
   Log4Qt::Logger* m_logger;
   DeviceMap m_scanners;
-  ScanOptions m_options;
+  OptionsMap m_options;
   QImage* m_image;
   Version m_version;
 
+  int m_brightness_opt = -1;
+  int m_resolution_opt = -1;
+  int m_resolution_opt_x = -1;
+  int m_resolution_opt_y = -1;
+  int m_tl_x_opt = -1;
+  int m_tl_y_opt = -1;
+  int m_br_x_opt = -1;
+  int m_br_y_opt = -1;
+  int m_contrast_opt = -1;
+  //  int m_resolution_x_opt = -1;
+  //  int m_resolution_y_opt = -1;
+  int m_source_opt = -1;
+  int m_mode_opt = -1;
+
   static QMutex _mutex;
 
-  void scan(Device device);
+  void
+  scan(Device device);
 
-  static void callbackWrapper(SANE_String_Const resource,
-                              SANE_Char* name,
-                              SANE_Char* password);
+  static void
+  callbackWrapper(SANE_String_Const resource, SANE_Char* name, SANE_Char* password);
+
+  // ScanInterface interface
+public:
 };
 
 #endif

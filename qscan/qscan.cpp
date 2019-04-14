@@ -19,9 +19,9 @@
 #include "qscan.h"
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
-#include "unix/sanelibrary.h"
+#  include "unix/sanelibrary.h"
 #elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
-#include "unix/scantwain.h"
+#  include "unix/scantwain.h"
 #endif
 
 QScan::QScan(QObject* parent)
@@ -36,18 +36,10 @@ QScan::QScan(QObject* parent)
   m_lib = new ScanTwain(this);
 
 #endif
-  connect(static_cast<ScanLibrary*>(m_lib),
-          &ScanLibrary::scanCompleted,
-          this,
-          &QScan::scanCompleted);
-  connect(static_cast<ScanLibrary*>(m_lib),
-          &ScanLibrary::scanFailed,
-          this,
-          &QScan::scanFailed);
-  connect(static_cast<ScanLibrary*>(m_lib),
-          &ScanLibrary::scanProgress,
-          this,
-          &QScan::scanProgress);
+  connect(
+    static_cast<ScanLibrary*>(m_lib), &ScanLibrary::scanCompleted, this, &QScan::scanCompleted);
+  connect(static_cast<ScanLibrary*>(m_lib), &ScanLibrary::scanFailed, this, &QScan::scanFailed);
+  connect(static_cast<ScanLibrary*>(m_lib), &ScanLibrary::scanProgress, this, &QScan::scanProgress);
 }
 
 bool
@@ -64,24 +56,24 @@ QScan::getDevices()
 }
 
 Device
-QScan::getDevice(QString name)
+QScan::getDevice(QString device_name)
 {
-  return m_lib->getDevice(name);
+  return m_lib->getDevice(device_name);
 }
 
 bool
-QScan::openDevice(QString name)
+QScan::openDevice(QString device_name)
 {
-  Device device = m_lib->getDevice(name);
+  Device device = m_lib->getDevice(device_name);
   m_logger->info(QString("Name: %1, vendor: %2, model: %3, type: %4")
                    .arg(device->name)
                    .arg(device->model)
                    .arg(device->vendor)
                    .arg(device->type));
 
-  if (m_lib->openDevice(name)) {
+  if (m_lib->openDevice(device_name)) {
     m_current_device = device;
-    Options o = m_lib->options(name);
+    m_lib->getScannerOptions(device_name);
     return true;
   }
 
@@ -89,14 +81,20 @@ QScan::openDevice(QString name)
 }
 
 bool
-QScan::startScanning(QString name)
+QScan::startScanning(QString device_name)
 {
-  if (m_lib->startScan(name)) {
+  if (m_lib->startScan(device_name)) {
   }
 }
 
 void
-QScan::cancelScan(QString name)
+QScan::cancelScan(QString device_name)
 {
-  m_lib->cancelScan(name);
+  m_lib->cancelScan(device_name);
+}
+
+Options
+QScan::options(QString device_name)
+{
+  return m_lib->options(device_name);
 }
