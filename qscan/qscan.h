@@ -1,6 +1,7 @@
 /*
     Copyright © Simon Meaden 2019.
-    This file is part of the QScan cpp library.
+    This file was developed as part of the QScan cpp library but could
+    easily be used elsewhere.
 
     QScan is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,38 +34,29 @@ public:
   explicit QScan(QObject* parent = nullptr);
   ~QScan() {}
 
-  bool
-  init();
-  QStringList
-  getDevices();
-  Device
-  getDevice(QString device_name);
-  bool
-  openDevice(QString device_name);
-  bool
-  startScanning(QString device_name);
-  void
-  cancelScan(QString device_name);
-  Options
-  options(QString device_name);
+  bool init();
+  QStringList getDevices();
+  ScanDevice* getDevice(QString device_name);
+  bool openDevice(QString device_name);
+  bool startScanning(QString device_name);
+  void cancelScan(QString device_name);
+  ScanOptions options(QString device_name);
 
 signals:
-  void scanCompleted(Image);
-  void
-  scanFailed();
-  void
-  scanProgress(double);
+  void scanCompleted(const QImage&);
+  void scanFailed();
+  void scanProgress(const int&);
 
 protected:
   Log4Qt::Logger* m_logger;
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
-  ScanInterface* m_lib;
+  ScanInterface* m_scan_lib;
 
 #elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
 #  include "win/scantwain.h"
-
+  // TODO handle special twain shit
 #endif
-  Device m_current_device;
+
 };
 
 #endif // SCAN_H

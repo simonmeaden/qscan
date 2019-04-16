@@ -1,6 +1,7 @@
 /*
     Copyright © Simon Meaden 2019.
-    This file is part of the QScan cpp library.
+    This file was developed as part of the QScan cpp library but could
+    easily be used elsewhere.
 
     QScan is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,17 +25,17 @@
 #include <QStringList>
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
-#  include <sane/sane.h>
+  #include <sane/sane.h>
 #endif
 
 #include "scanoptions.h"
 
 typedef QSharedPointer<QImage> Image;
 
-class ScanDevice final
+class ScanDevice : public QObject
 {
 public:
-  ScanDevice() {}
+  ScanDevice(QObject* parent = nullptr) : QObject(parent) {}
   ~ScanDevice() {}
 
   QString name;
@@ -47,8 +48,8 @@ public:
   // TODO
 #endif
 };
-typedef QSharedPointer<ScanDevice> Device;
-typedef QMap<QString, Device> DeviceMap;
+//typedef QSharedPointer<ScanDevice> Device;
+typedef QMap<QString, ScanDevice*> DeviceMap;
 
 class ScanOptions;
 
@@ -73,28 +74,17 @@ public:
 
   virtual ~ScanInterface() {}
 
-  virtual bool
-  init() = 0;
-  virtual QStringList
-  getDevices() = 0;
-  virtual Device
-  getDevice(QString device_name) = 0;
-  virtual bool
-  openDevice(QString device_name) = 0;
-  virtual bool
-  startScan(QString device_name) = 0;
-  virtual Options
-  options(QString device_name) = 0;
-  virtual void
-  cancelScan(QString device_name) = 0;
-  virtual void
-  getScannerOptions(QString device_name) = 0;
-  virtual QRect
-  geometry(QString device_name) = 0;
-  virtual int
-  contrast(QString device_name) = 0;
-  virtual int
-  brightness(QString device_name) = 0;
+  virtual bool init() = 0;
+  virtual QStringList getDevices() = 0;
+  virtual ScanDevice* getDevice(QString device_name) = 0;
+  virtual bool openDevice(QString device_name) = 0;
+  virtual bool startScan(QString device_name) = 0;
+  virtual ScanOptions options(QString device_name) = 0;
+  virtual void cancelScan(QString device_name) = 0;
+  virtual void getAvailableScannerOptions(QString device_name) = 0;
+  virtual QRect geometry(QString device_name) = 0;
+  virtual int contrast(QString device_name) = 0;
+  virtual int brightness(QString device_name) = 0;
 
 protected:
 };
@@ -104,17 +94,13 @@ class ScanLibrary
   , public ScanInterface
 {
   Q_OBJECT
-public:
-  ScanLibrary(QObject* parent = nullptr);
+public: ScanLibrary(QObject* parent = nullptr);
   ~ScanLibrary();
 
 signals:
-  void
-  scanCompleted(Image image);
-  void
-  scanFailed();
-  void
-  scanProgress(double);
+  void scanCompleted(const QImage& image);
+  void scanFailed();
+  void scanProgress(const int&);
 };
 
 #endif // SCANLIB_H

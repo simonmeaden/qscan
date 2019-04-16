@@ -1,6 +1,7 @@
 /*
     Copyright © Simon Meaden 2019.
-    This file is part of the QScan cpp library.
+    This file was developed as part of the QScan cpp library but could
+    easily be used elsewhere.
 
     QScan is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,14 +19,11 @@
 */
 #include "twainlibrary.h"
 
-#if defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
 
 ScanTwain::ScanTwain(QObject* parent)
   : ScanLibrary(parent)
 {}
 
-bool
-ScanTwain::init()
+bool ScanTwain::init()
 {}
 
-#endif

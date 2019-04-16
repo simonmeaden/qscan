@@ -21,6 +21,53 @@
 #include "qscan.h"
 #include "scaninterface.h"
 
+/*TextEditIoDevice
+  =============================================================================*/
+TextEditIoDevice::TextEditIoDevice(QPlainTextEdit* text_edit, QObject* parent)
+  : QIODevice(parent), m_text_edit(text_edit)
+{
+  open(QIODevice::WriteOnly | QIODevice::Text);
+}
+
+TextEditIoDevice::~TextEditIoDevice() {}
+
+void TextEditIoDevice::setTextEdit(QPlainTextEdit* text_edit)
+{
+  m_text_edit = text_edit;
+
+  if (!m_pre_data.isEmpty()) {
+    m_text_edit->setPlainText(m_pre_data);
+    m_pre_data.clear();
+  }
+}
+
+qint64 TextEditIoDevice::readData(char*, qint64)
+{
+  return 0;
+}
+
+qint64 TextEditIoDevice::writeData(const char* data, qint64 maxSize)
+{
+  if (m_text_edit) {
+    QString d(data);
+    d = d.trimmed();
+
+    if (d.endsWith("\n")) {
+      d = d.left(d.length() - 1);
+    }
+
+    m_text_edit->appendPlainText(d);
+
+  } else {
+    m_pre_data = QString(data);
+  }
+
+  return maxSize;
+}
+
+/*MainWindow
+  =============================================================================*/
+
 MainWindow::MainWindow(QWidget* parent)
   : QMainWindow(parent)
   , m_selected(false)
@@ -28,15 +75,15 @@ MainWindow::MainWindow(QWidget* parent)
   m_logger = Log4Qt::Logger::logger(QStringLiteral("Scanner"));
   initGui();
   m_scan = new QScan(this);
-  connect(m_scan, &QScan::scanCompleted, this, &MainWindow::scanIsCompleted);
-  connect(m_scan, &QScan::scanProgress, this, &MainWindow::scanProgressed);
+  connect(m_scan, &QScan::scanCompleted, m_image_editor, &ScanEditor::setImage);
+  connect(m_scan, &QScan::scanProgress, m_image_editor, &ScanEditor::setScanProgress);
   connect(m_scan, &QScan::scanFailed, this, &MainWindow::scanHasFailed);
   m_scan->init();
   QStringList scanners = m_scan->getDevices();
 
   for (int i = 0; i < scanners.size(); i++) {
     QString name = scanners.at(i);
-    Device s = m_scan->getDevice(name);
+    ScanDevice* s = m_scan->getDevice(name);
     int row = m_scanners->rowCount();
     m_scanners->insertRow(row);
     m_scanners->setItem(row, 0, new QTableWidgetItem(s->name));
@@ -48,8 +95,14 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow() {}
 
-void
-MainWindow::initGui()
+void MainWindow::setLogTextEdit(QPlainTextEdit* log_edit)
+{
+  m_log_edit = log_edit;
+  m_h_splitter->replaceWidget(1, m_log_edit);
+  m_empty_edit->deleteLater();
+}
+
+void MainWindow::initGui()
 {
   QScreen* screen = QGuiApplication::primaryScreen();
   QSize size = screen->availableSize();
@@ -60,17 +113,16 @@ MainWindow::initGui()
   setGeometry(x, y, 1200, 800);
   QFrame* main_frame = new QFrame(this);
   setCentralWidget(main_frame);
-  QGridLayout* main_layout = new QGridLayout;
-  main_frame->setLayout(main_layout);
-  m_splitter = new QSplitter(this);
-  m_image = new QLabel(this);
-  m_image->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  m_splitter->addWidget(m_image);
+  m_main_layout = new QGridLayout;
+  main_frame->setLayout(m_main_layout);
+  //
+  m_image_editor = new ScanEditor(this);
+  m_image_editor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  connect(m_image_editor, &ScanEditor::scanCancelled, this,
+          &MainWindow::cancelScanning);
+  //
   QStringList labels;
-  labels << "Name"
-         << "Vendor"
-         << "Model"
-         << "Type";
+  labels << "Name" << "Vendor" << "Model" << "Type";
   m_scanners = new QTableWidget(this);
   m_scanners->setHorizontalHeaderLabels(labels);
   m_scanners->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
@@ -80,45 +132,43 @@ MainWindow::initGui()
   m_scanners->setSelectionBehavior(QAbstractItemView::SelectRows);
   m_scanners->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   connect(m_scanners, &QTableWidget::clicked, this, &MainWindow::selectionChanged);
-  m_splitter->addWidget(m_scanners);
-  main_layout->addWidget(m_splitter, 0, 0);
-  QFrame* btn_frame = new QFrame(this);
-  QHBoxLayout* btn_layout = new QHBoxLayout;
-  btn_frame->setLayout(btn_layout);
-  main_layout->addWidget(btn_frame, 1, 0);
-  m_select_btn = new QPushButton(QStringLiteral("Select Scanner"), this);
-  m_select_btn->setEnabled(false);
-  connect(m_select_btn, &QPushButton::clicked, this, &MainWindow::selectScanner);
-  btn_layout->addWidget(m_select_btn);
-  m_geometry_btn = new QPushButton("Get geometry", this);
-  m_geometry_btn->setEnabled(false);
-  connect(m_geometry_btn, &QPushButton::clicked, this, &MainWindow::geometry);
-  btn_layout->addWidget(m_geometry_btn);
+  connect(m_scanners, &QTableWidget::doubleClicked, this, &MainWindow::doubleClicked);
+  //
+  m_empty_edit = new QPlainTextEdit(this);
+  //
+  m_v_splitter = new QSplitter(Qt::Vertical);
+  m_v_splitter->insertWidget(0, m_scanners);
+  m_v_splitter->insertWidget(1, m_empty_edit);
+  //  m_v_splitter->setSizes(QList<int>({INT_MAX, INT_MAX}));
+  //
+  m_h_splitter = new QSplitter(Qt::Horizontal);
+  m_h_splitter->insertWidget(0, m_image_editor);
+  m_h_splitter->insertWidget(1, m_v_splitter);
+  //  m_h_splitter->setSizes(QList<int>({INT_MAX, INT_MAX}));
+  //
+  m_main_layout->addWidget(m_h_splitter, 0, 0, 1, 2);
+  //
   m_scan_btn = new QPushButton(QStringLiteral("Start Scanning"), this);
   m_scan_btn->setEnabled(false);
+  connect(m_scan_btn, &QPushButton::clicked, m_image_editor, &ScanEditor::scanningStarted);
   connect(m_scan_btn, &QPushButton::clicked, this, &MainWindow::startScanning);
-  btn_layout->addWidget(m_scan_btn);
-  m_cancel_btn = new QPushButton(QStringLiteral("Cancel Scanning"), this);
-  m_cancel_btn->setEnabled(false);
-  connect(m_cancel_btn, &QPushButton::clicked, this, &MainWindow::cancelScanning);
-  btn_layout->addWidget(m_cancel_btn);
+  m_main_layout->addWidget(m_scan_btn, 1, 0);
   m_close_btn = new QPushButton(QStringLiteral("Close"), this);
-  btn_layout->addWidget(m_close_btn);
-  //  connect(
-  //    m_close_btn, &QPushButton::clicked, this, &MainWindow::cancelScanning);
+  m_main_layout->addWidget(m_close_btn, 1, 1);
   connect(m_close_btn, &QPushButton::clicked, this, &MainWindow::close);
 }
 
-void
-MainWindow::resizeEvent(QResizeEvent* /*event*/)
+void MainWindow::resizeEvent(QResizeEvent* /*event*/)
 {
-  QSize size = m_splitter->size();
+  QSize size = m_h_splitter->size();
   int w = int(size.width() / 2.0);
-  m_splitter->setSizes(QList<int>({ w, size.width() - w }));
+  m_h_splitter->setSizes(QList<int>({ w, size.width() - w }));
+  size = m_v_splitter->size();
+  int h = int(size.height() / 2.0);
+  m_h_splitter->setSizes(QList<int>({ w, size.height() - h }));
 }
 
-void
-MainWindow::selectionChanged()
+void MainWindow::selectionChanged()
 {
   QObject* obj = sender();
 
@@ -135,56 +185,55 @@ MainWindow::selectionChanged()
     }
   }
 
-  if (m_selected) {
-    m_select_btn->setEnabled(true);
-  }
+  //  if (m_selected) {
+  //    m_select_btn->setEnabled(true);
+  //  }
 }
 
-void
-MainWindow::selectScanner()
+void MainWindow::selectScanner()
 {
   if (m_scan->openDevice(m_selected_name)) {
     m_scan_btn->setEnabled(true);
-    m_geometry_btn->setEnabled(true);
+    //    m_geometry_btn->setEnabled(true);
 
   } else {
     m_logger->debug(QString("Unable to open %1").arg(m_selected_name));
   }
 }
 
-void
-MainWindow::startScanning()
+void MainWindow::startScanning()
 {
-  m_cancel_btn->setEnabled(true);
-
   if (m_scan->startScanning(m_selected_name)) {
+    // TODO
   }
 }
 
-void
-MainWindow::cancelScanning()
+void MainWindow::cancelScanning()
 {
   m_scan->cancelScan(m_selected_name);
 }
 
-void
-MainWindow::scanIsCompleted(Image image)
+void MainWindow::scanHasFailed()
+{}
+
+void MainWindow::scanProgressed(const int&)
+{}
+
+void MainWindow::geometry()
+{}
+
+void MainWindow::doubleClicked(const QModelIndex& index)
 {
-  int w = m_image->width();
-  int h = m_image->height();
-  QPixmap pixmap = QPixmap::fromImage(*image.data()).scaled(w, h, Qt::KeepAspectRatio);
-  m_image->setPixmap(pixmap);
-  //  m_image->adjustSize();
+  int row = index.row();
+  QString data = m_scanners->item(row, 0)->text();
+
+  if (m_scan->openDevice(data)) {
+    m_selected_name = data;
+    m_scan_btn->setEnabled(true);
+    //    m_geometry_btn->setEnabled(true);
+
+  } else {
+    m_logger->debug(QString("Unable to open %1").arg(m_selected_name));
+  }
 }
 
-void
-MainWindow::scanHasFailed()
-{}
-
-void
-MainWindow::scanProgressed(double)
-{}
-
-void
-MainWindow::geometry()
-{}

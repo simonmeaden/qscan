@@ -1,3 +1,22 @@
+/*
+    Copyright © Simon Meaden 2019.
+    This file was developed as part of the QScan cpp library but could
+    easily be used elsewhere.
+
+    QScan is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    QScan is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with QScan.  If not, see <http://www.gnu.org/licenses/>.
+    It is also available on request from Simon Meaden simonmeaden@sky.com.
+*/
 #ifndef SCANOPTIONS_H
 #define SCANOPTIONS_H
 
@@ -32,116 +51,79 @@ class ScanOptions : public QObject
 {
   Q_OBJECT
 public:
-  explicit ScanOptions(QObject* parent = nullptr);
+  ScanOptions(QObject* parent = nullptr);
+  ScanOptions(const ScanOptions& other);
   ~ScanOptions();
 
-  int
-  getScannerValue(Device device, int option_id);
+  ScanOptions operator = (const ScanOptions rhs);
 
-  int
-  dpi() const;
-  void
-  setDpi(int dpi);
+  int getIntScannerValue(const ScanDevice* device, const int option_id, const SANE_Option_Descriptor* opt);
+  QStringList getStringScannerValue(const ScanDevice* device, const int option_id, const SANE_Option_Descriptor* opt);
 
-  ScanMode
-  scanMode() const;
-  void
-  setScanMode(const ScanMode& scanMode);
+  int dpi() const;
+  void setDpi(int dpi);
 
-  int
-  depth() const;
-  void
-  setDepth(int depth);
+  QStringList scanModes() const;
+  void setScanModes(const QStringList& modes);
 
-  ScanType
-  type() const;
-  void
-  setType(const ScanType& type);
+  QStringList sources() const;
+  void setSources(const QStringList& sources);
 
-  int
-  paperWidth() const;
-  void
-  setPaperWidth(int paperWidth);
+  int depth() const;
+  void setDepth(int depth);
 
-  int
-  paperHeight() const;
-  void
-  setPaperHeight(int paperHeight);
+  ScanType type() const;
+  void setType(const ScanType& type);
 
-  int
-  brightness() const;
-  void
-  setBrightness(int brightness);
+  int paperWidth() const;
+  void setPaperWidth(int paperWidth);
 
-  int
-  contrast() const;
-  void
-  setContrast(int contrast);
+  int paperHeight() const;
+  void setPaperHeight(int paperHeight);
 
-  int
-  pageDelay() const;
-  void
-  setPageDelay(int pageDelay);
+  int brightness() const;
+  void setBrightness(int brightness);
 
-  int
-  topLeftX() const;
-  void
-  setTopLeftX(int topLeftX);
+  int contrast() const;
+  void setContrast(int contrast);
 
-  int
-  topLeftY() const;
-  void
-  setTopLeftY(int topLeftY);
+  int pageDelay() const;
+  void setPageDelay(int pageDelay);
 
-  int
-  bottomRightX() const;
-  void
-  setBottomRightX(int bottomRightX);
+  int topLeftX() const;
+  void setTopLeftX(int topLeftX);
 
-  int
-  bottomRightY() const;
-  void
-  setBottomRightY(int bottomRightY);
+  int topLeftY() const;
+  void setTopLeftY(int topLeftY);
 
-  QRect
-  geometry();
-  void
-  setGeometry(QRect geometry);
+  int bottomRightX() const;
+  void setBottomRightX(int bottomRightX);
 
-  int
-  scanResolutionX() const;
-  void
-  setScanResolutionX(int scan_resolution_x);
+  int bottomRightY() const;
+  void setBottomRightY(int bottomRightY);
 
-  int
-  scanResolutionY() const;
-  void
-  setScanResolutionY(int scan_resolution_y);
+  QRect geometry();
+  void setGeometry(QRect geometry);
 
-  int
-  scanResolution() const;
-  void
-  setScanResolution(int scan_resolution);
+  int scanResolutionX() const;
+  void setScanResolutionX(int scan_resolution_x);
 
-  QString
-  name() const;
-  void
-  setName(const QString& name);
+  int scanResolutionY() const;
+  void setScanResolutionY(int scan_resolution_y);
 
-  QString
-  description() const;
-  void
-  setDescription(const QString& description);
+  int scanResolution() const;
+  void setScanResolution(int scan_resolution);
 
-  QString
-  title() const;
-  void
-  setTitle(const QString& title);
+  int optionId(QString name) const;
+  void setOptionId(const QString& name, int option_id);
+
+  void copyData(const ScanOptions& other);
 
 protected:
-  QString m_name, m_description, m_title;
+  //  QString m_name, m_description, m_title;
   int m_dpi;
-  ScanMode m_mode;
+  QStringList m_modes;
+  QStringList m_sources;
   int m_depth;
   ScanType m_type;
   int m_paper_width;
@@ -153,8 +135,11 @@ protected:
   int m_scan_resolution = -1;
   int m_scan_resolution_x = -1;
   int m_scan_resolution_y = -1;
+  QMap<QString, int> m_option_pairs;
 };
-typedef QSharedPointer<ScanOptions> Options;
-typedef QMap<QString, Options> OptionsMap;
+//typedef QSharedPointer<ScanOptions> Options;
+typedef QMap<QString, ScanOptions> OptionsMap;
+
+Q_DECLARE_METATYPE(ScanOptions)
 
 #endif // SCANOPTIONS_H

@@ -17,10 +17,33 @@
     along with QScan.  If not, see <http://www.gnu.org/licenses/>.
     It is also available on request from Simon Meaden simonmeaden@sky.com.
 */
-#include "scaninterface.h"
+#ifndef SCANEDITOR_H
+#define SCANEDITOR_H
 
-ScanLibrary::ScanLibrary(QObject* parent)
-  : QObject(parent)
-{}
+#include <QFrame>
+#include <QHBoxLayout>
+#include <QImage>
+#include <QLabel>
+#include <QProgressDialog>
 
-ScanLibrary::~ScanLibrary() {}
+#include "qscan_global.h"
+
+class SCANSHARED_EXPORT ScanEditor : public QFrame
+{
+  Q_OBJECT
+public: ScanEditor(QWidget* parent = nullptr);
+  ~ScanEditor();
+
+  void setImage(const QImage& image);
+  void setScanProgress(const int& progress);
+  void scanningStarted();
+
+signals:
+  void scanCancelled();
+
+protected:
+  QLabel* m_image;
+  QProgressDialog* m_prog_dlg;
+};
+
+#endif // SCANEDITOR_H

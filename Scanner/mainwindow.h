@@ -24,8 +24,28 @@
 
 #include <log4qt/logger.h>
 
+#include "scaneditor.h"
+
 class QScan;
 typedef QSharedPointer<QImage> Image;
+
+class TextEditIoDevice : public QIODevice
+{
+  Q_OBJECT
+
+public: TextEditIoDevice(QPlainTextEdit* text_edit, QObject* parent = nullptr);
+  ~TextEditIoDevice();
+
+  void setTextEdit(QPlainTextEdit* m_text_edit);
+
+protected:
+  qint64 readData(char* /*data*/, qint64 /*maxSize*/);
+  qint64 writeData(const char* data, qint64 maxSize);
+
+private:
+  QPlainTextEdit* m_text_edit;
+  QString m_pre_data;
+};
 
 class MainWindow : public QMainWindow
 {
@@ -35,42 +55,38 @@ public:
   explicit MainWindow(QWidget* parent = nullptr);
   ~MainWindow();
 
+  void setLogTextEdit(QPlainTextEdit* log_edit);
+
 protected:
   Log4Qt::Logger* m_logger;
   QScan* m_scan;
   QFrame* m_main;
-  QLabel* m_image;
+  QGridLayout* m_main_layout;
+  ScanEditor* m_image_editor;
   QTableWidget* m_scanners;
   QPushButton* m_close_btn;
   QPushButton* m_scan_btn;
-  QPushButton* m_cancel_btn;
-  QPushButton* m_select_btn;
-  QPushButton* m_geometry_btn;
-  QSplitter* m_splitter;
+  QSplitter* m_h_splitter;
+  QSplitter* m_v_splitter;
 
   QString m_selected_name;
   bool m_selected;
+  QTextStream* m_log_stream;
+  QPlainTextEdit* m_empty_edit;
+  QPlainTextEdit* m_log_edit;
 
-  void
-  initGui();
-  void
-  resizeEvent(QResizeEvent*);
-  void
-  selectionChanged();
-  void
-  selectScanner();
-  void
-  startScanning();
-  void
-  cancelScanning();
-  void
-  scanIsCompleted(Image image);
-  void
-  scanHasFailed();
-  void
-  scanProgressed(double);
-  void
-  geometry();
+  void initGui();
+  void resizeEvent(QResizeEvent*);
+  void selectionChanged();
+  void selectScanner();
+  void startScanning();
+  void cancelScanning();
+  //  void
+  //  scanIsCompleted(const QImage& image);
+  void scanHasFailed();
+  void scanProgressed(const int&);
+  void geometry();
+  void doubleClicked(const QModelIndex& index);
 
 private:
 };

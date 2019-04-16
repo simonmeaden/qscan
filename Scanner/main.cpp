@@ -20,23 +20,27 @@
 #include <QApplication>
 #include <QImage>
 #include <QLoggingCategory>
+#include <QTextStream>
+#include <QPlainTextEdit>
 
 #include <log4qt/consoleappender.h>
+#include <log4qt/writerappender.h>
 #include <log4qt/logger.h>
 #include <log4qt/logmanager.h>
 #include <log4qt/ttcclayout.h>
+
+#include "scanoptions.h"
 
 typedef QSharedPointer<QImage> Image;
 Q_DECLARE_METATYPE(Image)
 
 using namespace Log4Qt;
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
+  //
   QApplication a(argc, argv);
-
   qRegisterMetaType<Image>();
-
+  qRegisterMetaType<ScanOptions>();
   LogManager::rootLogger();
   TTCCLayout* p_layout = new TTCCLayout();
   p_layout->setName(QStringLiteral("Logger"));
@@ -46,15 +50,28 @@ main(int argc, char* argv[])
     new ConsoleAppender(p_layout, ConsoleAppender::STDOUT_TARGET);
   p_appender->setName(QStringLiteral("Console"));
   p_appender->activateOptions();
+  //
+  QPlainTextEdit* text_edit = new QPlainTextEdit();
+  TextEditIoDevice* log_io_device = new TextEditIoDevice(text_edit);
+  QTextStream* stream = new QTextStream(log_io_device);
+  WriterAppender* p_writer = new WriterAppender(p_layout, stream);
+  p_writer->setName("StreamWriter");
+  p_writer->activateOptions();
   // Set appender on root logger
   Logger::rootLogger()->addAppender(p_appender);
+  Logger::rootLogger()->addAppender(p_writer);
   Logger::rootLogger()->setLevel(Level::DEBUG_INT);
-
   //  auto* object = new LoggerObject(&a);
   QLoggingCategory::setFilterRules("*.debug=false\n"
                                    "virus.debug=true");
+  //
   MainWindow w;
+  w.setLogTextEdit(text_edit);
   w.show();
-
-  return a.exec();
+  int res =  a.exec();
+  Logger::rootLogger()->removeAppender(p_writer);
+  delete log_io_device;
+  delete stream;
+  delete text_edit;
+  return res;
 }
