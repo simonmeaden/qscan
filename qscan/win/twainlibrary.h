@@ -31,8 +31,8 @@ public:
   ScanTwain(QObject* parent = nullptr);
 
   bool init() override;
-  QStringList getDevices() override;
-  Scanner getDevice(QString name) override;
+  QStringList devices() override;
+  Scanner device(QString name) override;
 };
 
 

@@ -35,12 +35,33 @@ public:
   ~QScan() {}
 
   bool init();
-  QStringList getDevices();
-  ScanDevice* getDevice(QString device_name);
+  QStringList devices();
+  ScanDevice* device(QString device_name);
   bool openDevice(QString device_name);
   bool startScanning(QString device_name);
   void cancelScan(QString device_name);
   ScanOptions options(QString device_name);
+
+  bool topLeftX(ScanDevice* device, int& value);
+  bool setTopLeftX(ScanDevice* device, int value);
+  bool topLeftY(ScanDevice* device, int& value);
+  bool setTopLeftY(ScanDevice* device, int value);
+  bool bottomRightX(ScanDevice* device, int& value);
+  bool setBottomRightX(ScanDevice* device, int value);
+  bool bottomRightY(ScanDevice* device, int& value);
+  bool setBottomRightY(ScanDevice* device, int value);
+  bool contrast(ScanDevice* device, int& value);
+  bool setContrast(ScanDevice* device, int value);
+  bool brightness(ScanDevice* device, int& value);
+  bool setBrightness(ScanDevice* device, int value);
+  bool resolution(ScanDevice* device, int& value);
+  bool setResolution(ScanDevice* device, int value);
+  bool resolutionX(ScanDevice* device, int& value);
+  bool setResolutionX(ScanDevice* device, int value);
+  bool resolutionY(ScanDevice* device, int& value);
+  bool setResolutionY(ScanDevice* device, int value);
+  bool setPreview(ScanDevice* device);
+  bool clearPreview(ScanDevice* device);
 
 signals:
   void scanCompleted(const QImage&);

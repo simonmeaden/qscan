@@ -59,7 +59,7 @@ bool SaneLibrary::init()
   return false;
 }
 
-QStringList SaneLibrary::getDevices()
+QStringList SaneLibrary::devices()
 {
   QMutexLocker locker(&_mutex);
   QStringList list;
@@ -94,7 +94,7 @@ QStringList SaneLibrary::getDevices()
   return list;
 }
 
-ScanDevice* SaneLibrary::getDevice(QString device_name)
+ScanDevice* SaneLibrary::device(QString device_name)
 {
   QMutexLocker locker(&_mutex);
   return m_scanners.value(device_name);
@@ -192,18 +192,6 @@ QRect SaneLibrary::geometry(QString device_name)
 {
   ScanOptions options = m_options.value(device_name);
   return options.geometry();
-}
-
-int SaneLibrary::contrast(QString device_name)
-{
-  ScanOptions options = m_options.value(device_name, nullptr);
-  return options.contrast();
-}
-
-int SaneLibrary::brightness(QString device_name)
-{
-  ScanOptions options = m_options.value(device_name, nullptr);
-  return options.brightness();
 }
 
 const Version& SaneLibrary::version() const

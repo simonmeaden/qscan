@@ -20,23 +20,28 @@
 #ifndef SCANEDITOR_H
 #define SCANEDITOR_H
 
-#include <QFrame>
-#include <QHBoxLayout>
+//#include <QFrame>
+//#include <QHBoxLayout>
 #include <QImage>
-#include <QLabel>
-#include <QProgressDialog>
+//#include <QLabel>
+//#include <QProgressDialog>
+#include <QtWidgets>
 
 #include "qscan_global.h"
+
+class QScan;
 
 class SCANSHARED_EXPORT ScanEditor : public QFrame
 {
   Q_OBJECT
-public: ScanEditor(QWidget* parent = nullptr);
+public: ScanEditor(QScan* scan, QWidget* parent = nullptr);
   ~ScanEditor();
 
   void setImage(const QImage& image);
   void setScanProgress(const int& progress);
   void scanningStarted();
+
+  void setSelectedName(const QString& selected_name);
 
 signals:
   void scanCancelled();
@@ -44,6 +49,43 @@ signals:
 protected:
   QLabel* m_image;
   QProgressDialog* m_prog_dlg;
+  QRubberBand* m_rubber_band;
+  QPoint m_origin;
+  QScan* m_scan_lib;
+  QString m_selected_name;
+  QAction* m_cut_act;
+  QAction* m_copy_act;
+  QAction* m_crop_to_selection_act;
+  QAction* m_crop_to_content_act;
+  QAction* m_rotate_cw_act;
+  QAction* m_rotate_acw_act;
+  QAction* m_rotate_180_act;
+  QAction* m_rotate_act;
+  QAction* m_rescan_act;
+  QAction* m_scale_act;
+  QAction* m_selectall_act;
+
+  bool m_is_selection;
+  bool m_select_all;
+  int m_tl_x, m_tl_y, m_br_x, m_br_y;
+
+  void mousePressEvent(QMouseEvent* event) override;
+  void mouseReleaseEvent(QMouseEvent*) override;
+  void mouseMoveEvent(QMouseEvent* event) override;
+  void contextMenuEvent(QContextMenuEvent* event) override;
+  void selectAll();
+  void rotate180();
+  void rotateCW();
+  void rotateACW();
+  void rotateAngle();
+  void rotateBy(int angle);
+  void cut();
+  void copy();
+  void crop();
+  void cropToContent();
+  void rescan();
+  void scale();
+
 };
 
 #endif // SCANEDITOR_H

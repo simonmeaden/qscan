@@ -45,14 +45,14 @@ bool QScan::init()
   return m_scan_lib->init();
 }
 
-QStringList QScan::getDevices()
+QStringList QScan::devices()
 {
-  return m_scan_lib->getDevices();
+  return m_scan_lib->devices();
 }
 
-ScanDevice* QScan::getDevice(QString device_name)
+ScanDevice* QScan::device(QString device_name)
 {
-  return m_scan_lib->getDevice(device_name);
+  return m_scan_lib->device(device_name);
 }
 
 bool QScan::openDevice(QString device_name)
@@ -79,4 +79,104 @@ void QScan::cancelScan(QString device_name)
 ScanOptions QScan::options(QString device_name)
 {
   return m_scan_lib->options(device_name);
+}
+
+bool QScan::topLeftX(ScanDevice* device, int& value)
+{
+  return m_scan_lib->topLeftX(device, value);
+}
+
+bool QScan::setTopLeftX(ScanDevice* device, int value)
+{
+  return m_scan_lib->setTopLeftX(device, value);
+}
+
+bool QScan::topLeftY(ScanDevice* device, int& value)
+{
+  return m_scan_lib->topLeftY(device, value);
+}
+
+bool QScan::setTopLeftY(ScanDevice* device, int value)
+{
+  return m_scan_lib->setTopLeftY(device, value);
+}
+
+bool QScan::bottomRightX(ScanDevice* device, int& value)
+{
+  return m_scan_lib->bottomRightX(device, value);
+}
+
+bool QScan::setBottomRightX(ScanDevice* device, int value)
+{
+  return m_scan_lib->setBottomRightX(device, value);
+}
+
+bool QScan::bottomRightY(ScanDevice* device, int& value)
+{
+  return m_scan_lib->bottomRightY(device, value);
+}
+
+bool QScan::setBottomRightY(ScanDevice* device, int value)
+{
+  return m_scan_lib->setBottomRightY(device, value);
+}
+
+bool QScan::contrast(ScanDevice* device, int& value)
+{
+  return m_scan_lib->contrast(device, value);
+}
+
+bool QScan::setContrast(ScanDevice* device, int value)
+{
+  return m_scan_lib->setContrast(device, value);
+}
+
+bool QScan::brightness(ScanDevice* device, int& value)
+{
+  return m_scan_lib->brightness(device, value);
+}
+
+bool QScan::setBrightness(ScanDevice* device, int value)
+{
+  return m_scan_lib->setBrightness(device, value);
+}
+
+bool QScan::resolution(ScanDevice* device, int& value)
+{
+  return m_scan_lib->resolution(device, value);
+}
+
+bool QScan::setResolution(ScanDevice* device, int value)
+{
+  return m_scan_lib->setResolution(device, value);
+}
+
+bool QScan::resolutionX(ScanDevice* device, int& value)
+{
+  return m_scan_lib->resolutionX(device, value);
+}
+
+bool QScan::setResolutionX(ScanDevice* device, int value)
+{
+  return m_scan_lib->setResolutionX(device, value);
+}
+
+bool QScan::resolutionY(ScanDevice* device, int& value)
+{
+  return m_scan_lib->resolutionY(device, value);
+}
+
+bool QScan::setResolutionY(ScanDevice* device, int value)
+{
+  return m_scan_lib->setResolutionY(device, value);
+}
+
+bool QScan::setPreview(ScanDevice* device)
+{
+  return m_scan_lib->setPreview(device);
+}
+
+bool QScan::clearPreview(ScanDevice* device)
+{
+  return m_scan_lib->clearPreview(device);
 }

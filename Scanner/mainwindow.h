@@ -59,15 +59,15 @@ public:
 
 protected:
   Log4Qt::Logger* m_logger;
-  QScan* m_scan;
+  QScan* m_scan_lib;
   QFrame* m_main;
   QGridLayout* m_main_layout;
   ScanEditor* m_image_editor;
   QTableWidget* m_scanners;
   QPushButton* m_close_btn;
   QPushButton* m_scan_btn;
-  QSplitter* m_h_splitter;
-  QSplitter* m_v_splitter;
+  //  QSplitter* m_h_splitter;
+  //  QSplitter* m_v_splitter;
 
   QString m_selected_name;
   bool m_selected;
@@ -76,9 +76,9 @@ protected:
   QPlainTextEdit* m_log_edit;
 
   void initGui();
-  void resizeEvent(QResizeEvent*);
+  //  void resizeEvent(QResizeEvent*);
   void selectionChanged();
-  void selectScanner();
+  //  void selectScanner();
   void startScanning();
   void cancelScanning();
   //  void

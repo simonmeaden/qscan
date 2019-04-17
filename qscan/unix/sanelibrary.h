@@ -52,39 +52,36 @@ public:
   bool init() override;
 
   // ScanInterface interface
-  QStringList getDevices() override;
-  ScanDevice* getDevice(QString device_name) override;
+  QStringList devices() override;
+  ScanDevice* device(QString device_name) override;
   ScanOptions options(QString device_name) override;
   bool openDevice(QString device_name) override;
   bool startScan(QString device_name) override;
   void cancelScan(QString device_name) override;
   void exit();
   QRect geometry(QString device_name) override;
-  int contrast(QString device_name) override;
-  int brightness(QString device_name) override;
-
   const Version& version() const;
 
-  bool topLeftX(ScanDevice* device, int& value);
-  bool setTopLeftX(ScanDevice* device, int x);
-  bool topLeftY(ScanDevice* device, int& value);
-  bool setTopLeftY(ScanDevice* device, int x);
-  bool bottomRightX(ScanDevice* device, int& value);
-  bool setBottomRightX(ScanDevice* device, int value);
-  bool bottomRightY(ScanDevice* device, int& value);
-  bool setBottomRightY(ScanDevice* device, int x);
-  bool contrast(ScanDevice* device, int& value);
-  bool setContrast(ScanDevice* device, int value);
-  bool brightness(ScanDevice* device, int& value);
-  bool setBrightness(ScanDevice* device, int value);
-  bool resolution(ScanDevice* device, int& value);
-  bool setResolution(ScanDevice* device, int value);
-  bool resolutionX(ScanDevice* device, int& value);
-  bool setResolutionX(ScanDevice* device, int value);
-  bool resolutionY(ScanDevice* device, int& value);
-  bool setResolutionY(ScanDevice* device, int value);
-  bool setPreview(ScanDevice* device);
-  bool clearPreview(ScanDevice* device);
+  bool topLeftX(ScanDevice* device, int& value) override;
+  bool setTopLeftX(ScanDevice* device, int x) override;
+  bool topLeftY(ScanDevice* device, int& value) override;
+  bool setTopLeftY(ScanDevice* device, int x) override;
+  bool bottomRightX(ScanDevice* device, int& value) override;
+  bool setBottomRightX(ScanDevice* device, int value) override;
+  bool bottomRightY(ScanDevice* device, int& value) override;
+  bool setBottomRightY(ScanDevice* device, int x) override;
+  bool contrast(ScanDevice* device, int& value) override;
+  bool setContrast(ScanDevice* device, int value) override;
+  bool brightness(ScanDevice* device, int& value) override;
+  bool setBrightness(ScanDevice* device, int value) override;
+  bool resolution(ScanDevice* device, int& value) override;
+  bool setResolution(ScanDevice* device, int value) override;
+  bool resolutionX(ScanDevice* device, int& value) override;
+  bool setResolutionX(ScanDevice* device, int value) override;
+  bool resolutionY(ScanDevice* device, int& value) override;
+  bool setResolutionY(ScanDevice* device, int value) override;
+  bool setPreview(ScanDevice* device) override;
+  bool clearPreview(ScanDevice* device) override;
 
 signals:
   void finished();

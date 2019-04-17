@@ -75,16 +75,36 @@ public:
   virtual ~ScanInterface() {}
 
   virtual bool init() = 0;
-  virtual QStringList getDevices() = 0;
-  virtual ScanDevice* getDevice(QString device_name) = 0;
+  virtual QStringList devices() = 0;
+  virtual ScanDevice* device(QString device_name) = 0;
   virtual bool openDevice(QString device_name) = 0;
   virtual bool startScan(QString device_name) = 0;
   virtual ScanOptions options(QString device_name) = 0;
   virtual void cancelScan(QString device_name) = 0;
   virtual void getAvailableScannerOptions(QString device_name) = 0;
   virtual QRect geometry(QString device_name) = 0;
-  virtual int contrast(QString device_name) = 0;
-  virtual int brightness(QString device_name) = 0;
+
+  virtual bool topLeftX(ScanDevice* device, int& value) = 0;
+  virtual bool setTopLeftX(ScanDevice* device, int x) = 0;
+  virtual bool topLeftY(ScanDevice* device, int& value) = 0;
+  virtual bool setTopLeftY(ScanDevice* device, int x) = 0;
+  virtual bool bottomRightX(ScanDevice* device, int& value) = 0;
+  virtual bool setBottomRightX(ScanDevice* device, int value) = 0;
+  virtual bool bottomRightY(ScanDevice* device, int& value) = 0;
+  virtual bool setBottomRightY(ScanDevice* device, int x) = 0;
+  virtual bool contrast(ScanDevice* device, int& value) = 0;
+  virtual bool setContrast(ScanDevice* device, int value) = 0;
+  virtual bool brightness(ScanDevice* device, int& value) = 0;
+  virtual bool setBrightness(ScanDevice* device, int value) = 0;
+  virtual bool resolution(ScanDevice* device, int& value) = 0;
+  virtual bool setResolution(ScanDevice* device, int value) = 0;
+  virtual bool resolutionX(ScanDevice* device, int& value) = 0;
+  virtual bool setResolutionX(ScanDevice* device, int value) = 0;
+  virtual bool resolutionY(ScanDevice* device, int& value) = 0;
+  virtual bool setResolutionY(ScanDevice* device, int value) = 0;
+  virtual bool setPreview(ScanDevice* device) = 0;
+  virtual bool clearPreview(ScanDevice* device) = 0;
+
 
 protected:
 };
@@ -94,7 +114,8 @@ class ScanLibrary
   , public ScanInterface
 {
   Q_OBJECT
-public: ScanLibrary(QObject* parent = nullptr);
+public:
+  ScanLibrary(QObject* parent = nullptr);
   ~ScanLibrary();
 
 signals:
