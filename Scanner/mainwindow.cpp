@@ -24,14 +24,16 @@
 /*TextEditIoDevice
   =============================================================================*/
 TextEditIoDevice::TextEditIoDevice(QPlainTextEdit* text_edit, QObject* parent)
-  : QIODevice(parent), m_text_edit(text_edit)
+  : QIODevice(parent)
+  , m_text_edit(text_edit)
 {
   open(QIODevice::WriteOnly | QIODevice::Text);
 }
 
 TextEditIoDevice::~TextEditIoDevice() {}
 
-void TextEditIoDevice::setTextEdit(QPlainTextEdit* text_edit)
+void
+TextEditIoDevice::setTextEdit(QPlainTextEdit* text_edit)
 {
   m_text_edit = text_edit;
 
@@ -41,12 +43,14 @@ void TextEditIoDevice::setTextEdit(QPlainTextEdit* text_edit)
   }
 }
 
-qint64 TextEditIoDevice::readData(char*, qint64)
+qint64
+TextEditIoDevice::readData(char*, qint64)
 {
   return 0;
 }
 
-qint64 TextEditIoDevice::writeData(const char* data, qint64 maxSize)
+qint64
+TextEditIoDevice::writeData(const char* data, qint64 maxSize)
 {
   if (m_text_edit) {
     QString d(data);
@@ -82,27 +86,36 @@ MainWindow::MainWindow(QWidget* parent)
   QStringList scanners = m_scan_lib->devices();
 
   for (int i = 0; i < scanners.size(); i++) {
-    QString name = scanners.at(i);
-    ScanDevice* s = m_scan_lib->device(name);
+    ScanDevice* s = m_scan_lib->device(scanners.at(i));
     int row = m_scanners->rowCount();
     m_scanners->insertRow(row);
-    m_scanners->setItem(row, 0, new QTableWidgetItem(s->name));
-    m_scanners->setItem(row, 1, new QTableWidgetItem(s->vendor));
-    m_scanners->setItem(row, 2, new QTableWidgetItem(s->model));
-    m_scanners->setItem(row, 3, new QTableWidgetItem(s->type));
+    auto* name_item = new QTableWidgetItem(s->name);
+    name_item->setFlags(Qt::ItemIsEnabled);
+    auto* vendor_item = new QTableWidgetItem(s->vendor);
+    vendor_item->setFlags(Qt::ItemIsEnabled);
+    auto* modelitem = new QTableWidgetItem(s->model);
+    modelitem->setFlags(Qt::ItemIsEnabled);
+    auto* type_item = new QTableWidgetItem(s->type);
+    type_item->setFlags(Qt::ItemIsEnabled);
+    m_scanners->setItem(row, 0, name_item);
+    m_scanners->setItem(row, 1, vendor_item);
+    m_scanners->setItem(row, 2, modelitem);
+    m_scanners->setItem(row, 3, type_item);
   }
 }
 
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow() = default;
 
-void MainWindow::setLogTextEdit(QPlainTextEdit* log_edit)
+void
+MainWindow::setLogTextEdit(QPlainTextEdit* log_edit)
 {
   m_log_edit = log_edit;
   m_main_layout->replaceWidget(m_empty_edit, m_log_edit);
   m_empty_edit->deleteLater();
 }
 
-void MainWindow::initGui()
+void
+MainWindow::initGui()
 {
   QScreen* screen = QGuiApplication::primaryScreen();
   QSize size = screen->availableSize();
@@ -115,41 +128,48 @@ void MainWindow::initGui()
   setCentralWidget(main_frame);
   m_main_layout = new QGridLayout;
   main_frame->setLayout(m_main_layout);
-  //
+
+  int m_row = 0;
   m_image_editor = new ScanEditor(m_scan_lib, this);
   m_image_editor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  m_main_layout->addWidget(m_image_editor, 0, 0, 2, 1);
-  connect(m_image_editor, &ScanEditor::scanCancelled, this,
-          &MainWindow::cancelScanning);
-  //
+  m_main_layout->addWidget(m_image_editor, m_row, 0, 2, 1);
+  connect(m_image_editor, &ScanEditor::scanCancelled, this, &MainWindow::cancelScanning);
+
   QStringList labels;
-  labels << "Name" << "Vendor" << "Model" << "Type";
+  labels << "Name"
+         << "Vendor"
+         << "Model"
+         << "Type";
   m_scanners = new QTableWidget(this);
   m_scanners->setHorizontalHeaderLabels(labels);
   m_scanners->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
   m_scanners->horizontalHeader()->setStretchLastSection(true);
   m_scanners->setColumnCount(4);
-  m_scanners->setSelectionMode(QAbstractItemView::SingleSelection);
+  m_scanners->setSelectionMode(QAbstractItemView::NoSelection);
   m_scanners->setSelectionBehavior(QAbstractItemView::SelectRows);
   m_scanners->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  m_main_layout->addWidget(m_scanners, 0, 1);
+  m_main_layout->addWidget(m_scanners, m_row, 1);
   connect(m_scanners, &QTableWidget::clicked, this, &MainWindow::selectionChanged);
   connect(m_scanners, &QTableWidget::doubleClicked, this, &MainWindow::doubleClicked);
-  //
+  m_main_layout->addWidget(m_scanners, m_row, 1);
+
   m_empty_edit = new QPlainTextEdit(this);
-  m_main_layout->addWidget(m_scanners, 1, 1);
-  //
+  m_main_layout->addWidget(m_empty_edit, m_row + 1, 1);
+
+  m_row += 2;
+
   m_scan_btn = new QPushButton(QStringLiteral("Start Scanning"), this);
   m_scan_btn->setEnabled(false);
   connect(m_scan_btn, &QPushButton::clicked, m_image_editor, &ScanEditor::scanningStarted);
   connect(m_scan_btn, &QPushButton::clicked, this, &MainWindow::startScanning);
-  m_main_layout->addWidget(m_scan_btn, 2, 0);
+  m_main_layout->addWidget(m_scan_btn, m_row, 0);
   m_close_btn = new QPushButton(QStringLiteral("Close"), this);
-  m_main_layout->addWidget(m_close_btn, 2, 1);
+  m_main_layout->addWidget(m_close_btn, m_row, 1);
   connect(m_close_btn, &QPushButton::clicked, this, &MainWindow::close);
 }
 
-void MainWindow::selectionChanged()
+void
+MainWindow::selectionChanged()
 {
   QObject* obj = sender();
 
@@ -167,39 +187,34 @@ void MainWindow::selectionChanged()
   }
 }
 
-//void MainWindow::selectScanner()
-//{
-//  if (m_scan_lib->openDevice(m_selected_name)) {
-//    m_scan_btn->setEnabled(true);
-//    m_image_editor->setSelectedName(m_selected_name);
-
-//  } else {
-//    m_logger->debug(QString("Unable to open %1").arg(m_selected_name));
-//  }
-//}
-
-void MainWindow::startScanning()
+void
+MainWindow::startScanning()
 {
   if (m_scan_lib->startScanning(m_selected_name)) {
     // TODO
   }
 }
 
-void MainWindow::cancelScanning()
+void
+MainWindow::cancelScanning()
 {
   m_scan_lib->cancelScan(m_selected_name);
 }
 
-void MainWindow::scanHasFailed()
+void
+MainWindow::scanHasFailed()
 {}
 
-void MainWindow::scanProgressed(const int&)
+void
+MainWindow::scanProgressed(const int&)
 {}
 
-void MainWindow::geometry()
+void
+MainWindow::geometry()
 {}
 
-void MainWindow::doubleClicked(const QModelIndex& index)
+void
+MainWindow::doubleClicked(const QModelIndex& index)
 {
   int row = index.row();
   QString data = m_scanners->item(row, 0)->text();
@@ -213,4 +228,3 @@ void MainWindow::doubleClicked(const QModelIndex& index)
     m_logger->debug(QString("Unable to open %1").arg(m_selected_name));
   }
 }
-

@@ -47,7 +47,7 @@ void SaneWorker::scan()
     return;
   }
 
-  int i, len, offset = 0, full_size = 0;
+  int len, offset = 0, full_size = 0;
   bool first_frame = true, must_buffer = true;
   //  SANE_Byte min = 0xff, max = 0;
   SANE_Word total_bytes = 0;
@@ -99,7 +99,7 @@ void SaneWorker::scan()
         format = QImage::Format_Mono;
 
         if (parameters.lines < 0) {
-          must_buffer = 1;
+          must_buffer = true;
           offset = 0;
         }
 
@@ -111,7 +111,7 @@ void SaneWorker::scan()
         greyscale = true;
 
         if (parameters.lines < 0) {
-          must_buffer = 1;
+          must_buffer = true;
           offset = 0;
         }
 
@@ -126,7 +126,7 @@ void SaneWorker::scan()
         greyscale = true;
 
         if (parameters.lines < 0) {
-          must_buffer = 1;
+          must_buffer = true;
           offset = 0;
         }
 

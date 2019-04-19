@@ -32,7 +32,8 @@ SOURCES += \
     scaninterface.cpp \
     scanoptions.cpp \
     papersize.cpp \
-    scaneditor.cpp
+    scaneditor.cpp \
+    scanimage.cpp
 
 HEADERS += \
     qscan.h \
@@ -41,7 +42,8 @@ HEADERS += \
     scaninterface.h  \
     scanoptions.h \
     papersize.h \
-    scaneditor.h
+    scaneditor.h \
+    scanimage.h
 
 unix {
     SOURCES += \

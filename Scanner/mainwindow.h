@@ -33,14 +33,18 @@ class TextEditIoDevice : public QIODevice
 {
   Q_OBJECT
 
-public: TextEditIoDevice(QPlainTextEdit* text_edit, QObject* parent = nullptr);
-  ~TextEditIoDevice();
+public:
+  TextEditIoDevice(QPlainTextEdit* text_edit, QObject* parent = nullptr);
+  ~TextEditIoDevice() override;
 
-  void setTextEdit(QPlainTextEdit* m_text_edit);
+  void
+  setTextEdit(QPlainTextEdit* m_text_edit);
 
 protected:
-  qint64 readData(char* /*data*/, qint64 /*maxSize*/);
-  qint64 writeData(const char* data, qint64 maxSize);
+  qint64
+  readData(char* /*data*/, qint64 /*maxSize*/) override;
+  qint64
+  writeData(const char* data, qint64 maxSize) override;
 
 private:
   QPlainTextEdit* m_text_edit;
@@ -55,12 +59,13 @@ public:
   explicit MainWindow(QWidget* parent = nullptr);
   ~MainWindow();
 
-  void setLogTextEdit(QPlainTextEdit* log_edit);
+  void
+  setLogTextEdit(QPlainTextEdit* log_edit);
 
 protected:
   Log4Qt::Logger* m_logger;
   QScan* m_scan_lib;
-  QFrame* m_main;
+  //  QFrame* m_main;
   QGridLayout* m_main_layout;
   ScanEditor* m_image_editor;
   QTableWidget* m_scanners;
@@ -75,18 +80,26 @@ protected:
   QPlainTextEdit* m_empty_edit;
   QPlainTextEdit* m_log_edit;
 
-  void initGui();
+  void
+  initGui();
   //  void resizeEvent(QResizeEvent*);
-  void selectionChanged();
+  void
+  selectionChanged();
   //  void selectScanner();
-  void startScanning();
-  void cancelScanning();
+  void
+  startScanning();
+  void
+  cancelScanning();
   //  void
   //  scanIsCompleted(const QImage& image);
-  void scanHasFailed();
-  void scanProgressed(const int&);
-  void geometry();
-  void doubleClicked(const QModelIndex& index);
+  void
+  scanHasFailed();
+  void
+  scanProgressed(const int&);
+  void
+  geometry();
+  void
+  doubleClicked(const QModelIndex& index);
 
 private:
 };

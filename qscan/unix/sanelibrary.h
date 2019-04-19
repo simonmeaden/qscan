@@ -93,7 +93,7 @@ protected:
   Log4Qt::Logger* m_logger;
   DeviceMap m_scanners;
   OptionsMap m_options;
-  QImage* m_image;
+  QImage* m_image{};
   Version m_version;
 
   //  int m_brightness_opt = -1;
@@ -113,7 +113,7 @@ protected:
   static QMutex _mutex;
 
   void getAvailableScannerOptions(QString device_name) override;
-  void receiveAvailableScannerOptions(QString device_name, ScanOptions options);
+  void receiveAvailableScannerOptions(const QString& device_name, const ScanOptions& options);
 
   static void callbackWrapper(SANE_String_Const resource, SANE_Char* name, SANE_Char* password);
 

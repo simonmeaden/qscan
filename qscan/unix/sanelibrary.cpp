@@ -75,10 +75,9 @@ QStringList SaneLibrary::devices()
     while ((current_device = device_list[current_device_index]) != nullptr) {
       if (!current_device) {
         m_logger->debug(QString("No devices connected"));
-        break;
 
       } else {
-        ScanDevice* scanner = new ScanDevice(this);
+        auto* scanner = new ScanDevice(this);
         scanner->name = current_device->name;
         scanner->vendor = current_device->vendor;
         scanner->model = current_device->model;
@@ -116,8 +115,8 @@ bool SaneLibrary::openDevice(QString device_name)
     ScanDevice* device = m_scanners.value(device_name);
     device->sane_handle = sane_handle;
     m_logger->debug(QString("sane_open status: %1").arg(sane_strstatus(sane_status)));
-    QThread* thread = new QThread;
-    SaneWorker* scan_worker = new SaneWorker(device);
+    auto* thread = new QThread;
+    auto* scan_worker = new SaneWorker(device);
     // cleanup
     connect(this, &SaneLibrary::finished, thread, &QThread::quit);
     connect(thread, &QThread::finished, scan_worker, &SaneWorker::deleteLater);
@@ -183,7 +182,7 @@ void SaneLibrary::getAvailableScannerOptions(QString device_name)
   emit getAvailableOptions(device, options);
 }
 
-void SaneLibrary::receiveAvailableScannerOptions(QString device_name, ScanOptions options)
+void SaneLibrary::receiveAvailableScannerOptions(const QString& device_name, const ScanOptions& options)
 {
   m_options.insert(device_name, options);
 }
