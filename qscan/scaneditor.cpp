@@ -48,9 +48,15 @@ ScanEditor::initActions()
 
   m_copy_selection_act = new QAction(tr("Copy selection"), this);
   m_copy_selection_act->setShortcut(QKeySequence::Copy);
+  m_copy_selection_act->setToolTip(tr("Copies selection to clipboard."));
   connect(m_copy_selection_act, &QAction::triggered, this, &ScanEditor::copySelection);
 
   m_crop_to_selection_act = new QAction(tr("Crop to selection"), this);
+  m_crop_to_selection_act->setToolTip(tr("Crops the image to the selection rectangle."));
+  connect(m_crop_to_selection_act, &QAction::triggered, this, &ScanEditor::cropToSelection);
+
+  m_clear_selection_act = new QAction(tr("Clear selection"), this);
+  m_clear_selection_act->setToolTip(tr("Removes selection rectangle."));
   connect(m_crop_to_selection_act, &QAction::triggered, this, &ScanEditor::cropToSelection);
 
   m_crop_to_content_act = new QAction(tr("Crop to content"), this);
@@ -116,8 +122,8 @@ ScanEditor::contextMenuEvent(QContextMenuEvent* event)
 
   if (m_image_display->hasSelection()) {
     contextMenu->addAction(m_copy_selection_act);
-    contextMenu->addSeparator();
     contextMenu->addAction(m_crop_to_selection_act);
+    contextMenu->addAction(m_clear_selection_act);
     contextMenu->addSeparator();
     contextMenu->addAction(m_rescan_act);
 
@@ -186,6 +192,12 @@ void
 ScanEditor::cropToSelection()
 {
   m_image_display->cropToSelection();
+}
+
+void
+ScanEditor::clearSelection()
+{
+  m_image_display->clearSelection();
 }
 
 void

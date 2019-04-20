@@ -30,10 +30,14 @@ ScanImage::setImage(const QImage& image)
 void
 ScanImage::rotateBy(int angle)
 {
-  int rotate_angle = m_angle;
-  rotate_angle += angle;
-  rotate_angle %= 360;
-  m_angle = rotate_angle;
+  m_angle = angle;
+  QImage rotated = m_image.transformed([&angle](QPoint center) {
+    QMatrix matrix;
+    matrix.translate(center.x(), center.y());
+    matrix.rotate(angle);
+    return matrix;
+  }(m_image.rect().center()));
+  m_image = rotated;
   update();
 }
 
@@ -76,9 +80,7 @@ ScanImage::cropToSelection()
 
     QImage cropped = m_image.copy(scaled_rect);
     m_image = cropped;
-    m_rubber_band = QRect();
-    m_stretched_band = QRect();
-    m_state = RB_NOTHING;
+    clearSelection();
     update();
   }
 }
@@ -114,21 +116,32 @@ ScanImage::selectAll()
 }
 
 void
+ScanImage::clearSelection()
+{
+  m_rubber_band = QRect();
+  m_stretched_band = QRect();
+  m_state = RB_NOTHING;
+  update();
+}
+
+void
 ScanImage::paintRubberBand(QPainter* painter)
 {
   painter->save();
+  QPen pen;
+  QBrush brush;
   switch (m_state) {
   case RUBBER_BANDING: {
-    QPen pen = QPen(QColor("green"));
-    QBrush brush = QBrush(QColor(128, 128, 255, 128));
+    pen = QPen(QColor("green"));
+    brush = QBrush(QColor(128, 128, 255, 128));
     painter->setPen(pen);
     painter->setBrush(brush);
     painter->drawRect(m_rubber_band);
     break;
   } // end of RUBBER_BANDING
   case RB_COMPLETE: {
-    QPen pen = QPen(QColor("blue"));
-    QBrush brush = QBrush(QColor(128, 128, 255, 128));
+    pen = QPen(QColor("blue"));
+    brush = QBrush(QColor(128, 128, 255, 128));
     painter->setPen(pen);
     painter->setBrush(brush);
     painter->drawRect(m_rubber_band);
@@ -146,8 +159,8 @@ ScanImage::paintRubberBand(QPainter* painter)
   case RB_NOTHING:
     break;
   default:
-    QPen pen = QPen(QColor("green"));
-    QBrush brush = QBrush(QColor(128, 128, 255, 128));
+    pen = QPen(QColor("green"));
+    brush = QBrush(QColor(128, 128, 255, 128));
     painter->setPen(pen);
     painter->setBrush(brush);
     painter->drawRect(m_stretched_band);
@@ -173,7 +186,8 @@ ScanImage::paintEvent(QPaintEvent*)
     int h = height();
     int centre_x = int(w / 2.0);
     int centre_y = int(h / 2.0);
-
+    QPen pen;
+    QBrush brush;
     // scale image to available size.
     QImage scaled_image = m_image.scaled(w, h, Qt::KeepAspectRatio);
     m_scaled_by = qreal(scaled_image.width()) / qreal(m_image.width());
@@ -181,14 +195,7 @@ ScanImage::paintEvent(QPaintEvent*)
     QPainter painter(this);
     painter.save();
     painter.fillRect(scaled_image.rect(), QBrush(Qt::yellow));
-
-    QTransform transform;
-    transform.translate(-centre_x, -centre_y);
-    transform.rotate(m_angle);
-    transform.translate(centre_x, centre_y);
     painter.drawImage(0, 0, scaled_image);
-    painter.setTransform(transform);
-    painter.end();
 
     paintRubberBand(&painter);
 
@@ -412,53 +419,4 @@ ScanImage::mouseMoveEvent(QMouseEvent* event)
       update();
     }
   }
-}
-
-QRectF
-ScanImage::getMinimumBoundingRect(QRect r, qreal angleRads)
-{
-  QPointF topLeft = getRotatedPoint(r.topLeft(), r.center(), angleRads);
-  QPointF bottomRight = getRotatedPoint(r.bottomRight(), r.center(), angleRads);
-  QPointF topRight = getRotatedPoint(r.topRight(), r.center(), angleRads);
-  QPointF bottomLeft = getRotatedPoint(r.bottomLeft(), r.center(), angleRads);
-
-  // getMin and getMax just return the min / max of their arguments
-
-  qreal minX = getMax(topLeft.x(), bottomRight.x(), topRight.x(), bottomLeft.x());
-  qreal minY = getMax(topLeft.y(), bottomRight.y(), topRight.y(), bottomLeft.y());
-
-  qreal maxX = getMax(topLeft.x(), bottomRight.x(), topRight.x(), bottomLeft.x());
-  qreal maxY = getMax(topLeft.y(), bottomRight.y(), topRight.y(), bottomLeft.y());
-
-  return { QPointF(minX, minY), QPointF(maxX, maxY) };
-}
-
-qreal
-ScanImage::getMax(qreal a, qreal b, qreal c, qreal d)
-{
-  return qMax(qMax(qMax(a, b), c), d);
-}
-
-QPointF
-ScanImage::getRotatedPoint(QPointF p, QPointF center, qreal angleRads)
-{
-  qreal x = p.x();
-  qreal y = p.y();
-
-  float s = qSin(angleRads);
-  float c = qCos(angleRads);
-
-  // translate point back to origin:
-  x -= center.x();
-  y -= center.y();
-
-  // rotate point
-  float xnew = x * c - y * s;
-  float ynew = x * s + y * c;
-
-  // translate point back:
-  x = xnew + center.x();
-  y = ynew + center.y();
-
-  return { x, y };
 }

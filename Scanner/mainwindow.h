@@ -57,7 +57,7 @@ class MainWindow : public QMainWindow
 
 public:
   explicit MainWindow(QWidget* parent = nullptr);
-  ~MainWindow();
+  ~MainWindow() override;
 
   void
   setLogTextEdit(QPlainTextEdit* log_edit);

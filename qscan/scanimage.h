@@ -31,6 +31,8 @@ public:
   copySelection();
   void
   selectAll();
+  void
+  clearSelection();
 
 protected:
   enum State

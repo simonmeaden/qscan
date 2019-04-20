@@ -59,6 +59,7 @@ protected:
   //  QAction* m_cut_act;
   QAction* m_copy_selection_act;
   QAction* m_crop_to_selection_act;
+  QAction* m_clear_selection_act;
   QAction* m_crop_to_content_act;
   QAction* m_rotate_cw_act;
   QAction* m_rotate_acw_act;
@@ -89,6 +90,8 @@ protected:
   copySelection();
   void
   cropToSelection();
+  void
+  clearSelection();
   void
   cropToContent();
   void
