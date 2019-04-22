@@ -19,8 +19,23 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QAction>
+#include <QComboBox>
+#include <QGridLayout>
+#include <QGuiApplication>
+#include <QHeaderView>
+#include <QIODevice>
+#include <QImage>
+#include <QLabel>
 #include <QMainWindow>
-#include <QtWidgets>
+#include <QMessageBox>
+#include <QPainter>
+#include <QPixmapCache>
+#include <QPlainTextEdit>
+#include <QPushButton>
+#include <QScreen>
+#include <QTableWidget>
+#include <QToolBar>
 
 #include <log4qt/logger.h>
 
@@ -35,16 +50,13 @@ class TextEditIoDevice : public QIODevice
 
 public:
   TextEditIoDevice(QPlainTextEdit* text_edit, QObject* parent = nullptr);
-  ~TextEditIoDevice() override;
+  //  ~TextEditIoDevice() override;
 
-  void
-  setTextEdit(QPlainTextEdit* m_text_edit);
+  void setTextEdit(QPlainTextEdit* m_text_edit);
 
 protected:
-  qint64
-  readData(char* /*data*/, qint64 /*maxSize*/) override;
-  qint64
-  writeData(const char* data, qint64 maxSize) override;
+  qint64 readData(char*, qint64) override;
+  qint64 writeData(const char* data, qint64 maxSize) override;
 
 private:
   QPlainTextEdit* m_text_edit;
@@ -59,8 +71,7 @@ public:
   explicit MainWindow(QWidget* parent = nullptr);
   ~MainWindow() override;
 
-  void
-  setLogTextEdit(QPlainTextEdit* log_edit);
+  void setLogTextEdit(QPlainTextEdit* log_edit);
 
 protected:
   Log4Qt::Logger* m_logger;
@@ -69,10 +80,8 @@ protected:
   QGridLayout* m_main_layout;
   ScanEditor* m_image_editor;
   QTableWidget* m_scanners;
-  QPushButton* m_close_btn;
-  QPushButton* m_scan_btn;
-  //  QSplitter* m_h_splitter;
-  //  QSplitter* m_v_splitter;
+  QComboBox *m_mode_box, *m_source_box;
+  //  QPushButton* m_close_btn;
 
   QString m_selected_name;
   bool m_selected;
@@ -80,28 +89,47 @@ protected:
   QPlainTextEdit* m_empty_edit;
   QPlainTextEdit* m_log_edit;
 
-  void
-  initGui();
-  //  void resizeEvent(QResizeEvent*);
-  void
-  selectionChanged();
-  //  void selectScanner();
-  void
-  startScanning();
-  void
-  cancelScanning();
-  //  void
-  //  scanIsCompleted(const QImage& image);
-  void
-  scanHasFailed();
-  void
-  scanProgressed(const int&);
-  void
-  geometry();
-  void
-  doubleClicked(const QModelIndex& index);
+  QPixmapCache::Key scan_key;
+  QPixmapCache::Key rot_left_key;
+  QPixmapCache::Key rot_right_key;
+  QPixmapCache::Key rot_angle_key;
+  QPixmapCache::Key rot_edge_key;
+  QPixmapCache::Key copy_key;
+  QPixmapCache::Key scale_key;
+  QPixmapCache::Key crop_key;
+  QPixmapCache::Key save_key;
+  QPixmapCache::Key save_as_key;
+  QPixmapCache::Key close_key;
 
-private:
+  QAction* m_scan_act;
+  QAction* m_rot_left_act;
+  QAction* m_rot_right_act;
+  QAction* m_rot_angle_act;
+  QAction* m_rot_edge_act;
+  QAction* m_copy_act;
+  QAction* m_crop_act;
+  QAction* m_scale_act;
+  QAction* m_save_act;
+  QAction* m_save_as_act;
+  QAction* m_close_act;
+
+  void initGui();
+  void initActions();
+  void connectActions();
+
+  void selectionChanged();
+  void startScanning();
+  void cancelScanning();
+
+  void scanHasFailed();
+  void scanProgressed(const int&);
+  void geometry();
+  void doubleClicked(const QModelIndex& index);
+  void modifyingSelection();
+  void selectionComplete();
+  void receiveOptionsSet();
+  void modeChanged(const QString& mode);
+  void sourceChanged(const QString& source);
 };
 
 #endif // MAINWINDOW_H

@@ -54,3 +54,6 @@ DEPENDPATH += $$PWD/../qscan
 
 #INCLUDEPATH += $$PWD/../scaneditor
 #DEPENDPATH += $$PWD/../scaneditor
+
+RESOURCES += \
+    icons.qrc

@@ -21,9 +21,9 @@
 #define SANESCANETHREAD_H
 
 #include <QImage>
-#include <QObject>
 #include <QMutex>
 #include <QMutexLocker>
+#include <QObject>
 
 #include <log4qt/logger.h>
 
@@ -32,25 +32,44 @@
 class SaneWorker : public QObject
 {
   Q_OBJECT
-public: SaneWorker(ScanDevice* device, QObject* parent = nullptr);
-  ~SaneWorker() {}
+public:
+  explicit SaneWorker(QObject* parent = nullptr);
 
-  void scan();
-
-  void getAvailableScannerOptions(ScanDevice* device, ScanOptions options);
+  void scan(ScanDevice* device);
+  void loadAvailableScannerOptions(ScanDevice* device);
+  void setBoolValue(ScanDevice* device,
+                    int option_id,
+                    const QString&,
+                    bool value);
+  void setIntValue(ScanDevice* device,
+                   int option_id,
+                   const QString& name,
+                   int value);
+  void setStringValue(ScanDevice* device,
+                      int option_id,
+                      const QString& name,
+                      const QString& value);
+  void cancelScan();
 
 signals:
   void scanCompleted(const QImage&);
   void scanFailed();
   void scanProgress(double);
   void finished();
-  void availableScannerOptions(QString name, ScanOptions options);
+  //  void availableScannerOptions(ScanDevice*);
+  //  void sendIntValue(ScanDevice*, int);
+  void optionsSet();
 
 protected:
-  QImage m_image;
-  ScanDevice* m_device;
   Log4Qt::Logger* m_logger;
   QMutex m_mutex;
+  SANE_Handle m_handle;
+
+  void getIntValue(ScanDevice* device, int option_id, const QString& name);
+  void getStringValue(ScanDevice* device,
+                      int option_id,
+                      const QString& name,
+                      const SANE_Option_Descriptor* opt);
 };
 
 #endif // SANESCANETHREAD_H

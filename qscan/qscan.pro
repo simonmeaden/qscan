@@ -31,7 +31,6 @@ SOURCES += \
     version.cpp  \
     scaninterface.cpp \
     scanoptions.cpp \
-    papersize.cpp \
     scaneditor.cpp \
     scanimage.cpp
 
@@ -41,7 +40,6 @@ HEADERS += \
     version.h \
     scaninterface.h  \
     scanoptions.h \
-    papersize.h \
     scaneditor.h \
     scanimage.h
 

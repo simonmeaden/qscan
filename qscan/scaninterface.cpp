@@ -23,4 +23,15 @@ ScanLibrary::ScanLibrary(QObject* parent)
   : QObject(parent)
 {}
 
-ScanLibrary::~ScanLibrary() {}
+// ScanLibrary::~ScanLibrary() {}
+
+ScanDevice::ScanDevice(QObject* parent)
+  : QObject(parent)
+{
+  options = new ScanOptions(parent);
+}
+
+// ScanDevice::~ScanDevice()
+//{
+//  delete options;
+//}

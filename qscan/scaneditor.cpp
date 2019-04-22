@@ -35,6 +35,15 @@ ScanEditor::ScanEditor(QScan* scan, QWidget* parent)
   m_image_display = new ScanImage(this);
   layout->addWidget(m_image_display);
   initActions();
+
+  connect(m_image_display,
+          &ScanImage::selectionUnderway,
+          this,
+          &ScanEditor::selectionUnderway);
+  connect(m_image_display,
+          &ScanImage::selectionComplete,
+          this,
+          &ScanEditor::selectionComplete);
 }
 
 ScanEditor::~ScanEditor() = default;
@@ -42,25 +51,34 @@ ScanEditor::~ScanEditor() = default;
 void
 ScanEditor::initActions()
 {
-  //  m_cut_act = new QAction(tr("Cut selection"), this);
-  //  m_cut_act->setShortcut(QKeySequence::Cut);
-  //  connect(m_cut_act, &QAction::triggered, this, &ScanEditor::cut);
-
   m_copy_selection_act = new QAction(tr("Copy selection"), this);
   m_copy_selection_act->setShortcut(QKeySequence::Copy);
   m_copy_selection_act->setToolTip(tr("Copies selection to clipboard."));
-  connect(m_copy_selection_act, &QAction::triggered, this, &ScanEditor::copySelection);
+  connect(m_copy_selection_act,
+          &QAction::triggered,
+          this,
+          &ScanEditor::copySelection);
 
   m_crop_to_selection_act = new QAction(tr("Crop to selection"), this);
-  m_crop_to_selection_act->setToolTip(tr("Crops the image to the selection rectangle."));
-  connect(m_crop_to_selection_act, &QAction::triggered, this, &ScanEditor::cropToSelection);
+  m_crop_to_selection_act->setToolTip(
+    tr("Crops the image to the selection rectangle."));
+  connect(m_crop_to_selection_act,
+          &QAction::triggered,
+          this,
+          &ScanEditor::cropToSelection);
 
   m_clear_selection_act = new QAction(tr("Clear selection"), this);
   m_clear_selection_act->setToolTip(tr("Removes selection rectangle."));
-  connect(m_crop_to_selection_act, &QAction::triggered, this, &ScanEditor::cropToSelection);
+  connect(m_clear_selection_act,
+          &QAction::triggered,
+          this,
+          &ScanEditor::cropToSelection);
 
   m_crop_to_content_act = new QAction(tr("Crop to content"), this);
-  connect(m_crop_to_content_act, &QAction::triggered, this, &ScanEditor::cropToContent);
+  connect(m_crop_to_content_act,
+          &QAction::triggered,
+          this,
+          &ScanEditor::cropToContent);
 
   m_rotate_cw_act = new QAction(tr("Rotate 90° clockwise"), this);
   connect(m_rotate_cw_act, &QAction::triggered, this, &ScanEditor::rotateCW);
@@ -71,8 +89,15 @@ ScanEditor::initActions()
   m_rotate_180_act = new QAction(tr("Rotate 180°"), this);
   connect(m_rotate_180_act, &QAction::triggered, this, &ScanEditor::rotate180);
 
-  m_rotate_act = new QAction(tr("Rotate by angle"), this);
-  connect(m_rotate_act, &QAction::triggered, this, &ScanEditor::rotateByAngle);
+  m_rotate_by_angle_act = new QAction(tr("Rotate by angle"), this);
+  connect(m_rotate_by_angle_act,
+          &QAction::triggered,
+          this,
+          &ScanEditor::rotateByAngle);
+
+  m_rotate_by_edge_act = new QAction(tr("Rotate by edge"), this);
+  connect(
+    m_rotate_by_edge_act, &QAction::triggered, this, &ScanEditor::rotateByEdge);
 
   m_rescan_act = new QAction(tr("Re-scan image to crop"), this);
   connect(m_rescan_act, &QAction::triggered, this, &ScanEditor::rescan);
@@ -87,23 +112,29 @@ ScanEditor::initActions()
 void
 ScanEditor::setImage(const QImage& image)
 {
-  m_prog_dlg->close();
-  m_prog_dlg = nullptr;
+  if (m_prog_dlg) {
+    m_prog_dlg->close();
+    m_prog_dlg = nullptr;
+  }
   m_image_display->setImage(image);
 }
 
 void
 ScanEditor::setScanProgress(const int& progress)
 {
-  m_prog_dlg->setValue(int(progress));
+  if (m_prog_dlg) {
+    m_prog_dlg->setValue(int(progress));
+  }
 }
 
 void
 ScanEditor::scanningStarted()
 {
   if (!m_prog_dlg) {
-    m_prog_dlg = new QProgressDialog("Scanning Image", "Cancel Scanning", 0, 100, this);
-    connect(m_prog_dlg, &QProgressDialog::canceled, this, &ScanEditor::scanCancelled);
+    m_prog_dlg =
+      new QProgressDialog("Scanning Image", "Cancel Scanning", 0, 100, this);
+    connect(
+      m_prog_dlg, &QProgressDialog::canceled, this, &ScanEditor::scanCancelled);
     m_prog_dlg->setWindowModality(Qt::WindowModal);
     m_prog_dlg->open();
   }
@@ -135,7 +166,8 @@ ScanEditor::contextMenuEvent(QContextMenuEvent* event)
     contextMenu->addAction(m_rotate_cw_act);
     contextMenu->addAction(m_rotate_acw_act);
     contextMenu->addAction(m_rotate_180_act);
-    contextMenu->addAction(m_rotate_act);
+    contextMenu->addAction(m_rotate_by_angle_act);
+    contextMenu->addAction(m_rotate_by_edge_act);
     contextMenu->addSeparator();
     contextMenu->addAction(m_scale_act);
     contextMenu->addSeparator();
@@ -143,6 +175,34 @@ ScanEditor::contextMenuEvent(QContextMenuEvent* event)
   }
 
   contextMenu->popup(event->globalPos());
+}
+
+bool
+ScanEditor::eventFilter(QObject* obj, QEvent* event)
+{
+  if (event->type() == QEvent::KeyPress) {
+    auto* key_event = dynamic_cast<QKeyEvent*>(event);
+    if (key_event) {
+      bool is_keypad = ((key_event->modifiers()) & Qt::KeypadModifier);
+      int key = key_event->key();
+      switch (key_event->key()) {
+        case Qt::Key_Escape:
+          clearSelection();
+          break;
+        case Qt::Key_Clear:
+          clearSelection();
+          break;
+        case Qt::Key_Plus:
+          zoomIn();
+          break;
+        case Qt::Key_Minus:
+          zoomOut();
+          break;
+      }
+    }
+    return true;
+  }
+  return QObject::eventFilter(obj, event);
 }
 
 void
@@ -172,15 +232,26 @@ ScanEditor::rotateACW()
 void
 ScanEditor::rotateByAngle()
 {
-  // TODO dialog for rotate angle.
-  int angle = 0;
-  m_image_display->rotateBy(angle);
+  bool ok;
+  qreal angle = QInputDialog::getDouble(
+    this,
+    tr("Rotate by angle"),
+    tr("Rotate the image by a fixed angle around the centre."),
+    0.0,   // value
+    0.0,   // min
+    360.0, // max
+    1,     // decimals
+    &ok);
+  if (angle > 0.0 && ok) {
+    m_image_display->rotateBy(angle);
+  }
 }
-//}
 
-// void
-// ScanEditor::cut()
-//{}
+void
+ScanEditor::rotateByEdge()
+{
+  m_image_display->rotateByEdge();
+}
 
 void
 ScanEditor::copySelection()
@@ -212,4 +283,26 @@ ScanEditor::rescan()
 
 void
 ScanEditor::scale()
+{
+  m_image_display->scaleBy();
+}
+
+void
+ScanEditor::save()
 {}
+
+void
+ScanEditor::saveAs()
+{}
+
+void
+ScanEditor::zoomIn()
+{
+  m_image_display->zoomIn();
+}
+
+void
+ScanEditor::zoomOut()
+{
+  m_image_display->zoomOut();
+}

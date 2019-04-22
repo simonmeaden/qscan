@@ -28,7 +28,7 @@
 #include <sane/saneopts.h>
 
 class ScanDevice;
-typedef QSharedPointer<ScanDevice> Device;
+using Device = QSharedPointer<ScanDevice>;
 
 enum ScanMode
 {
@@ -51,17 +51,18 @@ class ScanOptions : public QObject
 {
   Q_OBJECT
 public:
-  ScanOptions(QObject* parent = nullptr);
+  explicit ScanOptions(QObject* parent = nullptr);
   ScanOptions(const ScanOptions& other);
-  ~ScanOptions();
+  ~ScanOptions() override;
 
-  ScanOptions operator = (const ScanOptions rhs);
+  ScanOptions& operator=(const ScanOptions& rhs);
 
-  int getIntScannerValue(const ScanDevice* device, const int option_id, const SANE_Option_Descriptor* opt);
-  QStringList getStringScannerValue(const ScanDevice* device, const int option_id, const SANE_Option_Descriptor* opt);
-
-  int dpi() const;
-  void setDpi(int dpi);
+  //  int getIntScannerValue(const ScanDevice* device,
+  //                         const int option_id,
+  //                         const SANE_Option_Descriptor* opt);
+  //  QStringList getStringScannerValue(const ScanDevice* device,
+  //                                    const int option_id,
+  //                                    const SANE_Option_Descriptor* opt);
 
   QStringList scanModes() const;
   void setScanModes(const QStringList& modes);
@@ -114,16 +115,22 @@ public:
   int scanResolution() const;
   void setScanResolution(int scan_resolution);
 
-  int optionId(QString name) const;
+  int optionId(const QString& name) const;
   void setOptionId(const QString& name, int option_id);
 
   void copyData(const ScanOptions& other);
 
+  QString mode() const;
+  void setMode(const QString& mode);
+
+  QString source() const;
+  void setSource(const QString& source);
+
 protected:
-  //  QString m_name, m_description, m_title;
-  int m_dpi;
   QStringList m_modes;
   QStringList m_sources;
+  QString m_mode;
+  QString m_source;
   int m_depth;
   ScanType m_type;
   int m_paper_width;
@@ -137,8 +144,7 @@ protected:
   int m_scan_resolution_y = -1;
   QMap<QString, int> m_option_pairs;
 };
-//typedef QSharedPointer<ScanOptions> Options;
-typedef QMap<QString, ScanOptions> OptionsMap;
+using OptionsMap = QMap<QString, ScanOptions>;
 
 Q_DECLARE_METATYPE(ScanOptions)
 

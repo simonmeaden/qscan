@@ -1,0 +1,26 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>Devices-scanner-icon16.png</file>
+        <file>Devices-scanner-icon24.png</file>
+        <file alias="scan">Devices-scanner-icon32.png</file>
+        <file>Devices-scanner-icon48.png</file>
+        <file>Devices-scanner-icon64.png</file>
+        <file>Devices-scanner-icon72.png</file>
+        <file>Devices-scanner-icon96.png</file>
+        <file>Devices-scanner-icon128.png</file>
+        <file alias="crop">transform-crop.png</file>
+        <file>transform-crop-and-resize.png</file>
+        <file>transform-move.png</file>
+        <file>transform-rotate.png</file>
+        <file alias="scale">transform-scale.png</file>
+        <file alias="rotate-left">object-rotate-left.png</file>
+        <file alias="rotate-right">object-rotate-right.png</file>
+        <file alias="copy">edit-copy.png</file>
+        <file alias="rotate-angle">rotate-angle.png</file>
+        <file alias="close">app-stop.png</file>
+        <file alias="save">document-save.png</file>
+        <file>document-save-all.png</file>
+        <file alias="save-as">document-save-as.png</file>
+        <file alias="rotate-edge">rotate-edge.png</file>
+    </qresource>
+</RCC>

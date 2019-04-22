@@ -20,29 +20,30 @@
 #include <QApplication>
 #include <QImage>
 #include <QLoggingCategory>
-#include <QTextStream>
 #include <QPlainTextEdit>
+#include <QTextStream>
 
 #include <log4qt/consoleappender.h>
-#include <log4qt/writerappender.h>
 #include <log4qt/logger.h>
 #include <log4qt/logmanager.h>
 #include <log4qt/ttcclayout.h>
+#include <log4qt/writerappender.h>
 
 #include "scanoptions.h"
 
-typedef QSharedPointer<QImage> Image;
+using Image = QSharedPointer<QImage>;
 Q_DECLARE_METATYPE(Image)
 
 using namespace Log4Qt;
-int main(int argc, char* argv[])
+int
+main(int argc, char* argv[])
 {
   //
   QApplication a(argc, argv);
   qRegisterMetaType<Image>();
   qRegisterMetaType<ScanOptions>();
   LogManager::rootLogger();
-  TTCCLayout* p_layout = new TTCCLayout();
+  auto* p_layout = new TTCCLayout();
   p_layout->setName(QStringLiteral("Logger"));
   p_layout->activateOptions();
   // Create an appender
@@ -51,9 +52,9 @@ int main(int argc, char* argv[])
   p_appender->setName(QStringLiteral("Console"));
   p_appender->activateOptions();
   //
-  QPlainTextEdit* text_edit = new QPlainTextEdit();
-  TextEditIoDevice* log_io_device = new TextEditIoDevice(text_edit);
-  QTextStream* stream = new QTextStream(log_io_device);
+  auto* text_edit = new QPlainTextEdit();
+  auto* log_io_device = new TextEditIoDevice(text_edit);
+  auto* stream = new QTextStream(log_io_device);
   WriterAppender* p_writer = new WriterAppender(p_layout, stream);
   p_writer->setName("StreamWriter");
   p_writer->activateOptions();
@@ -68,7 +69,7 @@ int main(int argc, char* argv[])
   MainWindow w;
   w.setLogTextEdit(text_edit);
   w.show();
-  int res =  a.exec();
+  int res = QApplication::exec();
   Logger::rootLogger()->removeAppender(p_writer);
   delete log_io_device;
   delete stream;

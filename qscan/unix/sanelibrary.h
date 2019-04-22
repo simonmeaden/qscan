@@ -22,24 +22,24 @@
 
 #include <QObject>
 
-#  include <QImage>
-#  include <QMutexLocker>
-#  include <QThread>
+#include <QImage>
+#include <QMutexLocker>
+#include <QThread>
 
-#  include <sane/sane.h>
-#  include <sane/saneopts.h>
+#include <sane/sane.h>
+#include <sane/saneopts.h>
 
-#  include <log4qt/consoleappender.h>
-#  include <log4qt/logger.h>
-#  include <log4qt/logmanager.h>
-#  include <log4qt/ttcclayout.h>
+#include <log4qt/consoleappender.h>
+#include <log4qt/logger.h>
+#include <log4qt/logmanager.h>
+#include <log4qt/ttcclayout.h>
 
-#  include "scaninterface.h"
-#  include "scanoptions.h"
-#  include "version.h"
+#include "scaninterface.h"
+#include "scanoptions.h"
+#include "version.h"
 
 #ifndef PATH_MAX
-  #define PATH_MAX 1024
+#define PATH_MAX 1024
 #endif
 
 class SaneLibrary final : public ScanLibrary
@@ -50,77 +50,67 @@ public:
   ~SaneLibrary() override;
 
   bool init() override;
+  void exit() override;
 
   // ScanInterface interface
   QStringList devices() override;
   ScanDevice* device(QString device_name) override;
-  ScanOptions options(QString device_name) override;
-  bool openDevice(QString device_name) override;
+  //  ScanOptions options(QString device_name) override;
+  bool detectAvailableOptions(QString device_name) override;
   bool startScan(QString device_name) override;
-  void cancelScan(QString device_name) override;
-  void exit();
+  void cancelScan() override;
   QRect geometry(QString device_name) override;
   const Version& version() const;
 
-  bool topLeftX(ScanDevice* device, int& value) override;
-  bool setTopLeftX(ScanDevice* device, int x) override;
-  bool topLeftY(ScanDevice* device, int& value) override;
-  bool setTopLeftY(ScanDevice* device, int x) override;
-  bool bottomRightX(ScanDevice* device, int& value) override;
-  bool setBottomRightX(ScanDevice* device, int value) override;
-  bool bottomRightY(ScanDevice* device, int& value) override;
-  bool setBottomRightY(ScanDevice* device, int x) override;
-  bool contrast(ScanDevice* device, int& value) override;
-  bool setContrast(ScanDevice* device, int value) override;
-  bool brightness(ScanDevice* device, int& value) override;
-  bool setBrightness(ScanDevice* device, int value) override;
-  bool resolution(ScanDevice* device, int& value) override;
-  bool setResolution(ScanDevice* device, int value) override;
-  bool resolutionX(ScanDevice* device, int& value) override;
-  bool setResolutionX(ScanDevice* device, int value) override;
-  bool resolutionY(ScanDevice* device, int& value) override;
-  bool setResolutionY(ScanDevice* device, int value) override;
-  bool setPreview(ScanDevice* device) override;
-  bool clearPreview(ScanDevice* device) override;
+  //  void topLeftX(ScanDevice* device, int& value) override;
+  void setTopLeftX(ScanDevice* device, int x) override;
+  //  void topLeftY(ScanDevice* device, int& value) override;
+  void setTopLeftY(ScanDevice* device, int x) override;
+  //  void bottomRightX(ScanDevice* device, int& value) override;
+  void setBottomRightX(ScanDevice* device, int value) override;
+  //  void bottomRightY(ScanDevice* device, int& value) override;
+  void setBottomRightY(ScanDevice* device, int x) override;
+  //  void contrast(ScanDevice* device, int& value) override;
+  void setContrast(ScanDevice* device, int value) override;
+  //  void brightness(ScanDevice* device, int& value) override;
+  void setBrightness(ScanDevice* device, int value) override;
+  //  void resolution(ScanDevice* device, int& value) override;
+  void setResolution(ScanDevice* device, int value) override;
+  //  void resolutionX(ScanDevice* device, int& value) override;
+  void setResolutionX(ScanDevice* device, int value) override;
+  //  void resolutionY(ScanDevice* device, int& value) override;
+  void setResolutionY(ScanDevice* device, int value) override;
+  void setPreview(ScanDevice* device) override;
+  void clearPreview(ScanDevice* device) override;
+  void setMode(ScanDevice* device, const QString& mode) override;
+  void setSource(ScanDevice* device, const QString& source) override;
 
 signals:
   void finished();
-  void startScanning();
-  void getAvailableOptions(ScanDevice*, ScanOptions);
+  void startScanning(ScanDevice*);
+  void getAvailableOptions(ScanDevice*);
+  void setBoolValue(ScanDevice*, int, const QString&, bool);
+  void setIntValue(ScanDevice*, int, const QString&, int);
+  void setStringValue(ScanDevice*, int, const QString&, const QString&);
+  void getIntValue(ScanDevice*, int, int);
+  void cancelScanning();
 
 protected:
   SANE_Status doScan(const char* fileName);
   Log4Qt::Logger* m_logger;
   DeviceMap m_scanners;
-  OptionsMap m_options;
+  //  OptionsMap m_options;
   QImage* m_image{};
   Version m_version;
-
-  //  int m_brightness_opt = -1;
-  //  int m_resolution_opt = -1;
-  //  int m_resolution_opt_x = -1;
-  //  int m_resolution_opt_y = -1;
-  //  int m_tl_x_opt = -1;
-  //  int m_tl_y_opt = -1;
-  //  int m_br_x_opt = -1;
-  //  int m_br_y_opt = -1;
-  //  int m_contrast_opt = -1;
-  //  //  int m_resolution_x_opt = -1;
-  //  //  int m_resolution_y_opt = -1;
-  //  int m_source_opt = -1;
-  //  int m_mode_opt = -1;
 
   static QMutex _mutex;
 
   void getAvailableScannerOptions(QString device_name) override;
-  void receiveAvailableScannerOptions(const QString& device_name, const ScanOptions& options);
+  void receiveIntValue(ScanDevice* device, int value);
 
-  static void callbackWrapper(SANE_String_Const resource, SANE_Char* name, SANE_Char* password);
-
-  // ScanInterface interface
-  bool setBoolValue(ScanDevice* device, QString name, bool value);
-  bool setIntValue(ScanDevice* device, QString name, int value);
-  bool getIntValue(ScanDevice* device, QString name, int& value);
+  static void callbackWrapper(SANE_String_Const resource,
+                              SANE_Char* name,
+                              SANE_Char* password);
 
 public:
 };

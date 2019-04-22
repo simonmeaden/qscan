@@ -20,8 +20,13 @@
 #ifndef SCANEDITOR_H
 #define SCANEDITOR_H
 
+#include <QAction>
+#include <QFrame>
+#include <QHBoxLayout>
 #include <QImage>
-#include <QtWidgets>
+#include <QInputDialog>
+#include <QMenu>
+#include <QProgressDialog>
 
 #include "qscan_global.h"
 #include "scanimage.h"
@@ -33,21 +38,35 @@ class SCANSHARED_EXPORT ScanEditor : public QFrame
   Q_OBJECT
 public:
   ScanEditor(QScan* scan, QWidget* parent = nullptr);
-  ~ScanEditor();
+  ~ScanEditor() override;
 
-  void
-  setImage(const QImage& image);
-  void
-  setScanProgress(const int& progress);
-  void
-  scanningStarted();
+  void setImage(const QImage& image);
+  void setScanProgress(const int& progress);
+  void scanningStarted();
 
-  void
-  setSelectedName(const QString& selected_name);
+  void setSelectedName(const QString& selected_name);
+
+  void selectAll();
+  void rotate180();
+  void rotateCW();
+  void rotateACW();
+  void rotateByAngle();
+  void rotateByEdge();
+  void copySelection();
+  void cropToSelection();
+  void clearSelection();
+  void cropToContent();
+  void rescan();
+  void scale();
+  void save();
+  void saveAs();
+  void zoomIn();
+  void zoomOut();
 
 signals:
-  void
-  scanCancelled();
+  void scanCancelled();
+  void selectionComplete();
+  void selectionUnderway();
 
 protected:
   ScanImage* m_image_display;
@@ -64,43 +83,19 @@ protected:
   QAction* m_rotate_cw_act;
   QAction* m_rotate_acw_act;
   QAction* m_rotate_180_act;
-  QAction* m_rotate_act;
+  QAction* m_rotate_by_angle_act;
+  QAction* m_rotate_by_edge_act;
   QAction* m_rescan_act;
   QAction* m_scale_act;
   QAction* m_selectall_act;
 
   bool m_select_all;
-  int m_tl_x, m_tl_y, m_br_x, m_br_y;
+  //  int m_tl_x, m_tl_y, m_br_x, m_br_y;
 
-  void
-  contextMenuEvent(QContextMenuEvent* event) override;
-  void
-  selectAll();
-  void
-  rotate180();
-  void
-  rotateCW();
-  void
-  rotateACW();
-  void
-  rotateByAngle();
-  //  void
-  //  cut();
-  void
-  copySelection();
-  void
-  cropToSelection();
-  void
-  clearSelection();
-  void
-  cropToContent();
-  void
-  rescan();
-  void
-  scale();
+  void contextMenuEvent(QContextMenuEvent* event) override;
+  bool eventFilter(QObject* obj, QEvent* event);
 
-  void
-  initActions();
+  void initActions();
 };
 
 #endif // SCANEDITOR_H

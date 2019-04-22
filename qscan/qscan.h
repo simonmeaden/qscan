@@ -32,41 +32,44 @@ class SCANSHARED_EXPORT QScan : public QObject
   Q_OBJECT
 public:
   explicit QScan(QObject* parent = nullptr);
-  ~QScan() {}
+  //  ~QScan() = default;
 
   bool init();
   QStringList devices();
-  ScanDevice* device(QString device_name);
-  bool openDevice(QString device_name);
-  bool startScanning(QString device_name);
-  void cancelScan(QString device_name);
-  ScanOptions options(QString device_name);
+  ScanDevice* device(const QString& device_name);
+  bool openDevice(const QString& device_name);
+  bool startScanning(const QString& device_name);
+  void cancelScan();
+  //  ScanOptions options(const QString& device_name);
 
-  bool topLeftX(ScanDevice* device, int& value);
-  bool setTopLeftX(ScanDevice* device, int value);
-  bool topLeftY(ScanDevice* device, int& value);
-  bool setTopLeftY(ScanDevice* device, int value);
-  bool bottomRightX(ScanDevice* device, int& value);
-  bool setBottomRightX(ScanDevice* device, int value);
-  bool bottomRightY(ScanDevice* device, int& value);
-  bool setBottomRightY(ScanDevice* device, int value);
-  bool contrast(ScanDevice* device, int& value);
-  bool setContrast(ScanDevice* device, int value);
-  bool brightness(ScanDevice* device, int& value);
-  bool setBrightness(ScanDevice* device, int value);
-  bool resolution(ScanDevice* device, int& value);
-  bool setResolution(ScanDevice* device, int value);
-  bool resolutionX(ScanDevice* device, int& value);
-  bool setResolutionX(ScanDevice* device, int value);
-  bool resolutionY(ScanDevice* device, int& value);
-  bool setResolutionY(ScanDevice* device, int value);
-  bool setPreview(ScanDevice* device);
-  bool clearPreview(ScanDevice* device);
+  int topLeftX(ScanDevice* device);
+  void setTopLeftX(ScanDevice* device, int value);
+  int topLeftY(ScanDevice* device);
+  void setTopLeftY(ScanDevice* device, int value);
+  int bottomRightX(ScanDevice* device);
+  void setBottomRightX(ScanDevice* device, int value);
+  int bottomRightY(ScanDevice* device);
+  void setBottomRightY(ScanDevice* device, int value);
+  int contrast(ScanDevice* device);
+  void setContrast(ScanDevice* device, int value);
+  int brightness(ScanDevice* device);
+  void setBrightness(ScanDevice* device, int value);
+  int resolution(ScanDevice* device);
+  void setResolution(ScanDevice* device, int value);
+  int resolutionX(ScanDevice* device);
+  void setResolutionX(ScanDevice* device, int value);
+  int resolutionY(ScanDevice* device);
+  void setResolutionY(ScanDevice* device, int value);
+  void setPreview(ScanDevice* device);
+  void clearPreview(ScanDevice* device);
+  void setScanMode(ScanDevice* device, const QString& mode);
+  void setSource(ScanDevice* device, const QString& source);
 
 signals:
   void scanCompleted(const QImage&);
   void scanFailed();
   void scanProgress(const int&);
+  void optionsSet();
 
 protected:
   Log4Qt::Logger* m_logger;
@@ -74,10 +77,9 @@ protected:
   ScanInterface* m_scan_lib;
 
 #elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
-#  include "win/scantwain.h"
+#include "win/scantwain.h"
   // TODO handle special twain shit
 #endif
-
 };
 
 #endif // SCAN_H
