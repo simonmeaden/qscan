@@ -145,8 +145,8 @@ bool
 SaneLibrary::detectAvailableOptions(QString device_name)
 {
   QMutexLocker locker(&_mutex);
-  SANE_Status sane_status = SANE_STATUS_GOOD;
-  SANE_Handle sane_handle = nullptr;
+  SANE_Status sane_status;
+  SANE_Handle sane_handle;
   sane_status = sane_open(device_name.toStdString().c_str(), &sane_handle);
 
   if (sane_status == SANE_STATUS_GOOD) {

@@ -34,6 +34,7 @@
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QScreen>
+#include <QScrollArea>
 #include <QTableWidget>
 #include <QToolBar>
 
@@ -99,6 +100,11 @@ protected:
   QPixmapCache::Key crop_key;
   QPixmapCache::Key save_key;
   QPixmapCache::Key save_as_key;
+  QPixmapCache::Key zoom_in_key;
+  QPixmapCache::Key zoom_out_key;
+  QPixmapCache::Key fit_best_key;
+  QPixmapCache::Key fit_width_key;
+  QPixmapCache::Key fit_height_key;
   QPixmapCache::Key close_key;
 
   QAction* m_scan_act;
@@ -111,13 +117,18 @@ protected:
   QAction* m_scale_act;
   QAction* m_save_act;
   QAction* m_save_as_act;
+  QAction* m_zoom_in_act;
+  QAction* m_zoom_out_act;
+  QAction* m_fit_best_act;
+  QAction* m_fit_width_act;
+  QAction* m_fit_height_act;
   QAction* m_close_act;
 
   void initGui();
   void initActions();
   void connectActions();
 
-  void selectionChanged();
+  void scannerSelectionChanged();
   void startScanning();
   void cancelScanning();
 
@@ -126,10 +137,19 @@ protected:
   void geometry();
   void doubleClicked(const QModelIndex& index);
   void modifyingSelection();
-  void selectionComplete();
+  void editorHasSelection();
+  void editorHasNoSelection();
+  void imageLoaded();
   void receiveOptionsSet();
   void modeChanged(const QString& mode);
   void sourceChanged(const QString& source);
+  void initToolbar();
+  void enableNoSelectionBtns();
+  void enableSelectionBtns();
+  void disableSelectionBtns();
+  void disableNoSelectionBtns();
+  void enableImageLoadedBtns();
+  void disableImageLoadedBtns();
 };
 
 #endif // MAINWINDOW_H

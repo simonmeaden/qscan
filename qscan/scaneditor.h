@@ -27,6 +27,8 @@
 #include <QInputDialog>
 #include <QMenu>
 #include <QProgressDialog>
+#include <QScrollArea>
+#include <QScrollBar>
 
 #include "qscan_global.h"
 #include "scanimage.h"
@@ -62,11 +64,16 @@ public:
   void saveAs();
   void zoomIn();
   void zoomOut();
+  void fitBest();
+  void fitHeight();
+  void fitWidth();
 
 signals:
   void scanCancelled();
-  void selectionComplete();
+  void selected();
+  void unselected();
   void selectionUnderway();
+  void imageIsLoaded();
 
 protected:
   ScanImage* m_image_display;
@@ -74,6 +81,7 @@ protected:
   QPoint m_origin;
   QScan* m_scan_lib;
   QString m_selected_name;
+  QScrollArea* scroll;
 
   //  QAction* m_cut_act;
   QAction* m_copy_selection_act;
@@ -88,13 +96,16 @@ protected:
   QAction* m_rescan_act;
   QAction* m_scale_act;
   QAction* m_selectall_act;
+  QAction* m_save_act;
+  QAction* m_save_as_act;
 
   bool m_select_all;
   //  int m_tl_x, m_tl_y, m_br_x, m_br_y;
 
   void contextMenuEvent(QContextMenuEvent* event) override;
-  bool eventFilter(QObject* obj, QEvent* event);
+  bool eventFilter(QObject* obj, QEvent* event) override;
 
+  void adjustScrollbar(qreal factor);
   void initActions();
 };
 

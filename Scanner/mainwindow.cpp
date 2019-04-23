@@ -90,6 +90,11 @@ MainWindow::MainWindow(QWidget* parent)
   save_key = QPixmapCache::insert(QPixmap(":/icons/save"));
   save_as_key = QPixmapCache::insert(QPixmap(":/icons/save-as"));
   close_key = QPixmapCache::insert(QPixmap(":/icons/close"));
+  zoom_in_key = QPixmapCache::insert(QPixmap(":/icons/zoom-in"));
+  zoom_out_key = QPixmapCache::insert(QPixmap(":/icons/zoom-out"));
+  fit_best_key = QPixmapCache::insert(QPixmap(":/icons/fit-best"));
+  fit_width_key = QPixmapCache::insert(QPixmap(":/icons/fit-width"));
+  fit_height_key = QPixmapCache::insert(QPixmap(":/icons/fit-height"));
 
   initActions();
   initGui();
@@ -109,9 +114,15 @@ MainWindow::MainWindow(QWidget* parent)
           this,
           &MainWindow::modifyingSelection);
   connect(m_image_editor,
-          &ScanEditor::selectionComplete,
+          &ScanEditor::selected,
           this,
-          &MainWindow::selectionComplete);
+          &MainWindow::editorHasSelection);
+  connect(
+    m_image_editor, &ScanEditor::imageIsLoaded, this, &MainWindow::imageLoaded);
+  connect(m_image_editor,
+          &ScanEditor::unselected,
+          this,
+          &MainWindow::editorHasSelection);
   m_scan_lib->init();
   QStringList scanners = m_scan_lib->devices();
 
@@ -145,6 +156,40 @@ MainWindow::setLogTextEdit(QPlainTextEdit* log_edit)
 }
 
 void
+MainWindow::initToolbar()
+{
+  QToolBar* toolbar = addToolBar(tr("Edit"));
+  toolbar->setMovable(false);
+  toolbar->addAction(m_save_act);
+  toolbar->addAction(m_save_as_act);
+  toolbar->addSeparator();
+  toolbar->addAction(m_scan_act);
+  toolbar->addSeparator();
+  toolbar->addAction(m_copy_act);
+  toolbar->addAction(m_crop_act);
+  toolbar->addAction(m_scale_act);
+  toolbar->addSeparator();
+  toolbar->addAction(m_rot_left_act);
+  toolbar->addAction(m_rot_right_act);
+  toolbar->addAction(m_rot_angle_act);
+  toolbar->addAction(m_rot_edge_act);
+  toolbar->addSeparator();
+  toolbar->addAction(m_zoom_in_act);
+  toolbar->addAction(m_zoom_out_act);
+  toolbar->addAction(m_fit_best_act);
+  toolbar->addAction(m_fit_width_act);
+  toolbar->addAction(m_fit_height_act);
+
+  QWidget* spacer_widget = new QWidget(this);
+  spacer_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  spacer_widget->setVisible(true);
+  toolbar->addWidget(spacer_widget);
+
+  toolbar->addSeparator();
+  toolbar->addAction(m_close_act);
+}
+
+void
 MainWindow::initGui()
 {
   QScreen* screen = QGuiApplication::primaryScreen();
@@ -161,12 +206,13 @@ MainWindow::initGui()
 
   m_image_editor = new ScanEditor(m_scan_lib, this);
   m_image_editor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  m_main_layout->addWidget(m_image_editor, 0, 0, 3, 1);
   installEventFilter(m_image_editor);
   connect(m_image_editor,
           &ScanEditor::scanCancelled,
           this,
           &MainWindow::cancelScanning);
+
+  m_main_layout->addWidget(m_image_editor, 0, 0, 3, 1);
 
   QStringList labels;
   labels << "Name"
@@ -182,8 +228,10 @@ MainWindow::initGui()
   m_scanners->setSelectionMode(QAbstractItemView::NoSelection);
   m_scanners->setSelectionBehavior(QAbstractItemView::SelectRows);
   m_scanners->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  connect(
-    m_scanners, &QTableWidget::clicked, this, &MainWindow::selectionChanged);
+  connect(m_scanners,
+          &QTableWidget::clicked,
+          this,
+          &MainWindow::scannerSelectionChanged);
   connect(
     m_scanners, &QTableWidget::doubleClicked, this, &MainWindow::doubleClicked);
   m_main_layout->addWidget(m_scanners, 0, 1, 1, 4);
@@ -215,20 +263,7 @@ MainWindow::initGui()
   m_empty_edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   m_main_layout->addWidget(m_empty_edit, 2, 1, 1, 4);
 
-  QToolBar* toolbar = addToolBar(tr("Edit"));
-  toolbar->setMovable(false);
-  toolbar->addAction(m_close_act);
-  toolbar->addSeparator();
-  toolbar->addAction(m_scan_act);
-  toolbar->addSeparator();
-  toolbar->addAction(m_copy_act);
-  toolbar->addAction(m_crop_act);
-  toolbar->addAction(m_scale_act);
-  toolbar->addSeparator();
-  toolbar->addAction(m_rot_left_act);
-  toolbar->addAction(m_rot_right_act);
-  toolbar->addAction(m_rot_angle_act);
-  toolbar->addAction(m_rot_edge_act);
+  initToolbar();
 }
 
 void
@@ -236,7 +271,8 @@ MainWindow::initActions()
 {
   QPixmap scan_icon, rot_left_icon, rot_right_icon, rot_angle_icon,
     rot_edge_icon, copy_icon, scale_icon, crop_icon, close_icon, save_icon,
-    save_as_icon;
+    save_as_icon, zoom_in_icon, zoom_out_icon, fit_best_icon, fit_width_icon,
+    fit_height_icon;
   QPixmapCache::find(scan_key, &scan_icon);
   QPixmapCache::find(rot_left_key, &rot_left_icon);
   QPixmapCache::find(rot_right_key, &rot_right_icon);
@@ -247,94 +283,94 @@ MainWindow::initActions()
   QPixmapCache::find(crop_key, &crop_icon);
   QPixmapCache::find(save_key, &save_icon);
   QPixmapCache::find(save_as_key, &save_as_icon);
+  QPixmapCache::find(zoom_in_key, &zoom_in_icon);
+  QPixmapCache::find(zoom_out_key, &zoom_out_icon);
+  QPixmapCache::find(fit_best_key, &fit_best_icon);
+  QPixmapCache::find(fit_width_key, &fit_width_icon);
+  QPixmapCache::find(fit_height_key, &fit_height_icon);
   QPixmapCache::find(close_key, &close_icon);
 
   m_close_act = new QAction(QIcon(close_icon), tr("Close Application"), this);
-  //  m_close_act->setEnabled(false);
-
   m_scan_act = new QAction(QIcon(scan_icon), tr("Scan"), this);
   m_scan_act->setEnabled(false);
-
   m_rot_left_act =
     new QAction(QIcon(rot_left_icon), tr("Rotate Anti-clockwise"), this);
-  m_rot_left_act->setEnabled(false);
-
   m_rot_right_act =
     new QAction(QIcon(rot_right_icon), tr("Rotate Clockwise"), this);
-  m_rot_right_act->setEnabled(false);
-
   m_rot_angle_act =
     new QAction(QIcon(rot_angle_icon), tr("Rotate by angle"), this);
-  m_rot_angle_act->setEnabled(false);
-
   m_rot_edge_act =
     new QAction(QIcon(rot_edge_icon), tr("Rotate by defined edge"), this);
-  m_rot_edge_act->setEnabled(false);
-
   m_copy_act =
     new QAction(QIcon(copy_icon), tr("Copy selection to clipboard"), this);
-  m_copy_act->setEnabled(false);
-
   m_scale_act = new QAction(QIcon(scale_icon), tr("Scale image"), this);
-  m_scale_act->setEnabled(false);
-
   m_save_act = new QAction(QIcon(save_icon), tr("Save image"), this);
-  m_save_act->setEnabled(false);
-
   m_save_as_act = new QAction(QIcon(save_as_icon), tr("save as image"), this);
-  m_save_as_act->setEnabled(false);
-
   m_crop_act = new QAction(QIcon(crop_icon), tr("Crop to selection"), this);
-  m_crop_act->setEnabled(false);
+  m_zoom_in_act = new QAction(QIcon(zoom_in_icon), tr("Zoom in"), this);
+  m_zoom_out_act = new QAction(QIcon(zoom_out_icon), tr("zoom out"), this);
+  m_fit_best_act = new QAction(QIcon(fit_best_icon), tr("Best fit"), this);
+  m_fit_width_act =
+    new QAction(QIcon(fit_width_icon), tr("Fit to width"), this);
+  m_fit_height_act =
+    new QAction(QIcon(fit_height_icon), tr("Fit to feight"), this);
+
+  disableImageLoadedBtns();
+  disableSelectionBtns();
+  disableNoSelectionBtns();
 }
 
 void
 MainWindow::connectActions()
 {
   connect(m_close_act, &QAction::triggered, this, &MainWindow::close);
-
   connect(m_scan_act, &QAction::triggered, this, &MainWindow::startScanning);
-
   connect(m_rot_left_act,
           &QAction::triggered,
           m_image_editor,
           &ScanEditor::rotateACW);
-
   connect(m_rot_right_act,
           &QAction::triggered,
           m_image_editor,
           &ScanEditor::rotateCW);
-
   connect(m_rot_angle_act,
           &QAction::triggered,
           m_image_editor,
           &ScanEditor::rotateByAngle);
-
   connect(m_rot_edge_act,
           &QAction::triggered,
           m_image_editor,
           &ScanEditor::rotateByEdge);
-
   connect(m_copy_act,
           &QAction::triggered,
           m_image_editor,
           &ScanEditor::copySelection);
-
   connect(m_scale_act, &QAction::triggered, m_image_editor, &ScanEditor::scale);
-
   connect(m_crop_act,
           &QAction::triggered,
           m_image_editor,
           &ScanEditor::cropToSelection);
-
   connect(m_save_act, &QAction::triggered, m_image_editor, &ScanEditor::save);
-
   connect(
     m_save_as_act, &QAction::triggered, m_image_editor, &ScanEditor::saveAs);
+  connect(
+    m_zoom_in_act, &QAction::triggered, m_image_editor, &ScanEditor::zoomIn);
+  connect(
+    m_zoom_out_act, &QAction::triggered, m_image_editor, &ScanEditor::zoomOut);
+  connect(
+    m_fit_best_act, &QAction::triggered, m_image_editor, &ScanEditor::fitBest);
+  connect(m_fit_width_act,
+          &QAction::triggered,
+          m_image_editor,
+          &ScanEditor::fitWidth);
+  connect(m_fit_height_act,
+          &QAction::triggered,
+          m_image_editor,
+          &ScanEditor::fitHeight);
 }
 
 void
-MainWindow::selectionChanged()
+MainWindow::scannerSelectionChanged()
 {
   QObject* obj = sender();
 
@@ -402,9 +438,11 @@ MainWindow::receiveOptionsSet()
   ScanDevice* device = m_scan_lib->device(m_selected_name);
   ScanOptions* options = device->options;
   m_mode_box->clear();
-  m_mode_box->addItems(options->scanModes());
+  QStringList list = options->scanModes();
+  m_mode_box->addItems(list);
   m_source_box->clear();
-  m_source_box->addItems(options->sources());
+  list = options->sources();
+  m_source_box->addItems(list);
 }
 
 void
@@ -424,27 +462,85 @@ MainWindow::sourceChanged(const QString& source)
 void
 MainWindow::modifyingSelection()
 {
+  disableSelectionBtns();
+}
+
+void
+MainWindow::editorHasSelection()
+{
+  enableSelectionBtns();
+  disableNoSelectionBtns();
+}
+
+void
+MainWindow::editorHasNoSelection()
+{
+  disableSelectionBtns();
+  enableNoSelectionBtns();
+}
+
+void
+MainWindow::imageLoaded()
+{
+  enableImageLoadedBtns();
+  enableNoSelectionBtns();
+  disableSelectionBtns();
+}
+
+void
+MainWindow::disableNoSelectionBtns()
+{
   m_rot_left_act->setEnabled(false);
   m_rot_right_act->setEnabled(false);
   m_rot_angle_act->setEnabled(false);
   m_rot_edge_act->setEnabled(false);
   m_scale_act->setEnabled(false);
-  m_crop_act->setEnabled(false);
-  m_copy_act->setEnabled(false);
-  m_save_act->setEnabled(false);
-  m_save_as_act->setEnabled(false);
 }
 
 void
-MainWindow::selectionComplete()
+MainWindow::enableNoSelectionBtns()
 {
   m_rot_left_act->setEnabled(true);
   m_rot_right_act->setEnabled(true);
   m_rot_angle_act->setEnabled(true);
   m_rot_edge_act->setEnabled(true);
   m_scale_act->setEnabled(true);
+}
+
+void
+MainWindow::enableSelectionBtns()
+{
   m_crop_act->setEnabled(true);
   m_copy_act->setEnabled(true);
+}
+
+void
+MainWindow::disableSelectionBtns()
+{
+  m_crop_act->setEnabled(false);
+  m_copy_act->setEnabled(false);
+}
+
+void
+MainWindow::enableImageLoadedBtns()
+{
   m_save_act->setEnabled(true);
   m_save_as_act->setEnabled(true);
+  m_zoom_in_act->setEnabled(true);
+  m_zoom_out_act->setEnabled(true);
+  m_fit_best_act->setEnabled(true);
+  m_fit_width_act->setEnabled(true);
+  m_fit_height_act->setEnabled(true);
+}
+
+void
+MainWindow::disableImageLoadedBtns()
+{
+  m_save_act->setEnabled(false);
+  m_save_as_act->setEnabled(false);
+  m_zoom_in_act->setEnabled(false);
+  m_zoom_out_act->setEnabled(false);
+  m_fit_best_act->setEnabled(false);
+  m_fit_width_act->setEnabled(false);
+  m_fit_height_act->setEnabled(false);
 }

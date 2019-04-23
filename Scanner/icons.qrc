@@ -22,5 +22,10 @@
         <file>document-save-all.png</file>
         <file alias="save-as">document-save-as.png</file>
         <file alias="rotate-edge">rotate-edge.png</file>
+        <file alias="fit-best">zoom-fit-best.png</file>
+        <file alias="fit-height">zoom-fit-height.png</file>
+        <file alias="fit-width">zoom-fit-width.png</file>
+        <file alias="zoom-in">zoom-in.png</file>
+        <file alias="zoom-out">zoom-out.png</file>
     </qresource>
 </RCC>

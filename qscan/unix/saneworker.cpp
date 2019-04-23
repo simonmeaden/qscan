@@ -292,7 +292,7 @@ SaneWorker::setBoolValue(ScanDevice* device,
         if ((info & ~(SANE_INFO_RELOAD_OPTIONS | SANE_INFO_RELOAD_PARAMS)) ==
             0) {
           sane_close(sane_handle);
-          loadAvailableScannerOptions(device);
+          //          loadAvailableScannerOptions(device);
           return;
         }
         // TODO set whichever bool values need setting.
@@ -342,7 +342,7 @@ SaneWorker::setIntValue(ScanDevice* device,
         if ((info & ~(SANE_INFO_RELOAD_OPTIONS | SANE_INFO_RELOAD_PARAMS)) ==
             0) {
           sane_close(sane_handle);
-          loadAvailableScannerOptions(device);
+          //          loadAvailableScannerOptions(device);
           return;
         }
       }
@@ -375,7 +375,7 @@ SaneWorker::setStringValue(ScanDevice* device,
         if ((info & ~(SANE_INFO_RELOAD_OPTIONS | SANE_INFO_RELOAD_PARAMS)) ==
             0) {
           sane_close(sane_handle);
-          loadAvailableScannerOptions(device);
+          //          loadAvailableScannerOptions(device);
           return;
         }
         if (name == SANE_NAME_SCAN_SOURCE) {

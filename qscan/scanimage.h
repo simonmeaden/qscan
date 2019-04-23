@@ -13,6 +13,8 @@
 
 #include "log4qt/logger.h"
 
+class ScanEditor;
+
 class ScanImage : public QLabel
 {
   Q_OBJECT
@@ -20,7 +22,7 @@ public:
   explicit ScanImage(QWidget* parent);
 
   void setImage(const QImage& image);
-  void rotateBy(int angle);
+  //  void rotateBy(int angle);
   void rotateBy(qreal angle);
   void rotateByEdge();
   void scaleBy();
@@ -28,6 +30,9 @@ public:
   void saveAs();
   void zoomIn();
   void zoomOut();
+  void fitBest();
+  void fitHeight();
+  void fitWidth();
 
   QSize minimumSizeHint() const override;
   QSize sizeHint() const override;
@@ -39,8 +44,11 @@ public:
   void clearSelection();
 
 signals:
-  void selectionComplete();
+  void selected();
+  void unselected();
   void selectionUnderway();
+  void imageIsLoaded();
+  void adjustScrollbar(qreal);
 
 protected:
   enum State
@@ -53,7 +61,8 @@ protected:
     STRETCH_BOTTOMRIGHT,
     STRETCH_LEFT,
     STRETCH_RIGHT,
-    RUBBER_BANDING,
+    RUBBERBANDING,
+    RUBBERBAND_STARTING,
     RUBBERBAND_COMPLETE,
     RUBBERBAND_MOVE,
     EDGE_STARTING,
@@ -62,7 +71,12 @@ protected:
   };
   Log4Qt::Logger* m_logger;
   QImage m_image;
-  qreal m_display_scaled_by;
+  QImage m_scaled_image;
+  qreal m_scale_by;
+  QMatrix m_matrix;
+  qreal m_rotation;
+  ScanEditor* m_editor;
+
   int m_rb_start_x;
   int m_rb_start_y;
   int m_rb_end_x;
@@ -75,9 +89,8 @@ protected:
   QString m_filename;
   QPoint m_edge_start;
   QPoint m_edge_finish;
-  //  qreal m_zoom_factor;
-
-  void paintEvent(QPaintEvent*) override;
+  bool m_mouse_moved;
+  void paintEvent(QPaintEvent* event) override;
   void enterEvent(QEvent*) override;
   void leaveEvent(QEvent*) override;
   void mousePressEvent(QMouseEvent* event) override;
@@ -90,9 +103,18 @@ protected:
   QRectF getMinimumBoundingRect(QRect r, qreal angleRads);
   qreal getMax(qreal a, qreal b, qreal c, qreal d);
   void rotateUsingEdge();
+  void scaleImage(qreal factor);
 
   static const int EDGE_WIDTH = 2;
   static const int RUBBERBAND_WIDTH = 2;
+  static const int RUBBERBANDING_MIN = 2;
+  static const QColor EDGE_COLOR;
+  static const QColor EDGING_COLOR;
+  static const QColor RUBBERBAND_COLOR;
+  static const QColor RUBBERBANDING_COLOR;
+  static const QBrush RUBBERBAND_BRUSH;
+  static const qreal ZOOM_IN_FACTOR;
+  static const qreal ZOOM_OUT_FACTOR;
 };
 
 #endif // SCANIMAGE_H

@@ -32,18 +32,40 @@ ScanEditor::ScanEditor(QScan* scan, QWidget* parent)
   auto* layout = new QHBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
   setLayout(layout);
-  m_image_display = new ScanImage(this);
-  layout->addWidget(m_image_display);
+
   initActions();
+
+  scroll = new QScrollArea(this);
+  scroll->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+  scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+  scroll->setContentsMargins(0, 0, 0, 0);
+
+  //  auto* scroll_layout = new QHBoxLayout;
+  //  scroll->setLayout(scroll_layout);
+  //  scroll_layout->setContentsMargins(0, 0, 0, 0);
+
+  m_image_display = new ScanImage(this);
+  m_image_display->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+  m_image_display->setScaledContents(true);
+  scroll->setWidget(m_image_display);
+  layout->addWidget(scroll);
 
   connect(m_image_display,
           &ScanImage::selectionUnderway,
           this,
           &ScanEditor::selectionUnderway);
+  connect(m_image_display, &ScanImage::selected, this, &ScanEditor::selected);
+  connect(
+    m_image_display, &ScanImage::unselected, this, &ScanEditor::unselected);
   connect(m_image_display,
-          &ScanImage::selectionComplete,
+          &ScanImage::imageIsLoaded,
           this,
-          &ScanEditor::selectionComplete);
+          &ScanEditor::imageIsLoaded);
+  connect(m_image_display,
+          &ScanImage::adjustScrollbar,
+          this,
+          &ScanEditor::adjustScrollbar);
 }
 
 ScanEditor::~ScanEditor() = default;
@@ -107,6 +129,12 @@ ScanEditor::initActions()
 
   m_selectall_act = new QAction(tr("Select entire image"), this);
   connect(m_selectall_act, &QAction::triggered, this, &ScanEditor::selectAll);
+
+  m_save_act = new QAction(tr("Save image"), this);
+  connect(m_save_act, &QAction::triggered, this, &ScanEditor::selectAll);
+
+  m_save_as_act = new QAction(tr("Save image as"), this);
+  connect(m_save_as_act, &QAction::triggered, this, &ScanEditor::selectAll);
 }
 
 void
@@ -152,6 +180,9 @@ ScanEditor::contextMenuEvent(QContextMenuEvent* event)
   auto* contextMenu = new QMenu();
 
   if (m_image_display->hasSelection()) {
+    contextMenu->addAction(m_save_act);
+    contextMenu->addAction(m_save_as_act);
+    contextMenu->addSeparator();
     contextMenu->addAction(m_copy_selection_act);
     contextMenu->addAction(m_crop_to_selection_act);
     contextMenu->addAction(m_clear_selection_act);
@@ -159,6 +190,9 @@ ScanEditor::contextMenuEvent(QContextMenuEvent* event)
     contextMenu->addAction(m_rescan_act);
 
   } else {
+    contextMenu->addAction(m_save_act);
+    contextMenu->addAction(m_save_as_act);
+    contextMenu->addSeparator();
     contextMenu->addAction(m_selectall_act);
     contextMenu->addSeparator();
     contextMenu->addAction(m_crop_to_content_act);
@@ -180,6 +214,7 @@ ScanEditor::contextMenuEvent(QContextMenuEvent* event)
 bool
 ScanEditor::eventFilter(QObject* obj, QEvent* event)
 {
+  bool result;
   if (event->type() == QEvent::KeyPress) {
     auto* key_event = dynamic_cast<QKeyEvent*>(event);
     if (key_event) {
@@ -200,9 +235,25 @@ ScanEditor::eventFilter(QObject* obj, QEvent* event)
           break;
       }
     }
-    return true;
+    result = true;
+  } else if (event->type() == QEvent::Show || event->type() == QEvent::Resize) {
+    m_image_display->resize(frameRect().size());
+    result = true;
+  } else {
+    result = QObject::eventFilter(obj, event);
   }
-  return QObject::eventFilter(obj, event);
+  return result;
+}
+
+void
+ScanEditor::adjustScrollbar(qreal factor)
+{
+  QScrollBar* scrollbar = scroll->horizontalScrollBar();
+  scrollbar->setValue(int(factor * scrollbar->value() +
+                          ((factor - 1) * scrollbar->pageStep() / 2)));
+  scrollbar = scroll->verticalScrollBar();
+  scrollbar->setValue(int(factor * scrollbar->value() +
+                          ((factor - 1) * scrollbar->pageStep() / 2)));
 }
 
 void
@@ -214,19 +265,19 @@ ScanEditor::selectAll()
 void
 ScanEditor::rotate180()
 {
-  m_image_display->rotateBy(180);
+  m_image_display->rotateBy(180.0);
 }
 
 void
 ScanEditor::rotateCW()
 {
-  m_image_display->rotateBy(90);
+  m_image_display->rotateBy(90.0);
 }
 
 void
 ScanEditor::rotateACW()
 {
-  m_image_display->rotateBy(-90);
+  m_image_display->rotateBy(-90.0);
 }
 
 void
@@ -305,4 +356,22 @@ void
 ScanEditor::zoomOut()
 {
   m_image_display->zoomOut();
+}
+
+void
+ScanEditor::fitBest()
+{
+  m_image_display->fitBest();
+}
+
+void
+ScanEditor::fitHeight()
+{
+  m_image_display->fitHeight();
+}
+
+void
+ScanEditor::fitWidth()
+{
+  m_image_display->fitWidth();
 }
