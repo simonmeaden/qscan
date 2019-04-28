@@ -27,6 +27,21 @@ ScanEditor::ScanEditor(QScan* scan, QWidget* parent)
   , m_image_display(nullptr)
   , m_prog_dlg(nullptr)
   , m_scan_lib(scan)
+  , m_copy_selection_act(new QAction(tr("Copy selection"), this))
+  , m_crop_to_selection_act(new QAction(tr("Clear selection"), this))
+  , m_clear_selection_act(new QAction(tr("Clear selection"), this))
+  , m_crop_to_content_act(new QAction(tr("Crop to content"), this))
+  , m_rotate_cw_act(new QAction(tr("Rotate 90° clockwise"), this))
+  , m_rotate_acw_act(new QAction(tr("Rotate 90° anti-clockwise"), this))
+  , m_rotate_180_act(new QAction(tr("Rotate 180°"), this))
+  , m_rotate_by_angle_act(new QAction(tr("Rotate by angle"), this))
+  , m_rotate_by_edge_act(new QAction(tr("Rotate by edge"), this))
+  , m_rescan_act(new QAction(tr("Re-scan image to crop"), this))
+  , m_scale_act(new QAction(tr("Scale image"), this))
+  , m_selectall_act(new QAction(tr("Select entire image"), this))
+  , m_save_act(new QAction(tr("Save image"), this))
+  , m_save_as_act(new QAction(tr("Save image as"), this))
+  , m_select_all(false)
 {
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   auto* layout = new QHBoxLayout(this);
@@ -73,7 +88,6 @@ ScanEditor::~ScanEditor() = default;
 void
 ScanEditor::initActions()
 {
-  m_copy_selection_act = new QAction(tr("Copy selection"), this);
   m_copy_selection_act->setShortcut(QKeySequence::Copy);
   m_copy_selection_act->setToolTip(tr("Copies selection to clipboard."));
   connect(m_copy_selection_act,
@@ -81,7 +95,6 @@ ScanEditor::initActions()
           this,
           &ScanEditor::copySelection);
 
-  m_crop_to_selection_act = new QAction(tr("Crop to selection"), this);
   m_crop_to_selection_act->setToolTip(
     tr("Crops the image to the selection rectangle."));
   connect(m_crop_to_selection_act,
@@ -89,51 +102,39 @@ ScanEditor::initActions()
           this,
           &ScanEditor::cropToSelection);
 
-  m_clear_selection_act = new QAction(tr("Clear selection"), this);
   m_clear_selection_act->setToolTip(tr("Removes selection rectangle."));
   connect(m_clear_selection_act,
           &QAction::triggered,
           this,
           &ScanEditor::cropToSelection);
 
-  m_crop_to_content_act = new QAction(tr("Crop to content"), this);
   connect(m_crop_to_content_act,
           &QAction::triggered,
           this,
           &ScanEditor::cropToContent);
 
-  m_rotate_cw_act = new QAction(tr("Rotate 90° clockwise"), this);
   connect(m_rotate_cw_act, &QAction::triggered, this, &ScanEditor::rotateCW);
 
-  m_rotate_acw_act = new QAction(tr("Rotate 90° anti-clockwise"), this);
   connect(m_rotate_acw_act, &QAction::triggered, this, &ScanEditor::rotateACW);
 
-  m_rotate_180_act = new QAction(tr("Rotate 180°"), this);
   connect(m_rotate_180_act, &QAction::triggered, this, &ScanEditor::rotate180);
 
-  m_rotate_by_angle_act = new QAction(tr("Rotate by angle"), this);
   connect(m_rotate_by_angle_act,
           &QAction::triggered,
           this,
           &ScanEditor::rotateByAngle);
 
-  m_rotate_by_edge_act = new QAction(tr("Rotate by edge"), this);
   connect(
     m_rotate_by_edge_act, &QAction::triggered, this, &ScanEditor::rotateByEdge);
 
-  m_rescan_act = new QAction(tr("Re-scan image to crop"), this);
   connect(m_rescan_act, &QAction::triggered, this, &ScanEditor::rescan);
 
-  m_scale_act = new QAction(tr("Scale image"), this);
   connect(m_scale_act, &QAction::triggered, this, &ScanEditor::scale);
 
-  m_selectall_act = new QAction(tr("Select entire image"), this);
   connect(m_selectall_act, &QAction::triggered, this, &ScanEditor::selectAll);
 
-  m_save_act = new QAction(tr("Save image"), this);
   connect(m_save_act, &QAction::triggered, this, &ScanEditor::selectAll);
 
-  m_save_as_act = new QAction(tr("Save image as"), this);
   connect(m_save_as_act, &QAction::triggered, this, &ScanEditor::selectAll);
 }
 

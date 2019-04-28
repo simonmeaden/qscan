@@ -189,6 +189,97 @@ MainWindow::initToolbar()
   toolbar->addAction(m_close_act);
 }
 
+QFrame*
+MainWindow::initModeFrame()
+{
+  int col = 0;
+  QFrame* mode_frame = new QFrame(this);
+  auto* mode_layout = new QGridLayout;
+  mode_frame->setLayout(mode_layout);
+
+  QLabel* lbl = new QLabel(tr("Mode :"), this);
+  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  m_main_layout->addWidget(lbl, 1, 3);
+  mode_layout->addWidget(lbl, 0, col++);
+
+  m_mode_box = new QComboBox(this);
+  m_mode_box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  connect(
+    m_mode_box, &QComboBox::currentTextChanged, this, &MainWindow::modeChanged);
+  mode_layout->addWidget(m_mode_box, 0, col++);
+
+  lbl = new QLabel(tr("Current Mode :"), this);
+  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  mode_layout->addWidget(lbl, 0, col++);
+
+  m_curr_mode = new QLabel(this);
+  m_curr_mode->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  mode_layout->addWidget(m_curr_mode, 0, col);
+
+  return mode_frame;
+}
+
+QFrame*
+MainWindow::initSourceFrame()
+{
+  int col = 0;
+  QFrame* source_frame = new QFrame(this);
+  auto* source_layout = new QGridLayout;
+  source_frame->setLayout(source_layout);
+
+  QLabel* lbl = new QLabel(tr("Source :"), this);
+  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  source_layout->addWidget(lbl, 0, col++);
+
+  m_source_box = new QComboBox(this);
+  m_source_box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  connect(m_source_box,
+          &QComboBox::currentTextChanged,
+          this,
+          &MainWindow::sourceChanged);
+  source_layout->addWidget(m_source_box, 0, col++);
+
+  lbl = new QLabel(tr("Current Source :"), this);
+  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  source_layout->addWidget(lbl, 0, col++);
+
+  m_curr_src = new QLabel(this);
+  m_curr_src->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  source_layout->addWidget(m_curr_src, 0, col++);
+
+  return source_frame;
+}
+
+QFrame*
+MainWindow::initResolutionFrame()
+{
+  int col = 0;
+  QFrame* res_frame = new QFrame(this);
+  auto* res_layout = new QGridLayout;
+  res_frame->setLayout(res_layout);
+
+  QLabel* lbl = new QLabel("Min Resolution :", this);
+  res_layout->addWidget(lbl, 0, col++);
+  m_min_res = new QLabel(this);
+  m_min_res->setNum(1);
+  res_layout->addWidget(m_min_res, 0, col++);
+  lbl = new QLabel("Resolution :", this);
+  res_layout->addWidget(lbl, 0, col++);
+  m_res_box = new QSpinBox(this);
+  m_res_box->setMinimum(1);
+  m_res_box->setMaximum(1);
+  res_layout->addWidget(m_res_box, 0, col++);
+  lbl = new QLabel("dpi", this);
+  res_layout->addWidget(lbl, 0, col++, Qt::AlignLeft);
+  lbl = new QLabel("Max Resolution :", this);
+  res_layout->addWidget(lbl, 0, col++);
+  m_max_res = new QLabel(this);
+  m_max_res->setNum(1);
+  res_layout->addWidget(m_max_res, 0, col);
+
+  return res_frame;
+}
+
 void
 MainWindow::initGui()
 {
@@ -212,8 +303,9 @@ MainWindow::initGui()
           this,
           &MainWindow::cancelScanning);
 
-  m_main_layout->addWidget(m_image_editor, 0, 0, 3, 1);
+  int row = 0;
 
+  // Source Scanner list.
   QStringList labels;
   labels << "Name"
          << "Vendor"
@@ -234,34 +326,22 @@ MainWindow::initGui()
           &MainWindow::scannerSelectionChanged);
   connect(
     m_scanners, &QTableWidget::doubleClicked, this, &MainWindow::doubleClicked);
-  m_main_layout->addWidget(m_scanners, 0, 1, 1, 4);
+  m_main_layout->addWidget(m_scanners, row++, 1, 1, 4);
 
-  QLabel* lbl = new QLabel(tr("Source :"), this);
-  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_main_layout->addWidget(lbl, 1, 1);
+  // Scanner source info
+  m_main_layout->addWidget(initSourceFrame(), row++, 1);
+  // Scanner mode info
+  m_main_layout->addWidget(initModeFrame(), row++, 1);
+  // scanner resolution info
+  m_main_layout->addWidget(initResolutionFrame(), row++, 1);
 
-  m_source_box = new QComboBox(this);
-  m_source_box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  connect(m_source_box,
-          &QComboBox::currentTextChanged,
-          this,
-          &MainWindow::sourceChanged);
-  m_main_layout->addWidget(m_source_box, 1, 2);
-
-  lbl = new QLabel(tr("Mode :"), this);
-  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_main_layout->addWidget(lbl, 1, 3);
-
-  m_mode_box = new QComboBox(this);
-  m_mode_box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  connect(
-    m_mode_box, &QComboBox::currentTextChanged, this, &MainWindow::modeChanged);
-  m_main_layout->addWidget(m_mode_box, 1, 4);
-
+  // logger editor
   m_empty_edit = new QPlainTextEdit(this);
   m_empty_edit->setReadOnly(true);
   m_empty_edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  m_main_layout->addWidget(m_empty_edit, 2, 1, 1, 4);
+  m_main_layout->addWidget(m_empty_edit, row, 1);
+
+  m_main_layout->addWidget(m_image_editor, 0, 0, row + 1, 1);
 
   initToolbar();
 }
@@ -438,18 +518,32 @@ MainWindow::receiveOptionsSet()
   ScanDevice* device = m_scan_lib->device(m_selected_name);
   ScanOptions* options = device->options;
   m_mode_box->clear();
-  QStringList list = options->scanModes();
+  QStringList list = options->modes();
   m_mode_box->addItems(list);
   m_source_box->clear();
   list = options->sources();
   m_source_box->addItems(list);
+
+  int min = options->minResolution();
+  int max = options->maxResolution();
+  ScanUnits units = options->units();
+  QString u = (units == ScanUnits::DPI ? "dpi" : "mm");
+  int res = options->resolution();
+  QString s = QString("%1%2");
+  m_min_res->setText(s.arg(min).arg(u));
+  m_max_res->setText(s.arg(max).arg(u));
+  m_res_box->setMinimum(min);
+  m_res_box->setMaximum(max);
+  m_res_box->setValue(res);
+  m_curr_src->setText(options->currentSource());
+  m_curr_mode->setText(options->currentMode());
 }
 
 void
 MainWindow::modeChanged(const QString& mode)
 {
   ScanDevice* device = m_scan_lib->device(m_selected_name);
-  m_scan_lib->setSource(device, mode);
+  m_scan_lib->setScanMode(device, mode);
 }
 
 void

@@ -25,6 +25,7 @@
 
 ScanOptions::ScanOptions(QObject* parent)
   : QObject(parent)
+  , m_units(ScanUnits::DPI)
 {}
 
 ScanOptions::ScanOptions(const ScanOptions& other)
@@ -40,17 +41,18 @@ ScanOptions::copyData(const ScanOptions& other)
   m_modes = other.m_modes;
   m_sources = other.m_sources;
   m_depth = other.m_depth;
-  m_type = other.m_type;
+  //  m_type = other.m_type;
   m_paper_width = other.m_paper_width;
   m_paper_height = other.m_paper_height;
   m_brightness = other.m_brightness;
   m_contrast = other.m_contrast;
   m_page_delay = other.m_page_delay;
   m_geometry = other.m_geometry;
-  m_scan_resolution = other.m_scan_resolution;
-  m_scan_resolution_x = other.m_scan_resolution_x;
-  m_scan_resolution_y = other.m_scan_resolution_y;
+  m_resolution = other.m_resolution;
+  m_resolution_x = other.m_resolution_x;
+  m_resolution_y = other.m_resolution_y;
   m_option_pairs = other.m_option_pairs;
+  m_units = other.m_units;
 }
 
 QString
@@ -77,6 +79,66 @@ ScanOptions::setSource(const QString& source)
   m_source = source;
 }
 
+ScanUnits
+ScanOptions::units() const
+{
+  return m_units;
+}
+
+void
+ScanOptions::setUnits(const ScanUnits& units)
+{
+  m_units = units;
+}
+
+QString
+ScanOptions::currentMode() const
+{
+  return m_current_mode;
+}
+
+void
+ScanOptions::setCurrentMode(const QString& current_mode)
+{
+  m_current_mode = current_mode;
+}
+
+QString
+ScanOptions::currentSource() const
+{
+  return m_current_source;
+}
+
+void
+ScanOptions::setCurrentSource(const QString& current_source)
+{
+  m_current_source = current_source;
+}
+
+int
+ScanOptions::minResolution() const
+{
+  return m_min_resolution;
+}
+
+void
+ScanOptions::setMinResolution(int min_resolution)
+{
+  m_min_resolution = min_resolution;
+}
+
+int
+ScanOptions::maxResolution() const
+{
+  return m_max_resolution;
+}
+
+void
+ScanOptions::setMaxResolution(int max_resolution)
+{
+  m_max_resolution = max_resolution;
+}
+
 ScanOptions&
 ScanOptions::operator=(const ScanOptions& rhs)
 {
@@ -85,13 +147,13 @@ ScanOptions::operator=(const ScanOptions& rhs)
 }
 
 QStringList
-ScanOptions::scanModes() const
+ScanOptions::modes() const
 {
   return m_modes;
 }
 
 void
-ScanOptions::setScanModes(const QStringList& modes)
+ScanOptions::setModes(const QStringList& modes)
 {
   m_modes = modes;
 }
@@ -120,17 +182,17 @@ ScanOptions::setDepth(int depth)
   m_depth = depth;
 }
 
-ScanType
-ScanOptions::type() const
-{
-  return m_type;
-}
+// ScanType
+// ScanOptions::type() const
+//{
+//  return m_type;
+//}
 
-void
-ScanOptions::setType(const ScanType& type)
-{
-  m_type = type;
-}
+// void
+// ScanOptions::setType(const ScanType& type)
+//{
+//  m_type = type;
+//}
 
 int
 ScanOptions::paperWidth() const
@@ -257,41 +319,41 @@ ScanOptions::setGeometry(QRect geometry)
 }
 
 int
-ScanOptions::scanResolutionX() const
+ScanOptions::resolutionX() const
 {
-  return m_scan_resolution_x;
+  return m_resolution_x;
 }
 
 void
-ScanOptions::setScanResolutionX(int scan_resolution_x)
+ScanOptions::setResolutionX(int scan_resolution_x)
 {
-  m_scan_resolution_x = scan_resolution_x;
+  m_resolution_x = scan_resolution_x;
 }
 
 int
-ScanOptions::scanResolutionY() const
+ScanOptions::resolutionY() const
 {
-  return m_scan_resolution_y;
+  return m_resolution_y;
 }
 
 void
-ScanOptions::setScanResolutionY(int scan_resolution_y)
+ScanOptions::setResolutionY(int scan_resolution_y)
 {
-  m_scan_resolution_y = scan_resolution_y;
+  m_resolution_y = scan_resolution_y;
 }
 
 int
-ScanOptions::scanResolution() const
+ScanOptions::resolution() const
 {
-  return m_scan_resolution;
+  return m_resolution;
 }
 
 void
-ScanOptions::setScanResolution(int scan_resolution)
+ScanOptions::setResolution(int scan_resolution)
 {
-  m_scan_resolution = scan_resolution;
-  setScanResolutionX(scan_resolution);
-  setScanResolutionY(scan_resolution);
+  m_resolution = scan_resolution;
+  setResolutionX(scan_resolution);
+  setResolutionY(scan_resolution);
 }
 
 int

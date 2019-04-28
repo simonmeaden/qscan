@@ -22,6 +22,7 @@ ScanImage::ScanImage(QWidget* parent)
   , m_is_inside(false)
   , m_state(DOING_NOTHING)
   , m_mouse_moved(false)
+  , m_rotation(0)
 {
   m_editor = qobject_cast<ScanEditor*>(parent);
   m_logger = Log4Qt::Logger::logger(tr("ScanImage"));

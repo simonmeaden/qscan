@@ -20,6 +20,7 @@
 #include "saneworker.h"
 
 #include <memory>
+#include <stdlib.h>
 
 SaneWorker::SaneWorker(QObject* parent)
   : QObject(parent)
@@ -216,6 +217,53 @@ SaneWorker::scan(ScanDevice* device)
 }
 
 void
+SaneWorker::setResolution(ScanDevice* device,
+                          const SANE_Option_Descriptor* option,
+                          SANE_Int option_id)
+{
+  switch (option->unit) {
+    case SANE_UNIT_MM:
+      device->options->setUnits(ScanUnits::MM);
+      break;
+    case SANE_UNIT_DPI:
+      device->options->setUnits(ScanUnits::DPI);
+      break;
+  }
+  if (option->constraint_type == SANE_CONSTRAINT_RANGE) {
+    switch (option->type) {
+      case SANE_TYPE_INT:
+        device->options->setMinResolution(option->constraint.range->min);
+        device->options->setMaxResolution(option->constraint.range->max);
+        break;
+      case SANE_TYPE_FIXED:
+        device->options->setMinResolution(
+          SANE_UNFIX(option->constraint.range->min));
+        device->options->setMaxResolution(
+          SANE_UNFIX(option->constraint.range->max));
+        break;
+      default:
+        break;
+    }
+  }
+  int value = -1;
+  SANE_Status status = sane_control_option(
+    device->sane_handle, option_id, SANE_ACTION_GET_VALUE, &value, nullptr);
+
+  if (status == SANE_STATUS_GOOD) {
+    switch (option->type) {
+      case SANE_TYPE_INT:
+        device->options->setResolution(value);
+        break;
+      case SANE_TYPE_FIXED:
+        device->options->setResolution(SANE_UNFIX(value));
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+void
 SaneWorker::loadAvailableScannerOptions(ScanDevice* device)
 {
   QMutexLocker locker(&m_mutex);
@@ -224,6 +272,7 @@ SaneWorker::loadAvailableScannerOptions(ScanDevice* device)
   SANE_Int number_of_options = 0;
   SANE_Int option_id = 1;
   SANE_Int info;
+  QStringList list;
 
   status = sane_open(device->name.toStdString().c_str(), &sane_handle);
   device->sane_handle = sane_handle;
@@ -238,24 +287,105 @@ SaneWorker::loadAvailableScannerOptions(ScanDevice* device)
 
   if (status == SANE_STATUS_GOOD) {
     for (SANE_Int i = 1; i < number_of_options; ++option_id) {
-      if (const auto current_option =
+      if (const auto option =
             sane_get_option_descriptor(sane_handle, option_id)) {
-        QString name(current_option->name);
-        QString title(current_option->title);
+        QString name(option->name);
+        QString title(option->title);
 
         //        m_logger->info(tr("Name : %1, Title : %2").arg(name, title));
-
+        QStringList list;
         if (name == SANE_NAME_SCAN_TL_X || name == SANE_NAME_SCAN_TL_Y ||
             name == SANE_NAME_SCAN_BR_X || name == SANE_NAME_SCAN_BR_Y ||
-            name == SANE_NAME_SCAN_RESOLUTION ||
-            name == SANE_NAME_SCAN_X_RESOLUTION ||
-            name == SANE_NAME_SCAN_Y_RESOLUTION || name == SANE_NAME_CONTRAST ||
-            name == SANE_NAME_BRIGHTNESS) {
+            name == SANE_NAME_CONTRAST || name == SANE_NAME_BRIGHTNESS) {
           getIntValue(device, option_id, name);
 
-        } else if (name == SANE_NAME_SCAN_SOURCE ||
-                   name == SANE_NAME_SCAN_MODE) {
-          getStringValue(device, option_id, name, current_option);
+        } else if (name == SANE_NAME_SCAN_RESOLUTION) {
+          setResolution(device, option, option_id);
+
+        } else if (name == SANE_NAME_SCAN_SOURCE) {
+          switch (option->type) {
+            case SANE_TYPE_STRING: {
+              QString s;
+
+              switch (option->constraint_type) {
+                case SANE_CONSTRAINT_STRING_LIST:
+                  for (int i = 0; option->constraint.string_list[i] != nullptr;
+                       i++) {
+                    s = QString(option->constraint.string_list[i]);
+                    list.append(s);
+                  }
+
+                  break;
+
+                case SANE_CONSTRAINT_WORD_LIST:
+                  for (int i = 1; i <= option->constraint.word_list[0]; i++) {
+                    s = QString(option->constraint.word_list[i]);
+                    list.append(s);
+                  }
+
+                  break;
+
+                default:
+                  break;
+              }
+            }
+
+            default:
+              break;
+          }
+          if (!list.isEmpty()) {
+            device->options->setSources(list);
+          }
+          // get the current source
+          if (status == SANE_STATUS_GOOD) {
+            char* out_str =
+              get_option_value(device->sane_handle, SANE_NAME_SCAN_SOURCE);
+            QString s = QString(out_str);
+            device->options->setCurrentSource(s);
+          }
+          //          getStringValue(device, option_id, name, option);
+        } else if (name == SANE_NAME_SCAN_MODE) {
+
+          switch (option->type) {
+            case SANE_TYPE_STRING: {
+              QString s;
+
+              switch (option->constraint_type) {
+                case SANE_CONSTRAINT_STRING_LIST:
+                  for (int i = 0; option->constraint.string_list[i] != nullptr;
+                       i++) {
+                    s = QString(option->constraint.string_list[i]);
+                    list.append(s);
+                  }
+
+                  break;
+
+                case SANE_CONSTRAINT_WORD_LIST:
+                  for (int i = 1; i <= option->constraint.word_list[0]; i++) {
+                    s = QString(option->constraint.word_list[i]);
+                    list.append(s);
+                  }
+
+                  break;
+
+                default:
+                  break;
+              }
+            }
+
+            default:
+              break;
+          }
+          if (!list.isEmpty()) {
+            device->options->setModes(list);
+          }
+          // get the current mode
+          if (status == SANE_STATUS_GOOD) {
+            char* out_str =
+              get_option_value(device->sane_handle, SANE_NAME_SCAN_MODE);
+            QString s = QString(out_str);
+            device->options->setCurrentMode(s);
+          }
         }
 
         if (!name.isEmpty()) {
@@ -269,8 +399,6 @@ SaneWorker::loadAvailableScannerOptions(ScanDevice* device)
   }
 
   sane_close(sane_handle);
-
-  //  emit availableScannerOptions(device);
 }
 
 void
@@ -329,11 +457,11 @@ SaneWorker::setIntValue(ScanDevice* device,
         } else if (name == SANE_NAME_SCAN_BR_Y) {
           device->options->setBottomRightY(value);
         } else if (name == SANE_NAME_SCAN_RESOLUTION) {
-          device->options->setScanResolution(value);
+          device->options->setResolution(value);
         } else if (name == SANE_NAME_SCAN_X_RESOLUTION) {
-          device->options->setScanResolutionX(value);
+          device->options->setResolutionX(value);
         } else if (name == SANE_NAME_SCAN_Y_RESOLUTION) {
-          device->options->setScanResolutionY(value);
+          device->options->setResolutionY(value);
         } else if (name == SANE_NAME_CONTRAST) {
           device->options->setContrast(value);
         } else if (name == SANE_NAME_BRIGHTNESS) {
@@ -363,14 +491,15 @@ SaneWorker::setStringValue(ScanDevice* device,
   SANE_Int info;
   //  SANE_String val_string;
   status = sane_open(device->name.toStdString().c_str(), &sane_handle);
-  char val_string[value.length() + 1];
-  sprintf(val_string, "%s", (const char*)(value.toStdString().c_str()));
+  QByteArray ba = value.toLatin1();
+  char* c_str = new char[ba.length() + 1];
+  sprintf(c_str, "%s", ba.data());
 
   if (status == SANE_STATUS_GOOD) {
 
     if (option_id > -1) {
       status = sane_control_option(
-        sane_handle, option_id, SANE_ACTION_SET_VALUE, &val_string, &info);
+        sane_handle, option_id, SANE_ACTION_SET_VALUE, &c_str, &info);
       if (status == SANE_STATUS_GOOD) {
         if ((info & ~(SANE_INFO_RELOAD_OPTIONS | SANE_INFO_RELOAD_PARAMS)) ==
             0) {
@@ -412,11 +541,11 @@ SaneWorker::getIntValue(ScanDevice* device, int option_id, const QString& name)
       } else if (name == SANE_NAME_SCAN_BR_Y) {
         device->options->setBottomRightY(v);
       } else if (name == SANE_NAME_SCAN_RESOLUTION) {
-        device->options->setScanResolution(v);
+        device->options->setResolution(v);
       } else if (name == SANE_NAME_SCAN_X_RESOLUTION) {
-        device->options->setScanResolutionX(v);
+        device->options->setResolutionX(v);
       } else if (name == SANE_NAME_SCAN_Y_RESOLUTION) {
-        device->options->setScanResolutionY(v);
+        device->options->setResolutionY(v);
       } else if (name == SANE_NAME_CONTRAST) {
         device->options->setContrast(v);
       } else if (name == SANE_NAME_BRIGHTNESS) {
@@ -478,7 +607,7 @@ SaneWorker::getStringValue(ScanDevice* device,
         if (name == SANE_NAME_SCAN_SOURCE) {
           device->options->setSources(list);
         } else if (name == SANE_NAME_SCAN_MODE) {
-          device->options->setScanModes(list);
+          device->options->setModes(list);
         }
       }
     }
@@ -489,4 +618,176 @@ void
 SaneWorker::cancelScan()
 {
   sane_cancel(m_handle);
+}
+
+#define GUARDS_SIZE 4 /* 4 bytes */
+#define GUARD1 ((SANE_Word)0x5abf8ea5)
+#define GUARD2 ((SANE_Word)0xa58ebf5a)
+
+static int
+check(enum message_level level, int condition, const char* format, ...)
+{
+  char str[1000];
+  va_list args;
+
+  //  if (level != MSG && level != INF) checks_done ++;
+
+  if (condition != 0)
+    return condition;
+
+  va_start(args, format);
+  vsprintf(str, format, args);
+  va_end(args);
+
+  switch (level) {
+    case MSG:
+      printf("          %s\n", str);
+      break;
+    case INF: /* info */
+      printf("info    : %s\n", str);
+      break;
+    case WRN: /* warning */
+      printf("warning : %s\n", str);
+      //      message_number_wrn ++;
+      break;
+    case ERR: /* error */
+      printf("ERROR   : %s\n", str);
+      //      message_number_err ++;
+      break;
+    case FATAL: /* fatal error */
+      printf("FATAL ERROR : %s\n", str);
+      //      message_number_err ++;
+      break;
+    case BUG: /* bug in tstbackend */
+      printf("tstbackend BUG : %s\n", str);
+      break;
+  }
+
+  if (level == FATAL || level == BUG) {
+    /* Fatal error. Generate a core dump. */
+    //    display_stats();
+    abort();
+  }
+
+  fflush(stdout);
+
+  return (0);
+}
+
+/* Allocate the requested memory plus enough room to store some guard bytes. */
+static void*
+guards_malloc(size_t size)
+{
+  unsigned char* ptr;
+
+  size += 2 * GUARDS_SIZE;
+  ptr = reinterpret_cast<unsigned char*>(malloc(size));
+
+  //  assert(ptr);
+
+  ptr += GUARDS_SIZE;
+
+  return (ptr);
+}
+
+/* Free some memory allocated by guards_malloc. */
+static void
+guards_free(void* ptr)
+{
+  unsigned char* p = reinterpret_cast<unsigned char*>(ptr);
+
+  p -= GUARDS_SIZE;
+  free(p);
+}
+
+/* Get an option descriptor by the name of the option. */
+static const SANE_Option_Descriptor*
+get_optdesc_by_name(SANE_Handle device, const char* name, int* option_num)
+{
+  const SANE_Option_Descriptor* opt;
+  SANE_Int num_dev_options;
+  SANE_Status status;
+
+  /* Get the number of options. */
+  status =
+    sane_control_option(device, 0, SANE_ACTION_GET_VALUE, &num_dev_options, 0);
+  check(FATAL,
+        (status == SANE_STATUS_GOOD),
+        "cannot get option 0 value (%s)",
+        sane_strstatus(status));
+
+  for (*option_num = 0; *option_num < num_dev_options; (*option_num)++) {
+
+    /* Get the option descriptor */
+    opt = sane_get_option_descriptor(device, *option_num);
+    check(FATAL,
+          (opt != NULL),
+          "cannot get option descriptor for option %d",
+          *option_num);
+
+    if (opt->name && strcmp(opt->name, name) == 0) {
+      return (opt);
+    }
+  }
+  return (NULL);
+}
+
+/* Returns a string with the value of an option. */
+static char*
+get_option_value(SANE_Handle device, const char* option_name)
+{
+  const SANE_Option_Descriptor* opt;
+  void* optval; /* value for the option */
+  int optnum;
+  static char str[100];
+  SANE_Status status;
+
+  opt = get_optdesc_by_name(device, option_name, &optnum);
+  if (opt) {
+
+    optval = guards_malloc(opt->size);
+    status =
+      sane_control_option(device, optnum, SANE_ACTION_GET_VALUE, optval, NULL);
+
+    if (status == SANE_STATUS_GOOD) {
+      switch (opt->type) {
+
+        case SANE_TYPE_BOOL:
+          if (*(SANE_Word*)optval == SANE_FALSE) {
+            strcpy(str, "FALSE");
+          } else {
+            strcpy(str, "TRUE");
+          }
+          break;
+
+        case SANE_TYPE_INT:
+          sprintf(str, "%d", *(SANE_Word*)optval);
+          break;
+
+        case SANE_TYPE_FIXED: {
+          int i;
+          i = SANE_UNFIX(*(SANE_Word*)optval);
+          sprintf(str, "%d", i);
+        } break;
+
+        case SANE_TYPE_STRING:
+          strcpy(str, reinterpret_cast<const char*>(optval));
+          break;
+
+        default:
+          str[0] = 0;
+      }
+    } else {
+      /* Shouldn't happen. */
+      strcpy(str, "backend default");
+    }
+
+    guards_free(optval);
+
+  } else {
+    /* The option does not exists. */
+    strcpy(str, "backend default");
+  }
+
+  return (str);
 }

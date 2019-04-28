@@ -234,11 +234,11 @@ SaneLibrary::receiveIntValue(ScanDevice* device, int value)
   } else if (device->op_name == SANE_NAME_BRIGHTNESS) {
     device->options->setBrightness(value);
   } else if (device->op_name == SANE_NAME_SCAN_RESOLUTION) {
-    device->options->setScanResolution(value);
+    device->options->setResolution(value);
   } else if (device->op_name == SANE_NAME_SCAN_X_RESOLUTION) {
-    device->options->setScanResolutionX(value);
+    device->options->setResolutionX(value);
   } else if (device->op_name == SANE_NAME_SCAN_Y_RESOLUTION) {
-    device->options->setScanResolutionY(value);
+    device->options->setResolutionY(value);
   }
 }
 

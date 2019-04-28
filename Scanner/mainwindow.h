@@ -35,6 +35,7 @@
 #include <QPushButton>
 #include <QScreen>
 #include <QScrollArea>
+#include <QSpinBox>
 #include <QTableWidget>
 #include <QToolBar>
 
@@ -89,6 +90,8 @@ protected:
   QTextStream* m_log_stream;
   QPlainTextEdit* m_empty_edit;
   QPlainTextEdit* m_log_edit;
+  QLabel *m_min_res, *m_max_res, *m_curr_src, *m_curr_mode;
+  QSpinBox* m_res_box;
 
   QPixmapCache::Key scan_key;
   QPixmapCache::Key rot_left_key;
@@ -150,6 +153,9 @@ protected:
   void disableNoSelectionBtns();
   void enableImageLoadedBtns();
   void disableImageLoadedBtns();
+  QFrame* initModeFrame();
+  QFrame* initSourceFrame();
+  QFrame* initResolutionFrame();
 };
 
 #endif // MAINWINDOW_H

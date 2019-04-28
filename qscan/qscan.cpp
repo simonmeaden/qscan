@@ -164,7 +164,7 @@ QScan::setBrightness(ScanDevice* device, int value)
 int
 QScan::resolution(ScanDevice* device)
 {
-  return device->options->scanResolution();
+  return device->options->resolution();
 }
 
 void
@@ -176,7 +176,7 @@ QScan::setResolution(ScanDevice* device, int value)
 int
 QScan::resolutionX(ScanDevice* device)
 {
-  return device->options->scanResolutionX();
+  return device->options->resolutionX();
 }
 
 void
@@ -188,7 +188,7 @@ QScan::setResolutionX(ScanDevice* device, int value)
 int
 QScan::resolutionY(ScanDevice* device)
 {
-  return device->options->scanResolutionY();
+  return device->options->resolutionY();
 }
 
 void

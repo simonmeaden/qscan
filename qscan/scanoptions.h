@@ -30,21 +30,10 @@
 class ScanDevice;
 using Device = QSharedPointer<ScanDevice>;
 
-enum ScanMode
+enum ScanUnits
 {
-  Default, /*!< Default - normally colour */
-  Color,   /*!< Colour scan */
-  Gray,    /*!< Greyscale */
-  Mono,    /*!< Monochromatic */
-};
-
-enum ScanType
-{
-  Single,    /*!< Single page */
-  ADF_Front, /*!< Auto Document Feeder front page only */
-  ADF_Back,  /*!< Auto Document Feeder rear page only */
-  ADF_Both,  /*!< Auto Document Feeder both front and rear pages */
-  Batch,     /*!< A batch scan */
+  DPI,
+  MM,
 };
 
 class ScanOptions : public QObject
@@ -64,8 +53,8 @@ public:
   //                                    const int option_id,
   //                                    const SANE_Option_Descriptor* opt);
 
-  QStringList scanModes() const;
-  void setScanModes(const QStringList& modes);
+  QStringList modes() const;
+  void setModes(const QStringList& modes);
 
   QStringList sources() const;
   void setSources(const QStringList& sources);
@@ -73,8 +62,8 @@ public:
   int depth() const;
   void setDepth(int depth);
 
-  ScanType type() const;
-  void setType(const ScanType& type);
+  //  ScanType type() const;
+  //  void setType(const ScanType& type);
 
   int paperWidth() const;
   void setPaperWidth(int paperWidth);
@@ -106,14 +95,20 @@ public:
   QRect geometry();
   void setGeometry(QRect geometry);
 
-  int scanResolutionX() const;
-  void setScanResolutionX(int scan_resolution_x);
+  int resolutionX() const;
+  void setResolutionX(int scan_resolution_x);
 
-  int scanResolutionY() const;
-  void setScanResolutionY(int scan_resolution_y);
+  int resolutionY() const;
+  void setResolutionY(int scan_resolution_y);
 
-  int scanResolution() const;
-  void setScanResolution(int scan_resolution);
+  int resolution() const;
+  void setResolution(int scan_resolution);
+
+  int minResolution() const;
+  void setMinResolution(int minResolution);
+
+  int maxResolution() const;
+  void setMaxResolution(int maxResolution);
 
   int optionId(const QString& name) const;
   void setOptionId(const QString& name, int option_id);
@@ -126,22 +121,36 @@ public:
   QString source() const;
   void setSource(const QString& source);
 
+  ScanUnits units() const;
+  void setUnits(const ScanUnits& units);
+
+  QString currentMode() const;
+  void setCurrentMode(const QString& currentMode);
+
+  QString currentSource() const;
+  void setCurrentSource(const QString& currentSource);
+
 protected:
   QStringList m_modes;
+  QString m_current_mode;
   QStringList m_sources;
+  QString m_current_source;
   QString m_mode;
   QString m_source;
   int m_depth;
-  ScanType m_type;
+  //  ScanType m_type;
+  ScanUnits m_units;
   int m_paper_width;
   int m_paper_height;
   int m_brightness = -1;
   int m_contrast = -1;
   int m_page_delay;
   QRect m_geometry;
-  int m_scan_resolution = -1;
-  int m_scan_resolution_x = -1;
-  int m_scan_resolution_y = -1;
+  int m_resolution = -1;
+  int m_min_resolution = 1;
+  int m_max_resolution = 1;
+  int m_resolution_x = -1;
+  int m_resolution_y = -1;
   QMap<QString, int> m_option_pairs;
 };
 using OptionsMap = QMap<QString, ScanOptions>;

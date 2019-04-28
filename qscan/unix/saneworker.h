@@ -70,6 +70,30 @@ protected:
                       int option_id,
                       const QString& name,
                       const SANE_Option_Descriptor* opt);
+  void setResolution(ScanDevice* device,
+                     const SANE_Option_Descriptor* current_option,
+                     SANE_Int option_id);
 };
+
+enum message_level
+{
+  MSG,   /* info message */
+  INF,   /* non-urgent warning */
+  WRN,   /* warning */
+  ERR,   /* error, test can continue */
+  FATAL, /* error, test can't/mustn't continue */
+  BUG    /* bug in tstbackend */
+};
+
+static int
+check(enum message_level level, int condition, const char* format, ...);
+static void*
+guards_malloc(size_t size);
+static void
+guards_free(void* ptr);
+static const SANE_Option_Descriptor*
+get_optdesc_by_name(SANE_Handle device, const char* name, int* option_num);
+static char*
+get_option_value(SANE_Handle device, const char* option_name);
 
 #endif // SANESCANETHREAD_H
