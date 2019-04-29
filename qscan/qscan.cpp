@@ -40,6 +40,8 @@ QScan::QScan(QObject* parent)
     connect(scan_lib, &ScanLibrary::scanFailed, this, &QScan::scanFailed);
     connect(scan_lib, &ScanLibrary::scanProgress, this, &QScan::scanProgress);
     connect(scan_lib, &ScanLibrary::optionsSet, this, &QScan::optionsSet);
+    connect(scan_lib, &ScanLibrary::sourceChanged, this, &QScan::sourceChanged);
+    connect(scan_lib, &ScanLibrary::modeChanged, this, &QScan::modeChanged);
   }
 }
 
@@ -87,6 +89,12 @@ void QScan::cancelScan(/*const QString& device_name*/)
 {
   m_logger->info(tr("cancelled scan"));
   m_scan_lib->cancelScan(/*device_name*/);
+}
+
+bool
+QScan::isScanning()
+{
+  return m_scan_lib->isScanning();
 }
 
 int
@@ -218,5 +226,5 @@ QScan::setScanMode(ScanDevice* device, const QString& mode)
 void
 QScan::setSource(ScanDevice* device, const QString& source)
 {
-  m_scan_lib->setMode(device, source);
+  m_scan_lib->setSource(device, source);
 }

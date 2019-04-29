@@ -1,6 +1,6 @@
 --style=mozilla
 
---max-code-length=120
+--max-code-length=130
 
 --indent=spaces=2
 --indent-preproc-block

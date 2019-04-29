@@ -41,6 +41,7 @@ ScanEditor::ScanEditor(QScan* scan, QWidget* parent)
   , m_selectall_act(new QAction(tr("Select entire image"), this))
   , m_save_act(new QAction(tr("Save image"), this))
   , m_save_as_act(new QAction(tr("Save image as"), this))
+  , m_set_def_crop_act(new QAction(tr("Set default page crop size"), this))
   , m_select_all(false)
 {
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -71,6 +72,14 @@ ScanEditor::ScanEditor(QScan* scan, QWidget* parent)
           this,
           &ScanEditor::selectionUnderway);
   connect(m_image_display, &ScanImage::selected, this, &ScanEditor::selected);
+  connect(m_image_display,
+          &ScanImage::selected,
+          this,
+          &ScanEditor::enableSetDefaultCropSize);
+  connect(m_image_display,
+          &ScanImage::unselected,
+          this,
+          &ScanEditor::disableSetDefaultCropSize);
   connect(
     m_image_display, &ScanImage::unselected, this, &ScanEditor::unselected);
   connect(m_image_display,
@@ -94,48 +103,53 @@ ScanEditor::initActions()
           &QAction::triggered,
           this,
           &ScanEditor::copySelection);
-
   m_crop_to_selection_act->setToolTip(
     tr("Crops the image to the selection rectangle."));
   connect(m_crop_to_selection_act,
           &QAction::triggered,
           this,
           &ScanEditor::cropToSelection);
-
   m_clear_selection_act->setToolTip(tr("Removes selection rectangle."));
   connect(m_clear_selection_act,
           &QAction::triggered,
           this,
           &ScanEditor::cropToSelection);
-
   connect(m_crop_to_content_act,
           &QAction::triggered,
           this,
           &ScanEditor::cropToContent);
-
+  connect(m_set_def_crop_act,
+          &QAction::triggered,
+          this,
+          &ScanEditor::setDefaultPageCropSize);
   connect(m_rotate_cw_act, &QAction::triggered, this, &ScanEditor::rotateCW);
-
   connect(m_rotate_acw_act, &QAction::triggered, this, &ScanEditor::rotateACW);
-
   connect(m_rotate_180_act, &QAction::triggered, this, &ScanEditor::rotate180);
-
   connect(m_rotate_by_angle_act,
           &QAction::triggered,
           this,
           &ScanEditor::rotateByAngle);
-
   connect(
     m_rotate_by_edge_act, &QAction::triggered, this, &ScanEditor::rotateByEdge);
-
   connect(m_rescan_act, &QAction::triggered, this, &ScanEditor::rescan);
-
   connect(m_scale_act, &QAction::triggered, this, &ScanEditor::scale);
-
   connect(m_selectall_act, &QAction::triggered, this, &ScanEditor::selectAll);
+  connect(m_save_act, &QAction::triggered, this, &ScanEditor::save);
+  connect(m_save_as_act, &QAction::triggered, this, &ScanEditor::saveAs);
 
-  connect(m_save_act, &QAction::triggered, this, &ScanEditor::selectAll);
+  disableSetDefaultCropSize();
+}
 
-  connect(m_save_as_act, &QAction::triggered, this, &ScanEditor::selectAll);
+void
+ScanEditor::enableSetDefaultCropSize()
+{
+  m_set_def_crop_act->setEnabled(true);
+}
+
+void
+ScanEditor::disableSetDefaultCropSize()
+{
+  m_set_def_crop_act->setEnabled(false);
 }
 
 void
@@ -189,6 +203,8 @@ ScanEditor::contextMenuEvent(QContextMenuEvent* event)
     contextMenu->addAction(m_clear_selection_act);
     contextMenu->addSeparator();
     contextMenu->addAction(m_rescan_act);
+    contextMenu->addSeparator();
+    contextMenu->addAction(m_set_def_crop_act);
 
   } else {
     contextMenu->addAction(m_save_act);
@@ -341,11 +357,15 @@ ScanEditor::scale()
 
 void
 ScanEditor::save()
-{}
+{
+  m_image_display->save();
+}
 
 void
 ScanEditor::saveAs()
-{}
+{
+  m_image_display, saveAs();
+}
 
 void
 ScanEditor::zoomIn()
@@ -375,4 +395,10 @@ void
 ScanEditor::fitWidth()
 {
   m_image_display->fitWidth();
+}
+
+void
+ScanEditor::setDefaultPageCropSize()
+{
+  m_image_display->setDefaultPageCropSize();
 }

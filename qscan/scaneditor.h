@@ -67,6 +67,7 @@ public:
   void fitBest();
   void fitHeight();
   void fitWidth();
+  void setDefaultPageCropSize();
 
 signals:
   void scanCancelled();
@@ -98,6 +99,7 @@ protected:
   QAction* m_selectall_act;
   QAction* m_save_act;
   QAction* m_save_as_act;
+  QAction* m_set_def_crop_act;
 
   bool m_select_all;
   //  int m_tl_x, m_tl_y, m_br_x, m_br_y;
@@ -107,6 +109,8 @@ protected:
 
   void adjustScrollbar(qreal factor);
   void initActions();
+  void enableSetDefaultCropSize();
+  void disableSetDefaultCropSize();
 };
 
 #endif // SCANEDITOR_H

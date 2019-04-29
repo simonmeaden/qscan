@@ -42,6 +42,7 @@ public:
   void copySelection();
   void selectAll();
   void clearSelection();
+  void setDefaultPageCropSize();
 
 signals:
   void selected();
@@ -65,13 +66,13 @@ protected:
     RUBBERBAND_STARTING,
     RUBBERBAND_COMPLETE,
     RUBBERBAND_MOVE,
+    EDGE_SELECTED,
     EDGE_STARTING,
     EDGE_DRAWING,
     DOING_NOTHING,
   };
   Log4Qt::Logger* m_logger;
   QImage m_image;
-  QImage m_scaled_image;
   qreal m_scale_by;
   QMatrix m_matrix;
   qreal m_rotation;
@@ -83,7 +84,9 @@ protected:
   int m_rb_end_y;
   QRect m_rubber_band;
   QRect m_stretched_band;
-  QRect m_scaled_rect;
+  QRect m_default_crop_size;
+  bool m_def_crop_set;
+  //  QRect m_scaled_rect;
   bool m_is_inside;
   State m_state;
   QString m_filename;

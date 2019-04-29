@@ -23,6 +23,7 @@ ScanImage::ScanImage(QWidget* parent)
   , m_state(DOING_NOTHING)
   , m_mouse_moved(false)
   , m_rotation(0)
+  , m_def_crop_set(false)
 {
   m_editor = qobject_cast<ScanEditor*>(parent);
   m_logger = Log4Qt::Logger::logger(tr("ScanImage"));
@@ -38,6 +39,11 @@ ScanImage::setImage(const QImage& image)
   setPixmap(QPixmap::fromImage(m_image));
   fitBest();
   emit imageIsLoaded();
+  // allows multi use of the same crop size.
+  if (m_def_crop_set) {
+    m_rubber_band = m_default_crop_size;
+    m_state = RUBBERBAND_COMPLETE;
+  }
   update();
 }
 
@@ -45,20 +51,21 @@ void
 ScanImage::rotateBy(qreal angle)
 {
   m_logger->info(tr("Rotating by %1°").arg(angle));
-  QImage rotated = m_scaled_image.transformed([&angle](QPoint center) {
+  QImage rotated = m_image.transformed([&angle](QPoint center) {
     QMatrix matrix;
     matrix.translate(center.x(), center.y());
     matrix.rotate(angle);
     return matrix;
   }(m_image.rect().center()));
-  m_scaled_image = rotated;
+  setImage(rotated);
+  fitBest();
   update();
 }
 
 void
 ScanImage::rotateByEdge()
 {
-  m_state = EDGE_STARTING;
+  m_state = EDGE_SELECTED;
 }
 
 void
@@ -80,7 +87,10 @@ void
 ScanImage::saveAs()
 {
   QString filename = QFileDialog::getSaveFileName(
-    this, tr("Save Image"), ".", tr("Image Files (*.png *.jpg *.bmp)"));
+    this,
+    tr("Save Image"),
+    ".",
+    tr("PNG Images (*.png);;JPEG images (*.jpg);;BMP Images (*.bmp)"));
   if (!filename.isEmpty()) {
     m_filename = filename;
     m_image.save(m_filename);
@@ -114,9 +124,9 @@ ScanImage::cropToSelection()
     scaled_rect.setHeight(int(m_rubber_band.height() / m_scale_by));
 
     QImage cropped = m_image.copy(scaled_rect);
-    m_image = cropped;
+
+    setImage(cropped);
     clearSelection();
-    update();
   }
 }
 
@@ -148,9 +158,11 @@ void
 ScanImage::selectAll()
 {
   m_logger->info(tr("Selecting all"));
-  m_rubber_band = m_scaled_rect;
+  //  m_rubber_band = m_scaled_rect;
+  m_rubber_band = m_image.rect();
   m_stretched_band = m_rubber_band;
   m_state = RUBBERBAND_COMPLETE;
+  emit selected();
   update();
 }
 
@@ -169,77 +181,92 @@ ScanImage::clearSelection()
 }
 
 void
+ScanImage::setDefaultPageCropSize()
+{
+  m_default_crop_size = m_rubber_band;
+  m_def_crop_set = true;
+}
+
+void
 ScanImage::paintRubberBand(QPainter* painter)
 {
-  if (m_mouse_moved) {
-    QPen pen;
-    QBrush brush;
+  QPen pen;
+  QBrush brush;
 
-    switch (m_state) {
-      case EDGE_STARTING:
-        pen = QPen(EDGING_COLOR);
-        pen.setWidth(EDGE_WIDTH);
-        painter->setPen(pen);
-        painter->drawLine(m_edge_start, m_edge_finish);
-        break;
-      case RUBBERBANDING: {
-        pen = QPen(QColor("green"));
-        pen.setWidth(RUBBERBAND_WIDTH);
-        brush = QBrush(QColor(128, 128, 255, 128));
-        painter->setPen(pen);
-        painter->setBrush(brush);
-        painter->drawRect(m_rubber_band);
-        break;
-      } // end of RUBBER_BANDING
-      case RUBBERBAND_COMPLETE: {
-        pen = QPen(QColor("blue"));
-        pen.setWidth(RUBBERBAND_WIDTH);
-        brush = QBrush(QColor(128, 128, 255, 128));
-        painter->setPen(pen);
-        painter->setBrush(brush);
-        painter->drawRect(m_rubber_band);
-        painter->drawRect(
-          m_rubber_band.x() - 10, m_rubber_band.y() - 10, 20, 20);
-        painter->drawRect(m_rubber_band.x() + m_rubber_band.width() - 10,
-                          m_rubber_band.y() - 10,
-                          20,
-                          20);
-        painter->drawRect(m_rubber_band.x() - 10,
-                          m_rubber_band.y() + m_rubber_band.height() - 10,
-                          20,
-                          20);
-        painter->drawRect(m_rubber_band.x() + m_rubber_band.width() - 10,
-                          m_rubber_band.y() + m_rubber_band.height() - 10,
-                          20,
-                          20);
-        break;
-      } // end of RB_COMPLETE
-      case DOING_NOTHING:
-        break;
-      default:
-        pen = QPen(QColor("green"));
-        pen.setWidth(RUBBERBAND_WIDTH);
-        brush = QBrush(QColor(128, 128, 255, 128));
-        painter->setPen(pen);
-        painter->setBrush(brush);
-        painter->drawRect(m_stretched_band);
-        painter->drawRect(
-          m_stretched_band.x() - 10, m_stretched_band.y() - 10, 20, 20);
-        painter->drawRect(m_stretched_band.x() + m_stretched_band.width() - 10,
-                          m_stretched_band.y() - 10,
-                          20,
-                          20);
-        painter->drawRect(m_stretched_band.x() - 10,
-                          m_stretched_band.y() + m_stretched_band.height() - 10,
-                          20,
-                          20);
-        painter->drawRect(m_stretched_band.x() + m_stretched_band.width() - 10,
-                          m_stretched_band.y() + m_stretched_band.height() - 10,
-                          20,
-                          20);
-        break;
-    } // end of switch
-  }
+  switch (m_state) {
+      //      case EDGE_STARTING:
+      //        break;
+    case EDGE_DRAWING:
+      pen = QPen(EDGING_COLOR);
+      pen.setWidth(EDGE_WIDTH);
+      painter->setPen(pen);
+      painter->drawLine(m_edge_start, m_edge_finish);
+      break;
+    case RUBBERBANDING: {
+      pen = QPen(QColor("green"));
+      pen.setWidth(RUBBERBAND_WIDTH);
+      brush = QBrush(QColor(128, 128, 255, 128));
+      painter->setPen(pen);
+      painter->setBrush(brush);
+      painter->drawRect(m_rubber_band);
+      break;
+    } // end of RUBBER_BANDING
+    case RUBBERBAND_COMPLETE: {
+      pen = QPen(QColor("blue"));
+      pen.setWidth(RUBBERBAND_WIDTH);
+      brush = QBrush(QColor(128, 128, 255, 128));
+      painter->setPen(pen);
+      painter->setBrush(brush);
+      painter->drawRect(m_rubber_band);
+      painter->drawRect(m_rubber_band.x() - 10, m_rubber_band.y() - 10, 20, 20);
+      painter->drawRect(m_rubber_band.x() + m_rubber_band.width() - 10,
+                        m_rubber_band.y() - 10,
+                        20,
+                        20);
+      painter->drawRect(m_rubber_band.x() - 10,
+                        m_rubber_band.y() + m_rubber_band.height() - 10,
+                        20,
+                        20);
+      painter->drawRect(m_rubber_band.x() + m_rubber_band.width() - 10,
+                        m_rubber_band.y() + m_rubber_band.height() - 10,
+                        20,
+                        20);
+      break;
+    } // end of RB_COMPLETE
+    case DOING_NOTHING:
+      break;
+    case STRETCH_TOP:
+    case STRETCH_BOTTOM:
+    case STRETCH_LEFT:
+    case STRETCH_RIGHT:
+    case STRETCH_TOPLEFT:
+    case STRETCH_TOPRIGHT:
+    case STRETCH_BOTTOMLEFT:
+    case STRETCH_BOTTOMRIGHT:
+      pen = QPen(QColor("green"));
+      pen.setWidth(RUBBERBAND_WIDTH);
+      brush = QBrush(QColor(128, 128, 255, 128));
+      painter->setPen(pen);
+      painter->setBrush(brush);
+      painter->drawRect(m_stretched_band);
+      painter->drawRect(
+        m_stretched_band.x() - 10, m_stretched_band.y() - 10, 20, 20);
+      painter->drawRect(m_stretched_band.x() + m_stretched_band.width() - 10,
+                        m_stretched_band.y() - 10,
+                        20,
+                        20);
+      painter->drawRect(m_stretched_band.x() - 10,
+                        m_stretched_band.y() + m_stretched_band.height() - 10,
+                        20,
+                        20);
+      painter->drawRect(m_stretched_band.x() + m_stretched_band.width() - 10,
+                        m_stretched_band.y() + m_stretched_band.height() - 10,
+                        20,
+                        20);
+      break;
+    default:
+      break;
+  } // end of switch
 }
 
 void
@@ -253,9 +280,9 @@ ScanImage::rotateUsingEdge()
   qreal h = y_finish - y_start;
   qreal angle = qRadiansToDegrees(qAtan(qAbs(w) / qAbs(h)));
   if ((w > 0 && h > 0) || (w < 0 && h < 0)) {
-    rotateBy(-angle);
-  } else {
     rotateBy(angle);
+  } else {
+    rotateBy(-angle);
   }
   clearSelection();
 }
@@ -265,14 +292,8 @@ ScanImage::paintEvent(QPaintEvent* event)
 {
   if (!m_image.isNull()) {
     QLabel::paintEvent(event);
-    //     scale image to available size.
-    //        m_scaled_rect = m_image.rect();
     QPainter painter(this);
-    //        painter.fillRect(m_image.rect(), QBrush(Qt::yellow));
-    //        painter.drawImage(0, 0, m_image);
-
     paintRubberBand(&painter);
-
     painter.end();
   }
 }
@@ -302,9 +323,14 @@ ScanImage::mousePressEvent(QMouseEvent* event)
       if (m_is_inside) {
 
         switch (m_state) {
-          case EDGE_STARTING:
+          case EDGE_SELECTED:
+            m_state = EDGE_STARTING;
+            m_logger->info(tr("Edge draw pressed. (%1, %2)")
+                             .arg(m_edge_start.x())
+                             .arg(m_edge_start.y()));
             m_edge_start = event->pos();
             m_edge_finish = m_edge_start;
+            update();
             emit selectionUnderway();
             break;
 
@@ -381,10 +407,11 @@ ScanImage::mouseMoveEvent(QMouseEvent* event)
           if (m_mouse_moved) {
             m_state = EDGE_DRAWING;
           }
-          // fallthrough intended
-          [[fallthrough]];
+          break;
         case EDGE_DRAWING:
-          setCursor(Qt::CrossCursor);
+          m_logger->info(tr("Edge moving. (%1, %2)")
+                           .arg(m_edge_finish.x())
+                           .arg(m_edge_finish.y()));
           m_edge_finish = event->pos();
           break;
 
@@ -392,7 +419,6 @@ ScanImage::mouseMoveEvent(QMouseEvent* event)
           if (m_mouse_moved) {
             m_state = RUBBERBANDING;
           }
-          // fallthrough intended
           [[fallthrough]];
         case RUBBERBANDING:
           m_rb_end_x = e_x;
@@ -537,9 +563,13 @@ ScanImage::mouseReleaseEvent(QMouseEvent* event)
         break;
 
       case EDGE_DRAWING:
+        m_mouse_moved = false;
         m_edge_finish = event->pos();
-        rotateUsingEdge();
         m_state = DOING_NOTHING;
+        m_logger->info(tr("Edge draw released. (%1, %2)")
+                         .arg(m_edge_finish.x())
+                         .arg(m_edge_finish.y()));
+        rotateUsingEdge();
         emit unselected();
         break;
 
@@ -579,6 +609,20 @@ ScanImage::mouseReleaseEvent(QMouseEvent* event)
         break;
 
       case DOING_NOTHING:
+        break;
+
+      case STRETCH_TOP:
+      case STRETCH_BOTTOM:
+      case STRETCH_LEFT:
+      case STRETCH_RIGHT:
+      case STRETCH_TOPLEFT:
+      case STRETCH_TOPRIGHT:
+      case STRETCH_BOTTOMLEFT:
+      case STRETCH_BOTTOMRIGHT:
+        m_rubber_band = m_stretched_band;
+        emit selected();
+        m_state = RUBBERBAND_COMPLETE;
+        update();
         break;
 
       default:
@@ -639,7 +683,7 @@ ScanImage::fitBest()
   QSize frame_size = m_editor->frameSize();
   qreal scale_w = qreal(frame_size.width()) / qreal(m_image.width());
   qreal scale_h = qreal(frame_size.height()) / qreal(m_image.height());
-  qreal factor = (scale_w > scale_h ? scale_w : scale_h);
+  qreal factor = (scale_w < scale_h ? scale_w : scale_h);
   m_logger->info(tr("Fit Best scale %1 to %2").arg(m_scale_by).arg(factor));
   m_scale_by = factor;
   scaleImage(m_scale_by);

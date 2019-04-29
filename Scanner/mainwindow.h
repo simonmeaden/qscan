@@ -46,6 +46,8 @@
 class QScan;
 typedef QSharedPointer<QImage> Image;
 
+class ScanDevice;
+
 class TextEditIoDevice : public QIODevice
 {
   Q_OBJECT
@@ -127,6 +129,8 @@ protected:
   QAction* m_fit_height_act;
   QAction* m_close_act;
 
+  bool close();
+
   void initGui();
   void initActions();
   void connectActions();
@@ -143,9 +147,11 @@ protected:
   void editorHasSelection();
   void editorHasNoSelection();
   void imageLoaded();
-  void receiveOptionsSet();
-  void modeChanged(const QString& mode);
-  void sourceChanged(const QString& source);
+  void receiveOptionsSet(ScanDevice* device);
+  void receiveModeChange(ScanDevice* device);
+  void receiveSourceChange(ScanDevice* device);
+  void modeChangeSelected(const QString& mode);
+  void sourceChangeSelected(const QString& source);
   void initToolbar();
   void enableNoSelectionBtns();
   void enableSelectionBtns();

@@ -112,6 +112,10 @@ public:
 
   int optionId(const QString& name) const;
   void setOptionId(const QString& name, int option_id);
+  int optionSize(const QString& name) const;
+  void setOptionSize(const QString& name, int size);
+  int optionType(const QString& name) const;
+  void setOptionType(const QString& name, int type);
 
   void copyData(const ScanOptions& other);
 
@@ -124,17 +128,9 @@ public:
   ScanUnits units() const;
   void setUnits(const ScanUnits& units);
 
-  QString currentMode() const;
-  void setCurrentMode(const QString& currentMode);
-
-  QString currentSource() const;
-  void setCurrentSource(const QString& currentSource);
-
 protected:
   QStringList m_modes;
-  QString m_current_mode;
   QStringList m_sources;
-  QString m_current_source;
   QString m_mode;
   QString m_source;
   int m_depth;
@@ -151,7 +147,9 @@ protected:
   int m_max_resolution = 1;
   int m_resolution_x = -1;
   int m_resolution_y = -1;
-  QMap<QString, int> m_option_pairs;
+  QMap<QString, int> m_option_id_map;
+  QMap<QString, int> m_option_size_map;
+  QMap<QString, int> m_option_type_map;
 };
 using OptionsMap = QMap<QString, ScanOptions>;
 

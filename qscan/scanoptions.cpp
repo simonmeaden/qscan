@@ -51,7 +51,7 @@ ScanOptions::copyData(const ScanOptions& other)
   m_resolution = other.m_resolution;
   m_resolution_x = other.m_resolution_x;
   m_resolution_y = other.m_resolution_y;
-  m_option_pairs = other.m_option_pairs;
+  m_option_id_map = other.m_option_id_map;
   m_units = other.m_units;
 }
 
@@ -89,30 +89,6 @@ void
 ScanOptions::setUnits(const ScanUnits& units)
 {
   m_units = units;
-}
-
-QString
-ScanOptions::currentMode() const
-{
-  return m_current_mode;
-}
-
-void
-ScanOptions::setCurrentMode(const QString& current_mode)
-{
-  m_current_mode = current_mode;
-}
-
-QString
-ScanOptions::currentSource() const
-{
-  return m_current_source;
-}
-
-void
-ScanOptions::setCurrentSource(const QString& current_source)
-{
-  m_current_source = current_source;
 }
 
 int
@@ -359,13 +335,37 @@ ScanOptions::setResolution(int scan_resolution)
 int
 ScanOptions::optionId(const QString& name) const
 {
-  return m_option_pairs.value(name, -1);
+  return m_option_id_map.value(name, -1);
 }
 
 void
 ScanOptions::setOptionId(const QString& name, int option_id)
 {
-  m_option_pairs.insert(name, option_id);
+  m_option_id_map.insert(name, option_id);
+}
+
+int
+ScanOptions::optionSize(const QString& name) const
+{
+  return m_option_size_map.value(name);
+}
+
+void
+ScanOptions::setOptionSize(const QString& name, int size)
+{
+  m_option_size_map.insert(name, size);
+}
+
+int
+ScanOptions::optionType(const QString& name) const
+{
+  return m_option_type_map.value(name);
+}
+
+void
+ScanOptions::setOptionType(const QString& name, int type)
+{
+  m_option_type_map.insert(name, type);
 }
 
 // int

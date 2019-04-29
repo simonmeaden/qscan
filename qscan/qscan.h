@@ -40,6 +40,7 @@ public:
   bool openDevice(const QString& device_name);
   bool startScanning(const QString& device_name);
   void cancelScan();
+  bool isScanning();
   //  ScanOptions options(const QString& device_name);
 
   int topLeftX(ScanDevice* device);
@@ -69,7 +70,9 @@ signals:
   void scanCompleted(const QImage&);
   void scanFailed();
   void scanProgress(const int&);
-  void optionsSet();
+  void optionsSet(ScanDevice*);
+  void sourceChanged(ScanDevice*);
+  void modeChanged(ScanDevice*);
 
 protected:
   Log4Qt::Logger* m_logger;

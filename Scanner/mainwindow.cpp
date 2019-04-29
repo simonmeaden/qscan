@@ -30,8 +30,6 @@ TextEditIoDevice::TextEditIoDevice(QPlainTextEdit* text_edit, QObject* parent)
   open(QIODevice::WriteOnly | QIODevice::Text);
 }
 
-// TextEditIoDevice::~TextEditIoDevice() = default;
-
 void
 TextEditIoDevice::setTextEdit(QPlainTextEdit* text_edit)
 {
@@ -108,6 +106,10 @@ MainWindow::MainWindow(QWidget* parent)
           &ScanEditor::setScanProgress);
   connect(m_scan_lib, &QScan::scanFailed, this, &MainWindow::scanHasFailed);
   connect(m_scan_lib, &QScan::optionsSet, this, &MainWindow::receiveOptionsSet);
+  connect(
+    m_scan_lib, &QScan::modeChanged, this, &MainWindow::receiveModeChange);
+  connect(
+    m_scan_lib, &QScan::sourceChanged, this, &MainWindow::receiveSourceChange);
 
   connect(m_image_editor,
           &ScanEditor::selectionUnderway,
@@ -122,7 +124,7 @@ MainWindow::MainWindow(QWidget* parent)
   connect(m_image_editor,
           &ScanEditor::unselected,
           this,
-          &MainWindow::editorHasSelection);
+          &MainWindow::editorHasNoSelection);
   m_scan_lib->init();
   QStringList scanners = m_scan_lib->devices();
 
@@ -153,6 +155,27 @@ MainWindow::setLogTextEdit(QPlainTextEdit* log_edit)
   m_log_edit = log_edit;
   m_main_layout->replaceWidget(m_empty_edit, m_log_edit);
   m_empty_edit->deleteLater();
+}
+
+bool
+MainWindow::close()
+{
+  if (!m_scan_lib->isScanning()) {
+    return QMainWindow::close();
+  }
+
+  auto* msg_box =
+    new QMessageBox(QMessageBox::Warning,
+                    tr("Scanning"),
+                    tr("The scanner is still scanning. Please wait or "
+                       "press Cancel to cancel the scan."),
+                    QMessageBox::Ok | QMessageBox::Cancel,
+                    this);
+  if (msg_box->exec() == QMessageBox::Cancel) {
+    cancelScanning();
+  }
+
+  return true;
 }
 
 void
@@ -204,15 +227,13 @@ MainWindow::initModeFrame()
 
   m_mode_box = new QComboBox(this);
   m_mode_box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  connect(
-    m_mode_box, &QComboBox::currentTextChanged, this, &MainWindow::modeChanged);
   mode_layout->addWidget(m_mode_box, 0, col++);
 
   lbl = new QLabel(tr("Current Mode :"), this);
   lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   mode_layout->addWidget(lbl, 0, col++);
 
-  m_curr_mode = new QLabel(this);
+  m_curr_mode = new QLabel(tr("No Mode"), this);
   m_curr_mode->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   mode_layout->addWidget(m_curr_mode, 0, col);
 
@@ -233,17 +254,13 @@ MainWindow::initSourceFrame()
 
   m_source_box = new QComboBox(this);
   m_source_box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  connect(m_source_box,
-          &QComboBox::currentTextChanged,
-          this,
-          &MainWindow::sourceChanged);
   source_layout->addWidget(m_source_box, 0, col++);
 
   lbl = new QLabel(tr("Current Source :"), this);
   lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   source_layout->addWidget(lbl, 0, col++);
 
-  m_curr_src = new QLabel(this);
+  m_curr_src = new QLabel(tr("No Source"), this);
   m_curr_src->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   source_layout->addWidget(m_curr_src, 0, col++);
 
@@ -289,7 +306,7 @@ MainWindow::initGui()
   int h = size.height() - 800;
   int x = int(w / 2.0);
   int y = int(h / 2.0);
-  setGeometry(x, y, 1200, 800);
+  setGeometry(x, y, 1200, 1000);
   QFrame* main_frame = new QFrame(this);
   setCentralWidget(main_frame);
   m_main_layout = new QGridLayout;
@@ -513,13 +530,15 @@ MainWindow::doubleClicked(const QModelIndex& index)
   }
 }
 void
-MainWindow::receiveOptionsSet()
+MainWindow::receiveOptionsSet(ScanDevice* device)
 {
-  ScanDevice* device = m_scan_lib->device(m_selected_name);
+  //  ScanDevice* device = m_scan_lib->device(m_selected_name);
   ScanOptions* options = device->options;
+
   m_mode_box->clear();
   QStringList list = options->modes();
   m_mode_box->addItems(list);
+
   m_source_box->clear();
   list = options->sources();
   m_source_box->addItems(list);
@@ -535,19 +554,42 @@ MainWindow::receiveOptionsSet()
   m_res_box->setMinimum(min);
   m_res_box->setMaximum(max);
   m_res_box->setValue(res);
-  m_curr_src->setText(options->currentSource());
-  m_curr_mode->setText(options->currentMode());
+  m_curr_src->setText(options->source());
+  m_source_box->setCurrentText(options->source());
+  m_curr_mode->setText(options->mode());
+  m_mode_box->setCurrentText(options->mode());
+
+  connect(m_mode_box,
+          &QComboBox::currentTextChanged,
+          this,
+          &MainWindow::modeChangeSelected);
+  connect(m_source_box,
+          &QComboBox::currentTextChanged,
+          this,
+          &MainWindow::sourceChangeSelected);
 }
 
 void
-MainWindow::modeChanged(const QString& mode)
+MainWindow::receiveModeChange(ScanDevice* device)
+{
+  m_curr_mode->setText(device->options->mode());
+}
+
+void
+MainWindow::receiveSourceChange(ScanDevice* device)
+{
+  m_curr_src->setText(device->options->source());
+}
+
+void
+MainWindow::modeChangeSelected(const QString& mode)
 {
   ScanDevice* device = m_scan_lib->device(m_selected_name);
   m_scan_lib->setScanMode(device, mode);
 }
 
 void
-MainWindow::sourceChanged(const QString& source)
+MainWindow::sourceChangeSelected(const QString& source)
 {
   ScanDevice* device = m_scan_lib->device(m_selected_name);
   m_scan_lib->setSource(device, source);

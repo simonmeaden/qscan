@@ -25,24 +25,25 @@
 #include "log4qt/logmanager.h"
 #include "log4qt/ttcclayout.h"
 
-#include "saneworker.h"
-
 using namespace Log4Qt;
 
 QMutex SaneLibrary::_mutex;
 
 SaneLibrary::SaneLibrary(QObject* parent)
   : ScanLibrary(parent)
+  , m_scanning(false)
 {
   QMutexLocker locker(&_mutex);
   m_logger = Log4Qt::Logger::logger(tr("ScanSane"));
 
   auto* thread = new QThread;
   auto* scan_worker = new SaneWorker();
+
   // cleanup
   connect(this, &SaneLibrary::finished, thread, &QThread::quit);
   connect(thread, &QThread::finished, scan_worker, &SaneWorker::deleteLater);
   connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+
   // worker
   connect(this, &SaneLibrary::startScanning, scan_worker, &SaneWorker::scan);
   connect(this,
@@ -59,13 +60,24 @@ SaneLibrary::SaneLibrary(QObject* parent)
           &SaneLibrary::setStringValue,
           scan_worker,
           &SaneWorker::setStringValue);
-  connect(scan_worker, &SaneWorker::optionsSet, this, &SaneLibrary::optionsSet);
+  connect(scan_worker, &SaneWorker::optionsSet, this, &ScanLibrary::optionsSet);
+  connect(
+    scan_worker, &SaneWorker::sourceChanged, this, &ScanLibrary::sourceChanged);
+  connect(
+    scan_worker, &SaneWorker::modeChanged, this, &ScanLibrary::modeChanged);
   connect(
     scan_worker, &SaneWorker::scanCompleted, this, &ScanLibrary::scanCompleted);
+  connect(scan_worker,
+          &SaneWorker::scanCompleted,
+          this,
+          &SaneLibrary::scanIsCompleted);
   connect(scan_worker, &SaneWorker::scanFailed, this, &ScanLibrary::scanFailed);
   connect(
     scan_worker, &SaneWorker::scanProgress, this, &ScanLibrary::scanProgress);
-  //
+
+  // worker logging. Using m_logger in a thread causes a crash.
+  connect(scan_worker, &SaneWorker::log, this, &SaneLibrary::log);
+
   scan_worker->moveToThread(thread);
   thread->start();
 }
@@ -169,6 +181,7 @@ SaneLibrary::startScan(QString device_name)
   QMutexLocker locker(&_mutex);
   ScanDevice* device = m_scanners.value(device_name);
 
+  m_scanning = true;
   emit startScanning(device);
 
   return false;
@@ -179,23 +192,34 @@ void SaneLibrary::cancelScan(/*QString device_name*/)
   QMutexLocker locker(&_mutex);
   //  ScanDevice* device = m_scanners.value(device_name);
   emit cancelScanning();
+  m_scanning = false;
 }
 
 void
-SaneLibrary::callbackWrapper(SANE_String_Const resource,
-                             SANE_Char* name,
-                             SANE_Char* password)
+SaneLibrary::log(LogLevel level, const QString& msg)
 {
-  // TODO some form of authorisation ???
-  //  std::string name_destination;
-  //  std::string password_destination;
-  //  _callback(std::string(resource), name_destination,
-  //  password_destination);
-  //  assert(name_destination.size() < SANE_MAX_USERNAME_LEN);
-  //  assert(password_destination.size() < SANE_MAX_PASSWORD_LEN);
-  //  strncpy(username, name_destination.c_str(), name_destination.size());
-  //  strncpy(password, password_destination.c_str(),
-  //  password_destination.size());
+  switch (level) {
+    case TRACE:
+      m_logger->trace(msg);
+      break;
+    case DEBUG:
+      m_logger->debug(msg);
+      break;
+    case INFO:
+      m_logger->info(msg);
+      break;
+    case WARN:
+      m_logger->warn(msg);
+      break;
+    case ERROR:
+      m_logger->error(msg);
+      break;
+    case FATAL:
+      m_logger->fatal(msg);
+      break;
+    case OFF:
+      break;
+  }
 }
 
 void
@@ -240,6 +264,12 @@ SaneLibrary::receiveIntValue(ScanDevice* device, int value)
   } else if (device->op_name == SANE_NAME_SCAN_Y_RESOLUTION) {
     device->options->setResolutionY(value);
   }
+}
+
+void
+SaneLibrary::scanIsCompleted()
+{
+  m_scanning = false;
 }
 
 QRect
@@ -410,20 +440,40 @@ SaneLibrary::clearPreview(ScanDevice* device)
 }
 
 void
-SaneLibrary::setMode(ScanDevice* device, const QString& mode)
+SaneLibrary::setMode(ScanDevice* device, const QString& value)
 {
-  int option_id = device->options->optionId(SANE_NAME_SCAN_MODE);
-
-  emit setStringValue(device, option_id, QString(SANE_NAME_SCAN_MODE), mode);
+  emit setStringValue(device, QString(SANE_NAME_SCAN_MODE), value);
 }
 
 void
-SaneLibrary::setSource(ScanDevice* device, const QString& source)
+SaneLibrary::setSource(ScanDevice* device, const QString& value)
 {
   int option_id = device->options->optionId(SANE_NAME_SCAN_SOURCE);
 
-  emit setStringValue(
-    device, option_id, QString(SANE_NAME_SCAN_SOURCE), source);
+  emit setStringValue(device, QString(SANE_NAME_SCAN_SOURCE), value);
+}
+
+bool
+SaneLibrary::isScanning() const
+{
+  return m_scanning;
+}
+
+void
+SaneLibrary::callbackWrapper(SANE_String_Const resource,
+                             SANE_Char* name,
+                             SANE_Char* password)
+{
+  // TODO some form of authorisation ???
+  //  std::string name_destination;
+  //  std::string password_destination;
+  //  _callback(std::string(resource), name_destination,
+  //  password_destination);
+  //  assert(name_destination.size() < SANE_MAX_USERNAME_LEN);
+  //  assert(password_destination.size() < SANE_MAX_PASSWORD_LEN);
+  //  strncpy(username, name_destination.c_str(), name_destination.size());
+  //  strncpy(password, password_destination.c_str(),
+  //  password_destination.size());
 }
 
 static void

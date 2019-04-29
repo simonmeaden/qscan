@@ -132,6 +132,7 @@ public:
   virtual void clearPreview(ScanDevice* device) = 0;
   virtual void setMode(ScanDevice* device, const QString& mode) = 0;
   virtual void setSource(ScanDevice* device, const QString& source) = 0;
+  virtual bool isScanning() const = 0;
 
 protected:
 };
@@ -149,7 +150,9 @@ signals:
   void scanCompleted(const QImage& image);
   void scanFailed();
   void scanProgress(const int&);
-  void optionsSet();
+  void optionsSet(ScanDevice*);
+  void sourceChanged(ScanDevice*);
+  void modeChanged(ScanDevice*);
 };
 
 #endif // SCANLIB_H

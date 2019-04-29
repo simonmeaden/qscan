@@ -34,6 +34,7 @@
 #include <log4qt/logmanager.h>
 #include <log4qt/ttcclayout.h>
 
+#include "saneworker.h"
 #include "scaninterface.h"
 #include "scanoptions.h"
 #include "version.h"
@@ -58,6 +59,7 @@ public:
   //  ScanOptions options(QString device_name) override;
   bool detectAvailableOptions(QString device_name) override;
   bool startScan(QString device_name) override;
+  bool isScanning() const override;
   void cancelScan() override;
   QRect geometry(QString device_name) override;
   const Version& version() const;
@@ -82,8 +84,8 @@ public:
   void setResolutionY(ScanDevice* device, int value) override;
   void setPreview(ScanDevice* device) override;
   void clearPreview(ScanDevice* device) override;
-  void setMode(ScanDevice* device, const QString& mode) override;
-  void setSource(ScanDevice* device, const QString& source) override;
+  void setMode(ScanDevice* device, const QString& value) override;
+  void setSource(ScanDevice* device, const QString& value) override;
 
 signals:
   void finished();
@@ -91,7 +93,7 @@ signals:
   void getAvailableOptions(ScanDevice*);
   void setBoolValue(ScanDevice*, int, const QString&, bool);
   void setIntValue(ScanDevice*, int, const QString&, int);
-  void setStringValue(ScanDevice*, int, const QString&, const QString&);
+  void setStringValue(ScanDevice*, const QString&, const QString&);
   void getIntValue(ScanDevice*, int, int);
   void cancelScanning();
 
@@ -102,15 +104,19 @@ protected:
   //  OptionsMap m_options;
   QImage* m_image{};
   Version m_version;
+  bool m_scanning;
 
   static QMutex _mutex;
 
   void getAvailableScannerOptions(QString device_name) override;
   void receiveIntValue(ScanDevice* device, int value);
+  void scanIsCompleted();
 
   static void callbackWrapper(SANE_String_Const resource,
                               SANE_Char* name,
                               SANE_Char* password);
+
+  void log(LogLevel level, const QString&);
 
 public:
 };
