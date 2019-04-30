@@ -11,6 +11,9 @@ PageView::PageView(QWidget* parent)
 
   m_image_list = new QListWidget(this);
   m_image_list->setSelectionMode(QAbstractItemView::SingleSelection);
+  m_image_list->setViewMode(QListWidget::IconMode);
+  m_image_list->setIconSize(QSize(200, 200));
+  m_image_list->setResizeMode(QListWidget::Adjust);
   m_image_list->setDragDropMode(QAbstractItemView::InternalMove);
   connect(m_image_list->model(),
           &QAbstractItemModel::rowsMoved,

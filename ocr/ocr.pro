@@ -4,7 +4,8 @@
 #
 #-------------------------------------------------
 
-QT       -= gui
+#QT       -= gui
+QT += svg
 
 TARGET = ocr
 TEMPLATE = lib

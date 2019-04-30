@@ -33,6 +33,7 @@ ScanPage::thumbnail() const
 {
   int w = m_image.width();
   qreal factor = w / 100.0;
+  w = 100;
   int h = int(m_image.height() / factor);
   QSize size(w, h);
   QImage thumbnail = m_image.scaled(w, h, Qt::KeepAspectRatio);

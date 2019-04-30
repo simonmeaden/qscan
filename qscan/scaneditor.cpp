@@ -61,6 +61,8 @@ ScanEditor::initGui()
 
   m_page_view = new PageView(this);
   layout->addWidget(m_page_view, 0, 1);
+  layout->setColumnStretch(0, 30);
+  layout->setColumnStretch(1, 10);
 }
 
 void
@@ -81,40 +83,53 @@ ScanEditor::connectActions()
           &ScanImage::adjustScrollbar,
           this,
           &ScanEditor::adjustScrollbar);
+  connect(
+    m_image_display, &ScanImage::sendImage, this, &ScanEditor::receiveImage);
+  connect(
+    m_image_display, &ScanImage::sendImages, this, &ScanEditor::receiveImages);
+}
+
+void
+ScanEditor::receiveImage(const QImage& img)
+{
+  Page page(new ScanPage());
+  page->setImage(img);
+  m_pages.append(page);
+  m_page_view->append(m_pages.last()->thumbnail());
+}
+
+void
+ScanEditor::receiveImages(const QImage& left, const QImage& right)
+{
+  Page left_page(new ScanPage());
+  left_page->setImage(left);
+  m_pages.append(left_page);
+  m_page_view->append(m_pages.last()->thumbnail());
+  Page right_page(new ScanPage());
+  right_page->setImage(right);
+  m_pages.append(right_page);
+  m_page_view->append(m_pages.last()->thumbnail());
 }
 
 void
 ScanEditor::splitPages()
 {
   QPair<QImage, QImage> images = m_image_display->splitPages();
-  Page left_page(new ScanPage());
-  left_page->setImage(images.first);
-  m_pages.append(left_page);
-  m_page_view->append(m_pages.last()->thumbnail());
-  Page right_page(new ScanPage());
-  right_page->setImage(images.second);
-  m_pages.append(right_page);
-  m_page_view->append(m_pages.last()->thumbnail());
+  receiveImages(images.first, images.second);
 }
 
 void
 ScanEditor::splitLeftPage()
 {
   QImage image = m_image_display->splitLeftPage();
-  Page page(new ScanPage());
-  page->setImage(image);
-  m_pages.append(page);
-  m_page_view->append(m_pages.last()->thumbnail());
+  receiveImage(image);
 }
 
 void
 ScanEditor::splitRightPage()
 {
   QImage image = m_image_display->splitRightPage();
-  Page page(new ScanPage());
-  page->setImage(image);
-  m_pages.append(page);
-  m_page_view->append(m_pages.last()->thumbnail());
+  receiveImage(image);
 }
 
 void

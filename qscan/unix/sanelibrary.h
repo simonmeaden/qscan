@@ -98,7 +98,7 @@ signals:
   void cancelScanning();
 
 protected:
-  SANE_Status doScan(const char* fileName);
+  //  SANE_Status doScan(const char* fileName);
   Log4Qt::Logger* m_logger;
   DeviceMap m_scanners;
   //  OptionsMap m_options;

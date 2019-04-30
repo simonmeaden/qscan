@@ -102,6 +102,8 @@ protected:
   void adjustScrollbar(qreal factor);
   void initGui();
   void connectActions();
+  void receiveImage(const QImage& img);
+  void receiveImages(const QImage& left, const QImage& right);
 };
 
 #endif // SCANEDITOR_H

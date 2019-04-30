@@ -359,6 +359,8 @@ MainWindow::initGui()
   m_main_layout->addWidget(m_empty_edit, row, 1);
 
   m_main_layout->addWidget(m_image_editor, 0, 0, row + 1, 1);
+  m_main_layout->setColumnStretch(0, 30);
+  m_main_layout->setColumnStretch(1, 10);
 
   initToolbar();
 }

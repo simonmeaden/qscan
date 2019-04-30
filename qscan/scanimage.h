@@ -61,6 +61,8 @@ signals:
   void selectionUnderway();
   void imageIsLoaded();
   void adjustScrollbar(qreal);
+  void sendImage(QImage);
+  void sendImages(QImage, QImage);
 
 protected:
   enum State

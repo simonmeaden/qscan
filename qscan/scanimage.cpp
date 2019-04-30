@@ -48,6 +48,7 @@ ScanImage::ScanImage(QWidget* parent)
 {
   m_editor = qobject_cast<ScanEditor*>(parent);
   m_logger = Log4Qt::Logger::logger(tr("ScanImage"));
+  initActions();
   setMouseTracking(true);
 }
 
@@ -225,7 +226,7 @@ ScanImage::splitPages()
   part_rect.setX(0);
   part_rect.setY(0);
   part_rect.setWidth(w2);
-  part_rect.setHeight(height());
+  part_rect.setHeight(m_image.height());
 
   QImage left = m_image.copy(part_rect);
 
@@ -233,6 +234,8 @@ ScanImage::splitPages()
   part_rect.setWidth(w - w2);
 
   QImage right = m_image.copy(part_rect);
+
+  emit sendImages(left, right);
 
   return qMakePair<QImage, QImage>(left, right);
 }
@@ -247,9 +250,12 @@ ScanImage::splitLeftPage()
   part_rect.setX(0);
   part_rect.setY(0);
   part_rect.setWidth(w2);
-  part_rect.setHeight(height());
+  part_rect.setHeight(m_image.height());
 
   QImage left = m_image.copy(part_rect);
+
+  emit sendImage(left);
+
   return left;
 }
 
@@ -264,9 +270,11 @@ ScanImage::splitRightPage()
   part_rect.setX(w2 + 1);
   part_rect.setY(0);
   part_rect.setWidth(w - w2);
-  part_rect.setHeight(height());
+  part_rect.setHeight(m_image.height());
 
   QImage right = m_image.copy(part_rect);
+
+  emit sendImage(right);
 
   return right;
 }
@@ -274,6 +282,7 @@ ScanImage::splitRightPage()
 QImage
 ScanImage::makePage()
 {
+  emit sendImage(m_image);
   return m_image;
 }
 
@@ -873,6 +882,7 @@ ScanImage::initActions()
   connect(m_split_pages_act, &QAction::triggered, this, &ScanImage::splitPages);
 
   disableSetDefaultCropSize();
+  enableSelectionActions();
 }
 
 void
@@ -920,7 +930,7 @@ ScanImage::rotateByAngle()
 void
 ScanImage::fitBest()
 {
-  QSize frame_size = m_editor->frameSize();
+  QSize frame_size = frameSize();
   qreal scale_w = qreal(frame_size.width()) / qreal(m_image.width());
   qreal scale_h = qreal(frame_size.height()) / qreal(m_image.height());
   qreal factor = (scale_w < scale_h ? scale_w : scale_h);
