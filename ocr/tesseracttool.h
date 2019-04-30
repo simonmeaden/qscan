@@ -14,13 +14,13 @@
 
 #include <log4qt/logger.h>
 
-#include "ocr_global.h"
+#include "tesseract_global.h"
 
-class OCRSHARED_EXPORT Ocr : public QObject
+class OCRSHARED_EXPORT TesseractTool : public QObject
 {
   Q_OBJECT
 public:
-  Ocr(QObject* parent = nullptr);
+  explicit TesseractTool(QObject* parent = nullptr);
 
   QString makeString(const QImage& qImage, int page);
 
@@ -39,7 +39,7 @@ protected:
   QString getDataPath();
   QString getLang();
   //  void msg(QString messageText);
-  const char* kTrainedDataSuffix;
+  static const char* kTrainedDataSuffix;
 };
 
 #endif // OCR_H

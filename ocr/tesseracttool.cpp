@@ -1,11 +1,13 @@
-#include "ocr.h"
+#include "tesseracttool.h"
 
 #include "log4qt/consoleappender.h"
 #include "log4qt/log4qt.h"
 #include "log4qt/logmanager.h"
 #include "log4qt/ttcclayout.h"
 
-Ocr::Ocr(QObject* parent)
+const char* TesseractTool::kTrainedDataSuffix = "traineddata";
+
+TesseractTool::TesseractTool(QObject* parent)
   : QObject(parent)
 {
   m_logger = Log4Qt::Logger::logger(tr("Ocr"));
@@ -15,7 +17,7 @@ Ocr::Ocr(QObject* parent)
  * Create tesseract box data from QImage
  */
 QString
-Ocr::makeString(const QImage& qImage, const int page)
+TesseractTool::makeString(const QImage& qImage, const int page)
 {
   PIX* pixs;
   char* outText;
@@ -49,7 +51,7 @@ Ocr::makeString(const QImage& qImage, const int page)
 
   auto* api = new tesseract::TessBaseAPI();
   if (api->Init(nullptr, apiLang)) {
-    msg("Could not initialize tesseract.\n");
+    m_logger->info(tr("Could not initialize tesseract."));
     return "";
   }
   // Initialize tesseract to use English (eng) and the LSTM OCR engine.
@@ -88,7 +90,7 @@ Ocr::makeString(const QImage& qImage, const int page)
  * result: PIX
  */
 PIX*
-Ocr::qImage2PIX(const QImage& qImage)
+TesseractTool::qImage2PIX(const QImage& qImage)
 {
   PIX* pixs;
 
@@ -131,7 +133,7 @@ Ocr::qImage2PIX(const QImage& qImage)
  * result: QImage
  */
 QImage
-Ocr::PIX2qImage(PIX* pixImage)
+TesseractTool::PIX2qImage(PIX* pixImage)
 {
   int width = pixGetWidth(pixImage);
   int height = pixGetHeight(pixImage);
@@ -187,7 +189,7 @@ Ocr::PIX2qImage(PIX* pixImage)
 }
 
 QImage
-Ocr::GetThresholded(const QImage& qImage)
+TesseractTool::GetThresholded(const QImage& qImage)
 {
   // TODO(zdenop): Check this for memory leak
   PIX* pixs = qImage2PIX(qImage);
@@ -230,7 +232,7 @@ Ocr::GetThresholded(const QImage& qImage)
 }
 
 QString
-Ocr::getDataPath()
+TesseractTool::getDataPath()
 {
   QSettings settings(QSettings::IniFormat,
                      QSettings::UserScope,
@@ -244,7 +246,7 @@ Ocr::getDataPath()
 }
 
 QString
-Ocr::getLang()
+TesseractTool::getLang()
 {
   QSettings settings(QSettings::IniFormat,
                      QSettings::UserScope,
@@ -266,7 +268,7 @@ Ocr::getLang()
  * Get QList<QString> with list of available languages
  */
 QList<QString>
-Ocr::getLanguages(const QString& datapath)
+TesseractTool::getLanguages(const QString& datapath)
 {
   QList<QString> languages;
   QDir dir(datapath);
