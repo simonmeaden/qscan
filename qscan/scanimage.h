@@ -23,8 +23,13 @@ public:
 
   void setImage(const QImage& image);
   //  void rotateBy(int angle);
-  void rotateBy(qreal angle);
+  void cropToContent();
+  void rotate180();
+  void rotateCW();
+  void rotateACW();
+  void rotateByAngle();
   void rotateByEdge();
+  void rotateBy(qreal angle);
   void scaleBy();
   void save();
   void saveAs();
@@ -33,6 +38,8 @@ public:
   void fitBest();
   void fitHeight();
   void fitWidth();
+  void rescan();
+  void scale();
 
   QSize minimumSizeHint() const override;
   QSize sizeHint() const override;
@@ -43,6 +50,10 @@ public:
   void selectAll();
   void clearSelection();
   void setDefaultPageCropSize();
+  QPair<QImage, QImage> splitPages();
+  QImage splitLeftPage();
+  QImage splitRightPage();
+  QImage makePage();
 
 signals:
   void selected();
@@ -93,6 +104,9 @@ protected:
   QPoint m_edge_start;
   QPoint m_edge_finish;
   bool m_mouse_moved;
+  //  bool m_select_all;
+
+  void contextMenuEvent(QContextMenuEvent* event) override;
   void paintEvent(QPaintEvent* event) override;
   void enterEvent(QEvent*) override;
   void leaveEvent(QEvent*) override;
@@ -107,6 +121,35 @@ protected:
   qreal getMax(qreal a, qreal b, qreal c, qreal d);
   void rotateUsingEdge();
   void scaleImage(qreal factor);
+  void enableSetDefaultCropSize();
+  void disableSetDefaultCropSize();
+  void enableSelectionActions();
+  void disableSelectionActions();
+  void enableNoSelectionActions();
+  void disableNoSelectionActions();
+
+  //  QAction* m_cut_act;
+  QAction* m_copy_selection_act;
+  QAction* m_crop_to_selection_act;
+  QAction* m_clear_selection_act;
+  QAction* m_crop_to_content_act;
+  QAction* m_rotate_cw_act;
+  QAction* m_rotate_acw_act;
+  QAction* m_rotate_180_act;
+  QAction* m_rotate_by_angle_act;
+  QAction* m_rotate_by_edge_act;
+  QAction* m_rescan_act;
+  QAction* m_scale_act;
+  QAction* m_selectall_act;
+  QAction* m_save_act;
+  QAction* m_save_as_act;
+  QAction* m_set_def_crop_act;
+  QAction* m_split_pages_act;
+  QAction* m_split_right_act;
+  QAction* m_split_left_act;
+  QAction* m_make_page_act;
+
+  void initActions();
 
   static const int EDGE_WIDTH = 2;
   static const int RUBBERBAND_WIDTH = 2;

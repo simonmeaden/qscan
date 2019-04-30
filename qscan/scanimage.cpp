@@ -24,6 +24,27 @@ ScanImage::ScanImage(QWidget* parent)
   , m_mouse_moved(false)
   , m_rotation(0)
   , m_def_crop_set(false)
+  , m_copy_selection_act(new QAction(tr("Copy selection"), this))
+  , m_crop_to_selection_act(new QAction(tr("Clear selection"), this))
+  , m_clear_selection_act(new QAction(tr("Clear selection"), this))
+  , m_crop_to_content_act(new QAction(tr("Crop to content"), this))
+  , m_rotate_cw_act(new QAction(tr("Rotate 90° clockwise"), this))
+  , m_rotate_acw_act(new QAction(tr("Rotate 90° anti-clockwise"), this))
+  , m_rotate_180_act(new QAction(tr("Rotate 180°"), this))
+  , m_rotate_by_angle_act(new QAction(tr("Rotate by angle"), this))
+  , m_rotate_by_edge_act(new QAction(tr("Rotate by edge"), this))
+  , m_rescan_act(new QAction(tr("Re-scan image to crop"), this))
+  , m_scale_act(new QAction(tr("Scale image"), this))
+  , m_selectall_act(new QAction(tr("Select entire image"), this))
+  , m_save_act(new QAction(tr("Save image"), this))
+  , m_save_as_act(new QAction(tr("Save image as"), this))
+  , m_set_def_crop_act(new QAction(tr("Set default page crop size"), this))
+  //  , m_select_all(false)
+  , m_split_pages_act(new QAction(tr("Split image into two pages"), this))
+  , m_make_page_act(new QAction(tr("Make image into a single page"), this))
+  , m_split_left_act(new QAction(tr("Make left half into a single page"), this))
+  , m_split_right_act(
+      new QAction(tr("Make right half into a single page"), this))
 {
   m_editor = qobject_cast<ScanEditor*>(parent);
   m_logger = Log4Qt::Logger::logger(tr("ScanImage"));
@@ -163,6 +184,9 @@ ScanImage::selectAll()
   m_stretched_band = m_rubber_band;
   m_state = RUBBERBAND_COMPLETE;
   emit selected();
+  enableSetDefaultCropSize();
+  enableSelectionActions();
+  disableNoSelectionActions();
   update();
 }
 
@@ -178,6 +202,9 @@ ScanImage::clearSelection()
   setCursor(Qt::ArrowCursor);
   update();
   emit unselected();
+  disableSetDefaultCropSize();
+  disableSelectionActions();
+  enableNoSelectionActions();
 }
 
 void
@@ -185,6 +212,113 @@ ScanImage::setDefaultPageCropSize()
 {
   m_default_crop_size = m_rubber_band;
   m_def_crop_set = true;
+}
+
+QPair<QImage, QImage>
+ScanImage::splitPages()
+{
+  int w = m_image.width();
+  int w2 = int(w / 2.0);
+
+  m_logger->info(tr("Copying to clipboard"));
+  QRect part_rect;
+  part_rect.setX(0);
+  part_rect.setY(0);
+  part_rect.setWidth(w2);
+  part_rect.setHeight(height());
+
+  QImage left = m_image.copy(part_rect);
+
+  part_rect.setX(w2 + 1);
+  part_rect.setWidth(w - w2);
+
+  QImage right = m_image.copy(part_rect);
+
+  return qMakePair<QImage, QImage>(left, right);
+}
+
+QImage
+ScanImage::splitLeftPage()
+{
+  int w2 = int(m_image.width() / 2.0);
+
+  m_logger->info(tr("Copying to clipboard"));
+  QRect part_rect;
+  part_rect.setX(0);
+  part_rect.setY(0);
+  part_rect.setWidth(w2);
+  part_rect.setHeight(height());
+
+  QImage left = m_image.copy(part_rect);
+  return left;
+}
+
+QImage
+ScanImage::splitRightPage()
+{
+  int w = m_image.width();
+  int w2 = int(w / 2.0);
+
+  m_logger->info(tr("Copying to clipboard"));
+  QRect part_rect;
+  part_rect.setX(w2 + 1);
+  part_rect.setY(0);
+  part_rect.setWidth(w - w2);
+  part_rect.setHeight(height());
+
+  QImage right = m_image.copy(part_rect);
+
+  return right;
+}
+
+QImage
+ScanImage::makePage()
+{
+  return m_image;
+}
+
+void
+ScanImage::contextMenuEvent(QContextMenuEvent* event)
+{
+  auto* context_menu = new QMenu();
+
+  if (hasSelection()) {
+    context_menu->addAction(m_save_act);
+    context_menu->addAction(m_save_as_act);
+    context_menu->addSeparator();
+    context_menu->addAction(m_copy_selection_act);
+    context_menu->addAction(m_crop_to_selection_act);
+    context_menu->addAction(m_clear_selection_act);
+    context_menu->addSeparator();
+    context_menu->addAction(m_rescan_act);
+    context_menu->addSeparator();
+    context_menu->addAction(m_set_def_crop_act);
+
+  } else {
+    context_menu->addAction(m_save_act);
+    context_menu->addAction(m_save_as_act);
+    context_menu->addSeparator();
+    context_menu->addAction(m_selectall_act);
+    context_menu->addSeparator();
+    context_menu->addAction(m_crop_to_content_act);
+    context_menu->addSeparator();
+    context_menu->addAction(m_rotate_cw_act);
+    context_menu->addAction(m_rotate_acw_act);
+    context_menu->addAction(m_rotate_180_act);
+    context_menu->addAction(m_rotate_by_angle_act);
+    context_menu->addAction(m_rotate_by_edge_act);
+    context_menu->addSeparator();
+    context_menu->addAction(m_scale_act);
+    context_menu->addSeparator();
+    context_menu->addAction(m_rescan_act);
+    context_menu->addSeparator();
+    context_menu->addAction(m_split_pages_act);
+    context_menu->addAction(m_split_left_act);
+    context_menu->addAction(m_split_right_act);
+    context_menu->addAction(m_make_page_act);
+  }
+
+  context_menu->popup(event->globalPos());
 }
 
 void
@@ -560,6 +694,9 @@ ScanImage::mouseReleaseEvent(QMouseEvent* event)
         // mouse pressed and released without moving.
         clearSelection();
         emit unselected();
+        disableSetDefaultCropSize();
+        disableSelectionActions();
+        enableNoSelectionActions();
         break;
 
       case EDGE_DRAWING:
@@ -571,6 +708,9 @@ ScanImage::mouseReleaseEvent(QMouseEvent* event)
                          .arg(m_edge_finish.y()));
         rotateUsingEdge();
         emit unselected();
+        disableSetDefaultCropSize();
+        disableSelectionActions();
+        enableNoSelectionActions();
         break;
 
       case RUBBERBANDING: {
@@ -594,6 +734,9 @@ ScanImage::mouseReleaseEvent(QMouseEvent* event)
                           .arg(m_rubber_band.height()));
         m_state = RUBBERBAND_COMPLETE;
         emit selected();
+        enableSetDefaultCropSize();
+        enableSelectionActions();
+        disableNoSelectionActions();
         update();
         break;
       } // end of RUBBER_BANDING
@@ -602,6 +745,9 @@ ScanImage::mouseReleaseEvent(QMouseEvent* event)
         if (m_mouse_moved) {
           m_state = RUBBERBAND_COMPLETE;
           emit selected();
+          enableSetDefaultCropSize();
+          enableSelectionActions();
+          disableNoSelectionActions();
         } else {
           clearSelection();
         }
@@ -621,6 +767,9 @@ ScanImage::mouseReleaseEvent(QMouseEvent* event)
       case STRETCH_BOTTOMRIGHT:
         m_rubber_band = m_stretched_band;
         emit selected();
+        enableSetDefaultCropSize();
+        enableSelectionActions();
+        disableNoSelectionActions();
         m_state = RUBBERBAND_COMPLETE;
         update();
         break;
@@ -629,6 +778,9 @@ ScanImage::mouseReleaseEvent(QMouseEvent* event)
         m_rubber_band = m_stretched_band;
         clearSelection();
         emit selected();
+        enableSetDefaultCropSize();
+        enableSelectionActions();
+        disableNoSelectionActions();
         update();
     } // end of switch.
   }
@@ -678,6 +830,94 @@ ScanImage::scaleImage(qreal factor)
 }
 
 void
+ScanImage::initActions()
+{
+  m_copy_selection_act->setShortcut(QKeySequence::Copy);
+  m_copy_selection_act->setToolTip(tr("Copies selection to clipboard."));
+  connect(
+    m_copy_selection_act, &QAction::triggered, this, &ScanImage::copySelection);
+  m_crop_to_selection_act->setToolTip(
+    tr("Crops the image to the selection rectangle."));
+  connect(m_crop_to_selection_act,
+          &QAction::triggered,
+          this,
+          &ScanImage::cropToSelection);
+  m_clear_selection_act->setToolTip(tr("Removes selection rectangle."));
+  connect(m_clear_selection_act,
+          &QAction::triggered,
+          this,
+          &ScanImage::cropToSelection);
+  connect(m_crop_to_content_act,
+          &QAction::triggered,
+          this,
+          &ScanImage::cropToContent);
+  connect(m_set_def_crop_act,
+          &QAction::triggered,
+          this,
+          &ScanImage::setDefaultPageCropSize);
+  connect(m_rotate_cw_act, &QAction::triggered, this, &ScanImage::rotateCW);
+  connect(m_rotate_acw_act, &QAction::triggered, this, &ScanImage::rotateACW);
+  connect(m_rotate_180_act, &QAction::triggered, this, &ScanImage::rotate180);
+  connect(m_rotate_by_angle_act,
+          &QAction::triggered,
+          this,
+          &ScanImage::rotateByAngle);
+  connect(
+    m_rotate_by_edge_act, &QAction::triggered, this, &ScanImage::rotateByEdge);
+  connect(m_rescan_act, &QAction::triggered, this, &ScanImage::rescan);
+  connect(m_scale_act, &QAction::triggered, this, &ScanImage::scale);
+  connect(m_selectall_act, &QAction::triggered, this, &ScanImage::selectAll);
+  connect(m_save_act, &QAction::triggered, this, &ScanImage::save);
+  connect(m_save_as_act, &QAction::triggered, this, &ScanImage::saveAs);
+
+  connect(m_split_pages_act, &QAction::triggered, this, &ScanImage::splitPages);
+
+  disableSetDefaultCropSize();
+}
+
+void
+ScanImage::cropToContent()
+{
+  // TODO crop to content
+}
+
+void
+ScanImage::rotate180()
+{
+  rotateBy(180);
+}
+
+void
+ScanImage::rotateCW()
+{
+  rotateBy(90.0);
+}
+
+void
+ScanImage::rotateACW()
+{
+  rotateBy(-90.0);
+}
+
+void
+ScanImage::rotateByAngle()
+{
+  bool ok;
+  qreal angle = QInputDialog::getDouble(
+    this,
+    tr("Rotate by angle"),
+    tr("Rotate the image by a fixed angle around the centre."),
+    0.0,   // value
+    0.0,   // min
+    360.0, // max
+    1,     // decimals
+    &ok);
+  if (angle > 0.0 && ok) {
+    rotateBy(angle);
+  }
+}
+
+void
 ScanImage::fitBest()
 {
   QSize frame_size = m_editor->frameSize();
@@ -705,6 +945,68 @@ ScanImage::fitWidth()
   m_logger->info(tr("Fit Width scale %1 to %2").arg(m_scale_by).arg(factor));
   m_scale_by = factor;
   scaleImage(m_scale_by);
+}
+
+void
+ScanImage::rescan()
+{
+  // TODO rescan
+}
+
+void
+ScanImage::scale()
+{
+  // TODO scale
+  scaleBy();
+}
+void
+ScanImage::enableSetDefaultCropSize()
+{
+  m_set_def_crop_act->setEnabled(true);
+}
+
+void
+ScanImage::disableSetDefaultCropSize()
+{
+  m_set_def_crop_act->setEnabled(false);
+}
+
+void
+ScanImage::enableSelectionActions()
+{
+  m_crop_to_content_act->setEnabled(true);
+  m_crop_to_selection_act->setEnabled(true);
+  m_copy_selection_act->setEnabled(true);
+}
+
+void
+ScanImage::disableSelectionActions()
+{
+  m_crop_to_content_act->setEnabled(false);
+  m_crop_to_selection_act->setEnabled(false);
+  m_copy_selection_act->setEnabled(false);
+}
+
+void
+ScanImage::enableNoSelectionActions()
+{
+  m_rotate_cw_act->setEnabled(true);
+  m_rotate_acw_act->setEnabled(true);
+  m_rotate_180_act->setEnabled(true);
+  m_rotate_by_edge_act->setEnabled(true);
+  m_rotate_by_angle_act->setEnabled(true);
+  m_scale_act->setEnabled(true);
+}
+
+void
+ScanImage::disableNoSelectionActions()
+{
+  m_rotate_cw_act->setEnabled(false);
+  m_rotate_acw_act->setEnabled(false);
+  m_rotate_180_act->setEnabled(false);
+  m_rotate_by_edge_act->setEnabled(false);
+  m_rotate_by_angle_act->setEnabled(false);
+  m_scale_act->setEnabled(false);
 }
 
 QSize

@@ -22,34 +22,30 @@
 
 /* ScanEditor
  *****************************************************************************/
+
 ScanEditor::ScanEditor(QScan* scan, QWidget* parent)
   : QFrame(parent)
   , m_image_display(nullptr)
   , m_prog_dlg(nullptr)
   , m_scan_lib(scan)
-  , m_copy_selection_act(new QAction(tr("Copy selection"), this))
-  , m_crop_to_selection_act(new QAction(tr("Clear selection"), this))
-  , m_clear_selection_act(new QAction(tr("Clear selection"), this))
-  , m_crop_to_content_act(new QAction(tr("Crop to content"), this))
-  , m_rotate_cw_act(new QAction(tr("Rotate 90° clockwise"), this))
-  , m_rotate_acw_act(new QAction(tr("Rotate 90° anti-clockwise"), this))
-  , m_rotate_180_act(new QAction(tr("Rotate 180°"), this))
-  , m_rotate_by_angle_act(new QAction(tr("Rotate by angle"), this))
-  , m_rotate_by_edge_act(new QAction(tr("Rotate by edge"), this))
-  , m_rescan_act(new QAction(tr("Re-scan image to crop"), this))
-  , m_scale_act(new QAction(tr("Scale image"), this))
-  , m_selectall_act(new QAction(tr("Select entire image"), this))
-  , m_save_act(new QAction(tr("Save image"), this))
-  , m_save_as_act(new QAction(tr("Save image as"), this))
-  , m_set_def_crop_act(new QAction(tr("Set default page crop size"), this))
-  , m_select_all(false)
+  , m_page_view(nullptr)
+  , scroll(nullptr)
 {
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  auto* layout = new QHBoxLayout(this);
+
+  initGui();
+  connectActions();
+}
+
+// ScanEditor::~ScanEditor(){
+//}
+
+void
+ScanEditor::initGui()
+{
+  auto* layout = new QGridLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
   setLayout(layout);
-
-  initActions();
 
   scroll = new QScrollArea(this);
   scroll->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -57,29 +53,24 @@ ScanEditor::ScanEditor(QScan* scan, QWidget* parent)
   scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   scroll->setContentsMargins(0, 0, 0, 0);
 
-  //  auto* scroll_layout = new QHBoxLayout;
-  //  scroll->setLayout(scroll_layout);
-  //  scroll_layout->setContentsMargins(0, 0, 0, 0);
-
   m_image_display = new ScanImage(this);
   m_image_display->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
   m_image_display->setScaledContents(true);
   scroll->setWidget(m_image_display);
-  layout->addWidget(scroll);
+  layout->addWidget(scroll, 0, 0);
 
+  m_page_view = new PageView(this);
+  layout->addWidget(m_page_view, 0, 1);
+}
+
+void
+ScanEditor::connectActions()
+{
   connect(m_image_display,
           &ScanImage::selectionUnderway,
           this,
           &ScanEditor::selectionUnderway);
   connect(m_image_display, &ScanImage::selected, this, &ScanEditor::selected);
-  connect(m_image_display,
-          &ScanImage::selected,
-          this,
-          &ScanEditor::enableSetDefaultCropSize);
-  connect(m_image_display,
-          &ScanImage::unselected,
-          this,
-          &ScanEditor::disableSetDefaultCropSize);
   connect(
     m_image_display, &ScanImage::unselected, this, &ScanEditor::unselected);
   connect(m_image_display,
@@ -92,64 +83,48 @@ ScanEditor::ScanEditor(QScan* scan, QWidget* parent)
           &ScanEditor::adjustScrollbar);
 }
 
-ScanEditor::~ScanEditor() = default;
-
 void
-ScanEditor::initActions()
+ScanEditor::splitPages()
 {
-  m_copy_selection_act->setShortcut(QKeySequence::Copy);
-  m_copy_selection_act->setToolTip(tr("Copies selection to clipboard."));
-  connect(m_copy_selection_act,
-          &QAction::triggered,
-          this,
-          &ScanEditor::copySelection);
-  m_crop_to_selection_act->setToolTip(
-    tr("Crops the image to the selection rectangle."));
-  connect(m_crop_to_selection_act,
-          &QAction::triggered,
-          this,
-          &ScanEditor::cropToSelection);
-  m_clear_selection_act->setToolTip(tr("Removes selection rectangle."));
-  connect(m_clear_selection_act,
-          &QAction::triggered,
-          this,
-          &ScanEditor::cropToSelection);
-  connect(m_crop_to_content_act,
-          &QAction::triggered,
-          this,
-          &ScanEditor::cropToContent);
-  connect(m_set_def_crop_act,
-          &QAction::triggered,
-          this,
-          &ScanEditor::setDefaultPageCropSize);
-  connect(m_rotate_cw_act, &QAction::triggered, this, &ScanEditor::rotateCW);
-  connect(m_rotate_acw_act, &QAction::triggered, this, &ScanEditor::rotateACW);
-  connect(m_rotate_180_act, &QAction::triggered, this, &ScanEditor::rotate180);
-  connect(m_rotate_by_angle_act,
-          &QAction::triggered,
-          this,
-          &ScanEditor::rotateByAngle);
-  connect(
-    m_rotate_by_edge_act, &QAction::triggered, this, &ScanEditor::rotateByEdge);
-  connect(m_rescan_act, &QAction::triggered, this, &ScanEditor::rescan);
-  connect(m_scale_act, &QAction::triggered, this, &ScanEditor::scale);
-  connect(m_selectall_act, &QAction::triggered, this, &ScanEditor::selectAll);
-  connect(m_save_act, &QAction::triggered, this, &ScanEditor::save);
-  connect(m_save_as_act, &QAction::triggered, this, &ScanEditor::saveAs);
-
-  disableSetDefaultCropSize();
+  QPair<QImage, QImage> images = m_image_display->splitPages();
+  Page left_page(new ScanPage());
+  left_page->setImage(images.first);
+  m_pages.append(left_page);
+  m_page_view->append(m_pages.last()->thumbnail());
+  Page right_page(new ScanPage());
+  right_page->setImage(images.second);
+  m_pages.append(right_page);
+  m_page_view->append(m_pages.last()->thumbnail());
 }
 
 void
-ScanEditor::enableSetDefaultCropSize()
+ScanEditor::splitLeftPage()
 {
-  m_set_def_crop_act->setEnabled(true);
+  QImage image = m_image_display->splitLeftPage();
+  Page page(new ScanPage());
+  page->setImage(image);
+  m_pages.append(page);
+  m_page_view->append(m_pages.last()->thumbnail());
 }
 
 void
-ScanEditor::disableSetDefaultCropSize()
+ScanEditor::splitRightPage()
 {
-  m_set_def_crop_act->setEnabled(false);
+  QImage image = m_image_display->splitRightPage();
+  Page page(new ScanPage());
+  page->setImage(image);
+  m_pages.append(page);
+  m_page_view->append(m_pages.last()->thumbnail());
+}
+
+void
+ScanEditor::makePage()
+{
+  QImage image = m_image_display->makePage();
+  Page page(new ScanPage());
+  page->setImage(image);
+  m_pages.append(page);
+  m_page_view->append(m_pages.last()->thumbnail());
 }
 
 void
@@ -187,45 +162,6 @@ void
 ScanEditor::setSelectedName(const QString& selected_name)
 {
   m_selected_name = selected_name;
-}
-
-void
-ScanEditor::contextMenuEvent(QContextMenuEvent* event)
-{
-  auto* contextMenu = new QMenu();
-
-  if (m_image_display->hasSelection()) {
-    contextMenu->addAction(m_save_act);
-    contextMenu->addAction(m_save_as_act);
-    contextMenu->addSeparator();
-    contextMenu->addAction(m_copy_selection_act);
-    contextMenu->addAction(m_crop_to_selection_act);
-    contextMenu->addAction(m_clear_selection_act);
-    contextMenu->addSeparator();
-    contextMenu->addAction(m_rescan_act);
-    contextMenu->addSeparator();
-    contextMenu->addAction(m_set_def_crop_act);
-
-  } else {
-    contextMenu->addAction(m_save_act);
-    contextMenu->addAction(m_save_as_act);
-    contextMenu->addSeparator();
-    contextMenu->addAction(m_selectall_act);
-    contextMenu->addSeparator();
-    contextMenu->addAction(m_crop_to_content_act);
-    contextMenu->addSeparator();
-    contextMenu->addAction(m_rotate_cw_act);
-    contextMenu->addAction(m_rotate_acw_act);
-    contextMenu->addAction(m_rotate_180_act);
-    contextMenu->addAction(m_rotate_by_angle_act);
-    contextMenu->addAction(m_rotate_by_edge_act);
-    contextMenu->addSeparator();
-    contextMenu->addAction(m_scale_act);
-    contextMenu->addSeparator();
-    contextMenu->addAction(m_rescan_act);
-  }
-
-  contextMenu->popup(event->globalPos());
 }
 
 bool
@@ -282,37 +218,25 @@ ScanEditor::selectAll()
 void
 ScanEditor::rotate180()
 {
-  m_image_display->rotateBy(180.0);
+  m_image_display->rotate180();
 }
 
 void
 ScanEditor::rotateCW()
 {
-  m_image_display->rotateBy(90.0);
+  m_image_display->rotateCW();
 }
 
 void
 ScanEditor::rotateACW()
 {
-  m_image_display->rotateBy(-90.0);
+  m_image_display->rotateACW();
 }
 
 void
 ScanEditor::rotateByAngle()
 {
-  bool ok;
-  qreal angle = QInputDialog::getDouble(
-    this,
-    tr("Rotate by angle"),
-    tr("Rotate the image by a fixed angle around the centre."),
-    0.0,   // value
-    0.0,   // min
-    360.0, // max
-    1,     // decimals
-    &ok);
-  if (angle > 0.0 && ok) {
-    m_image_display->rotateBy(angle);
-  }
+  m_image_display->rotateByAngle();
 }
 
 void
@@ -342,17 +266,19 @@ ScanEditor::clearSelection()
 void
 ScanEditor::cropToContent()
 {
-  // TODO work out actual content.
+  m_image_display->cropToContent();
 }
 
 void
 ScanEditor::rescan()
-{}
+{
+  m_image_display->rescan();
+}
 
 void
 ScanEditor::scale()
 {
-  m_image_display->scaleBy();
+  m_image_display->scale();
 }
 
 void
@@ -401,4 +327,16 @@ void
 ScanEditor::setDefaultPageCropSize()
 {
   m_image_display->setDefaultPageCropSize();
+}
+
+int
+ScanEditor::pageCount()
+{
+  return m_pages.size();
+}
+
+Page
+ScanEditor::page(int index)
+{
+  return m_pages.at(index);
 }

@@ -22,16 +22,19 @@
 
 #include <QAction>
 #include <QFrame>
-#include <QHBoxLayout>
+#include <QGridLayout>
 #include <QImage>
 #include <QInputDialog>
+#include <QList>
 #include <QMenu>
 #include <QProgressDialog>
 #include <QScrollArea>
 #include <QScrollBar>
 
+#include "pageview.h"
 #include "qscan_global.h"
 #include "scanimage.h"
+#include "scanpage.h"
 
 class QScan;
 
@@ -40,7 +43,7 @@ class SCANSHARED_EXPORT ScanEditor : public QFrame
   Q_OBJECT
 public:
   ScanEditor(QScan* scan, QWidget* parent = nullptr);
-  ~ScanEditor() override;
+  //  ~ScanEditor() override;
 
   void setImage(const QImage& image);
   void setScanProgress(const int& progress);
@@ -68,6 +71,13 @@ public:
   void fitHeight();
   void fitWidth();
   void setDefaultPageCropSize();
+  void splitPages();
+  void splitLeftPage();
+  void splitRightPage();
+  void makePage();
+
+  int pageCount();
+  Page page(int index);
 
 signals:
   void scanCancelled();
@@ -83,34 +93,15 @@ protected:
   QScan* m_scan_lib;
   QString m_selected_name;
   QScrollArea* scroll;
+  PageView* m_page_view;
 
-  //  QAction* m_cut_act;
-  QAction* m_copy_selection_act;
-  QAction* m_crop_to_selection_act;
-  QAction* m_clear_selection_act;
-  QAction* m_crop_to_content_act;
-  QAction* m_rotate_cw_act;
-  QAction* m_rotate_acw_act;
-  QAction* m_rotate_180_act;
-  QAction* m_rotate_by_angle_act;
-  QAction* m_rotate_by_edge_act;
-  QAction* m_rescan_act;
-  QAction* m_scale_act;
-  QAction* m_selectall_act;
-  QAction* m_save_act;
-  QAction* m_save_as_act;
-  QAction* m_set_def_crop_act;
+  QList<Page> m_pages;
 
-  bool m_select_all;
-  //  int m_tl_x, m_tl_y, m_br_x, m_br_y;
-
-  void contextMenuEvent(QContextMenuEvent* event) override;
   bool eventFilter(QObject* obj, QEvent* event) override;
 
   void adjustScrollbar(qreal factor);
-  void initActions();
-  void enableSetDefaultCropSize();
-  void disableSetDefaultCropSize();
+  void initGui();
+  void connectActions();
 };
 
 #endif // SCANEDITOR_H

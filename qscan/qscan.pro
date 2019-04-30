@@ -27,7 +27,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    pageview.cpp \
     qscan.cpp \
+    scanpage.cpp \
     version.cpp  \
     scaninterface.cpp \
     scanoptions.cpp \
@@ -35,8 +37,10 @@ SOURCES += \
     scanimage.cpp
 
 HEADERS += \
+    pageview.h \
     qscan.h \
     qscan_global.h \
+    scanpage.h \
     version.h \
     scaninterface.h  \
     scanoptions.h \
