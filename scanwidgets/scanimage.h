@@ -11,11 +11,13 @@
 #include <QPoint>
 #include <QtMath>
 
-#include "log4qt/logger.h"
+#include "logger.h"
+
+#include "scanwidgets_global.h"
 
 class ScanEditor;
 
-class ScanImage : public QLabel
+class SCANWIDGETSSHARED_EXPORT ScanImage : public QLabel
 {
   Q_OBJECT
 public:
@@ -89,7 +91,6 @@ protected:
   qreal m_scale_by;
   QMatrix m_matrix;
   qreal m_rotation;
-  ScanEditor* m_editor;
 
   int m_rb_start_x;
   int m_rb_start_y;

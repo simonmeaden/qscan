@@ -25,20 +25,9 @@
 #include <QMutexLocker>
 #include <QObject>
 
-#include <log4qt/logger.h>
+#include "logger.h"
 
 #include "scaninterface.h"
-
-enum LogLevel
-{
-  TRACE,
-  DEBUG,
-  INFO,
-  WARN,
-  ERROR,
-  FATAL,
-  OFF,
-};
 
 class SaneWorker : public QObject
 {
@@ -91,10 +80,6 @@ protected:
   static const int GUARDS_SIZE = 4; /* 4 bytes */
   void* guardedMalloc(size_t size);
   void guardedFree(void* ptr);
-  //  const SANE_Option_Descriptor* getOptionDescriptorByName(SANE_Handle
-  //  device,
-  //                                                          const char* name,
-  //                                                          int* option_num);
   QVariant getOptionValue(ScanDevice* device, const QString& option_name);
 };
 

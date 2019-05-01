@@ -4,8 +4,9 @@
 #
 #-------------------------------------------------
 
-#QT       -= gui
-QT += svg
+QT += core svg
+
+DEFINES += LOGGER_ENABLE
 
 TARGET = ocr
 TEMPLATE = lib
@@ -24,11 +25,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    tesseracttool.cpp
+    ocrtools.cpp \
+    ocrworker.cpp \
+    tesstools.cpp
 
 HEADERS += \
-        tesseract_global.h \
-        tesseracttool.h
+        ocr_global.h \
+        ocrtools.h \
+        ocrworker.h \
+        tesstools.h
 
 unix {
     target.path = /usr/lib
@@ -41,3 +46,10 @@ else:unix: LIBS += -L$$PWD/../../../../../usr/local/lib/ -ltesseract
 
 INCLUDEPATH += $$PWD/../../../../../usr/local/include
 DEPENDPATH += $$PWD/../../../../../usr/local/include
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../logger/release/ -llogger
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../logger/debug/ -llogger
+else:unix: LIBS += -L$$OUT_PWD/../logger/ -llogger
+
+INCLUDEPATH += $$PWD/../logger
+DEPENDPATH += $$PWD/../logger

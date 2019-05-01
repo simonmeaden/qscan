@@ -94,6 +94,9 @@ MainWindow::MainWindow(QWidget* parent)
   fit_width_key = QPixmapCache::insert(QPixmap(":/icons/fit-width"));
   fit_height_key = QPixmapCache::insert(QPixmap(":/icons/fit-height"));
 
+  m_config_dir = "/home/simon/.config/Biblos";
+  m_lang = "eng";
+
   initActions();
   initGui();
   connectActions();
@@ -312,7 +315,7 @@ MainWindow::initGui()
   m_main_layout = new QGridLayout;
   main_frame->setLayout(m_main_layout);
 
-  m_image_editor = new ScanEditor(m_scan_lib, this);
+  m_image_editor = new ScanEditor(m_scan_lib, m_config_dir, m_lang, this);
   m_image_editor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   installEventFilter(m_image_editor);
   connect(m_image_editor,

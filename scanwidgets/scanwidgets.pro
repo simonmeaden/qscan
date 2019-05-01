@@ -1,21 +1,17 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2019-04-06T09:11:49
+# Project created by QtCreator 2019-05-01T05:44:59
 #
 #-------------------------------------------------
 
 DEFINES += LOGGER_ENABLE
 
-QT       += widgets svg xml multimedia
+QT       += widgets svg
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += printsupport
-
-TARGET = qscan
+TARGET = scanwidgets
 TEMPLATE = lib
 
-DEFINES += SCAN_LIBRARY
-
-CONFIG += c++14
+DEFINES += SCANWIDGETS_LIBRARY
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -29,45 +25,22 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    qscan.cpp \
-    version.cpp  \
-    scaninterface.cpp \
-    scanoptions.cpp
+        pageview.cpp \
+        scaneditor.cpp \
+        scanimage.cpp \
+        scanpage.cpp
 
 HEADERS += \
-    qscan.h \
-    qscan_global.h \
-    version.h \
-    scaninterface.h  \
-    scanoptions.h
+        pageview.h \
+        scaneditor.h \
+        scanimage.h \
+        scanpage.h \
+        scanwidgets_global.h 
 
 unix {
-    SOURCES += \
-        unix/saneworker.cpp \
-        unix/sanelibrary.cpp \
-
-    HEADERS += \
-        unix/saneworker.h \
-        unix/sanelibrary.h \
-
-    LIBS += -lsane
-
     target.path = /usr/lib
     INSTALLS += target
 }
-
-win32:win64 {
-    SOURCES += \
-        win/twainlibrary.cpp
-
-    HEADERS += \
-        win/twainlibrary.h
-}
-
-unix|win32: LIBS += -llog4qt
-
-DISTFILES += \
-    SIZES.md
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../logger/release/ -llogger
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../logger/debug/ -llogger
@@ -75,3 +48,17 @@ else:unix: LIBS += -L$$OUT_PWD/../logger/ -llogger
 
 INCLUDEPATH += $$PWD/../logger
 DEPENDPATH += $$PWD/../logger
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qscan/release/ -lqscan
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../qscan/debug/ -lqscan
+else:unix: LIBS += -L$$OUT_PWD/../qscan/ -lqscan
+
+INCLUDEPATH += $$PWD/../qscan
+DEPENDPATH += $$PWD/../qscan
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../ocr/release/ -locr
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../ocr/debug/ -locr
+else:unix: LIBS += -L$$OUT_PWD/../ocr/ -locr
+
+INCLUDEPATH += $$PWD/../ocr
+DEPENDPATH += $$PWD/../ocr

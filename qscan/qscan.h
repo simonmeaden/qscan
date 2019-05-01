@@ -22,7 +22,7 @@
 
 #include <QObject>
 
-#include "log4qt/logger.h"
+#include "logger.h"
 
 #include "qscan_global.h"
 #include "scaninterface.h"

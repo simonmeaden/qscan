@@ -29,10 +29,7 @@
 #include <sane/sane.h>
 #include <sane/saneopts.h>
 
-#include <log4qt/consoleappender.h>
-#include <log4qt/logger.h>
-#include <log4qt/logmanager.h>
-#include <log4qt/ttcclayout.h>
+#include "logger.h"
 
 #include "saneworker.h"
 #include "scaninterface.h"

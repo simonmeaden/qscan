@@ -1,29 +1,49 @@
-#include "tesseracttool.h"
+/**********************************************************************
+ * File:        TessTools.cpp
+ * Description: Tesseract tools
+ * Author:      Zdenko Podobny
+ * Created:     2012-03-27
+ *
+ * (C) Copyright 2012-2013, Zdenko Podobny
+ **
+ ** Licensed under the Apache License, Version 2.0 (the "License");
+ ** you may not use this file except in compliance with the License.
+ ** You may obtain a copy of the License at
+ **
+ **    http://www.apache.org/licenses/LICENSE-2.0
+ **
+ ** Unless required by applicable law or agreed to in writing, software
+ ** distributed under the License is distributed on an "AS IS" BASIS,
+ ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ ** See the License for the specific language governing permissions and
+ ** limitations under the License.
+ *
+ **********************************************************************/
+#include "tesstools.h"
 
-#include "log4qt/consoleappender.h"
-#include "log4qt/log4qt.h"
-#include "log4qt/logmanager.h"
-#include "log4qt/ttcclayout.h"
+const char* TessTools::kTrainedDataSuffix = "traineddata";
 
-const char* TesseractTool::kTrainedDataSuffix = "traineddata";
-
-TesseractTool::TesseractTool(QObject* parent)
+TessTools::TessTools(const QString& datapath,
+                     const QString& lang,
+                     QObject* parent)
   : QObject(parent)
+  , m_datapath(datapath)
+  , m_lang(lang)
 {
-  m_logger = Log4Qt::Logger::logger(tr("Ocr"));
+  m_datapath += QStringLiteral("/tesseract/datapath");
 }
 
 /*!
  * Create tesseract box data from QImage
  */
 QString
-TesseractTool::makeString(const QImage& qImage, const int page)
+TessTools::makeBoxes(const QImage& qImage, const int page)
 {
   PIX* pixs;
   char* outText;
 
   if ((pixs = qImage2PIX(qImage)) == nullptr) {
-    m_logger->info("Unsupported image type");
+    emit log(LogLevel::INFO, QString("Unsupported image type"));
     return "";
   }
 
@@ -33,7 +53,7 @@ TesseractTool::makeString(const QImage& qImage, const int page)
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
   QByteArray byteArray = getLang().toAscii();
 #else
-  QByteArray byteArray = getLang().toLocal8Bit();
+  QByteArray byteArray = m_lang.toLocal8Bit();
 #endif
   const char* apiLang = byteArray.constData();
 
@@ -44,14 +64,14 @@ TesseractTool::makeString(const QImage& qImage, const int page)
   const char* env = byteArrayWin.data();
   putenv(env);
 #else
-  QByteArray byteArray1 = getDataPath().toUtf8();
+  QByteArray byteArray1 = m_datapath.toUtf8();
   const char* datapath = byteArray1.data();
   setenv("TESSDATA_PREFIX", datapath, 1);
 #endif
 
   auto* api = new tesseract::TessBaseAPI();
   if (api->Init(nullptr, apiLang)) {
-    m_logger->info(tr("Could not initialize tesseract."));
+    emit log(LogLevel::INFO, tr("Could not initialize tesseract."));
     return "";
   }
   // Initialize tesseract to use English (eng) and the LSTM OCR engine.
@@ -85,20 +105,20 @@ TesseractTool::makeString(const QImage& qImage, const int page)
 }
 
 /*!
- * Convert QT QImage to PIX
+ * Convert QT QImage to Leptonica PIX
  * input: QImage
  * result: PIX
  */
 PIX*
-TesseractTool::qImage2PIX(const QImage& qImage)
+TessTools::qImage2PIX(const QImage& qimage)
 {
   PIX* pixs;
 
-  QImage myImage = qImage.rgbSwapped();
-  int width = myImage.width();
-  int height = myImage.height();
-  int depth = myImage.depth();
-  int wpl = myImage.bytesPerLine() / 4;
+  QImage image = qimage.rgbSwapped();
+  int width = image.width();
+  int height = image.height();
+  int depth = image.depth();
+  int wpl = image.bytesPerLine() / 4;
 
   pixs = pixCreate(width, height, depth);
   pixSetWpl(pixs, wpl);
@@ -107,16 +127,16 @@ TesseractTool::qImage2PIX(const QImage& qImage)
 
   for (int y = 0; y < height; y++) {
     l_uint32* lines = datas + y * wpl;
-    QByteArray a(reinterpret_cast<const char*>(myImage.scanLine(y)),
-                 myImage.bytesPerLine());
+    QByteArray a(reinterpret_cast<const char*>(image.scanLine(y)),
+                 image.bytesPerLine());
     for (int j = 0; j < a.size(); j++) {
       *((l_uint8*)lines + j) = a[j];
     }
   }
 
   const qreal toDPM = 1.0 / 0.0254;
-  int resolutionX = int(myImage.dotsPerMeterX() / toDPM);
-  int resolutionY = int(myImage.dotsPerMeterY() / toDPM);
+  int resolutionX = int(image.dotsPerMeterX() / toDPM);
+  int resolutionY = int(image.dotsPerMeterY() / toDPM);
 
   if (resolutionX < 300)
     resolutionX = 300;
@@ -133,7 +153,7 @@ TesseractTool::qImage2PIX(const QImage& qImage)
  * result: QImage
  */
 QImage
-TesseractTool::PIX2qImage(PIX* pixImage)
+TessTools::PIX2qImage(PIX* pixImage)
 {
   int width = pixGetWidth(pixImage);
   int height = pixGetHeight(pixImage);
@@ -181,7 +201,7 @@ TesseractTool::PIX2qImage(PIX* pixImage)
 
   if (result.isNull()) {
     static QImage none(0, 0, QImage::Format_Invalid);
-    m_logger->info(tr("Invalid format!!!"));
+    emit log(LogLevel::INFO, tr("Invalid format!!!"));
     return none;
   }
 
@@ -189,13 +209,13 @@ TesseractTool::PIX2qImage(PIX* pixImage)
 }
 
 QImage
-TesseractTool::GetThresholded(const QImage& qImage)
+TessTools::GetThresholded(const QImage& qImage)
 {
   // TODO(zdenop): Check this for memory leak
   PIX* pixs = qImage2PIX(qImage);
 
   // Set tessdata as Enviromental Variable to avoid problems
-  QByteArray byteArray1 = getDataPath().toUtf8();
+  QByteArray byteArray1 = m_datapath.toUtf8();
 #ifdef _WIN32
   QString envQString = "TESSDATA_PREFIX=" + byteArray1;
   const char* env = qString2Char(envQString);
@@ -209,7 +229,7 @@ TesseractTool::GetThresholded(const QImage& qImage)
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
   QByteArray byteArray = getLang().toAscii();
 #else
-  QByteArray byteArray = getLang().toLocal8Bit();
+  QByteArray byteArray = m_lang.toLocal8Bit();
 #endif
   const char* apiLang = byteArray.constData();
 
@@ -217,7 +237,7 @@ TesseractTool::GetThresholded(const QImage& qImage)
 
   auto* api = new tesseract::TessBaseAPI();
   if (api->Init(nullptr, apiLang)) {
-    m_logger->info(tr("Could not initialize tesseract.\n"));
+    emit log(LogLevel::INFO, tr("Could not initialize tesseract.\n"));
     return QImage();
   }
   api->SetImage(pixs);
@@ -231,44 +251,11 @@ TesseractTool::GetThresholded(const QImage& qImage)
   return tresholdedImage;
 }
 
-QString
-TesseractTool::getDataPath()
-{
-  QSettings settings(QSettings::IniFormat,
-                     QSettings::UserScope,
-                     SETTING_ORGANIZATION,
-                     SETTING_APPLICATION);
-  QString dataPath;
-  if (settings.contains("Tesseract/DataPath")) {
-    dataPath = settings.value("Tesseract/DataPath").toString();
-  }
-  return dataPath;
-}
-
-QString
-TesseractTool::getLang()
-{
-  QSettings settings(QSettings::IniFormat,
-                     QSettings::UserScope,
-                     SETTING_ORGANIZATION,
-                     SETTING_APPLICATION);
-  QString lang;
-  if (settings.contains("Tesseract/Lang")) {
-    lang = settings.value("Tesseract/Lang").toString();
-  }
-
-  if (lang.isNull()) {
-    m_logger->info(tr("You need to configure tesseract in Settings!"));
-    return "";
-  }
-  return lang;
-}
-
 /*!
  * Get QList<QString> with list of available languages
  */
 QList<QString>
-TesseractTool::getLanguages(const QString& datapath)
+TessTools::getLanguages(const QString& datapath)
 {
   QList<QString> languages;
   QDir dir(datapath);
@@ -276,8 +263,8 @@ TesseractTool::getLanguages(const QString& datapath)
   if (!dir.exists()) {
     QMessageBox msgBox;
     msgBox.setText(
-      QObject::tr("Cannot find the tessdata directory '%1'!\n").arg(datapath) +
-      QObject::tr("Please check your configuration or tesseract instalation"));
+      tr("Cannot find the tessdata directory '%1'!\n").arg(datapath) +
+      tr("Please check your configuration or tesseract instalation"));
     msgBox.exec();
     return languages;
   }

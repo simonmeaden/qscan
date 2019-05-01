@@ -31,18 +31,24 @@
 #include <QScrollArea>
 #include <QScrollBar>
 
+#include "logger.h"
+
+#include "ocrtools.h"
 #include "pageview.h"
-#include "qscan_global.h"
 #include "scanimage.h"
 #include "scanpage.h"
+#include "scanwidgets_global.h"
 
 class QScan;
 
-class SCANSHARED_EXPORT ScanEditor : public QFrame
+class SCANWIDGETSSHARED_EXPORT ScanEditor : public QFrame
 {
   Q_OBJECT
 public:
-  ScanEditor(QScan* scan, QWidget* parent = nullptr);
+  ScanEditor(QScan* scan,
+             QString datapath,
+             QString lang,
+             QWidget* parent = nullptr);
   //  ~ScanEditor() override;
 
   void setImage(const QImage& image);
@@ -94,6 +100,7 @@ protected:
   QString m_selected_name;
   QScrollArea* scroll;
   PageView* m_page_view;
+  OcrTools* m_ocr_tools;
 
   QList<Page> m_pages;
 
@@ -104,6 +111,7 @@ protected:
   void connectActions();
   void receiveImage(const QImage& img);
   void receiveImages(const QImage& left, const QImage& right);
+  void receiveString(int page, const QString& str);
 };
 
 #endif // SCANEDITOR_H

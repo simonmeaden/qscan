@@ -46,7 +46,6 @@ ScanImage::ScanImage(QWidget* parent)
   , m_split_right_act(
       new QAction(tr("Make right half into a single page"), this))
 {
-  m_editor = qobject_cast<ScanEditor*>(parent);
   m_logger = Log4Qt::Logger::logger(tr("ScanImage"));
   initActions();
   setMouseTracking(true);

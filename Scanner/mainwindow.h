@@ -39,7 +39,7 @@
 #include <QTableWidget>
 #include <QToolBar>
 
-#include <log4qt/logger.h>
+#include "logger.h"
 
 #include "scaneditor.h"
 
@@ -86,6 +86,8 @@ protected:
   QTableWidget* m_scanners;
   QComboBox *m_mode_box, *m_source_box;
   //  QPushButton* m_close_btn;
+  QString m_config_dir;
+  QString m_lang;
 
   QString m_selected_name;
   bool m_selected;

@@ -25,13 +25,17 @@
 /* ScanEditor
  *****************************************************************************/
 
-ScanEditor::ScanEditor(QScan* scan, QWidget* parent)
+ScanEditor::ScanEditor(QScan* scan,
+                       QString datapath,
+                       QString lang,
+                       QWidget* parent)
   : QFrame(parent)
   , m_image_display(nullptr)
   , m_prog_dlg(nullptr)
   , m_scan_lib(scan)
   , m_page_view(nullptr)
   , scroll(nullptr)
+  , m_ocr_tools(new OcrTools(datapath, lang, this))
 {
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
@@ -92,7 +96,8 @@ ScanEditor::connectActions()
 }
 
 /*
-   Receives a single page image from the ScanImage object.
+   Receives a single page image from the ScanImage object
+   and stores it.
 */
 void
 ScanEditor::receiveImage(const QImage& img)
@@ -101,10 +106,12 @@ ScanEditor::receiveImage(const QImage& img)
   page->setImage(img);
   m_pages.append(page);
   m_page_view->append(m_pages.last()->thumbnail());
+  m_ocr_tools->convertImage(m_pages.size() - 1, img);
 }
 
 /*
-   Receives two split page images from the ScanImage object.
+   Receives two split page images from the ScanImage object
+   and stores them.
  */
 void
 ScanEditor::receiveImages(const QImage& left, const QImage& right)
@@ -113,10 +120,18 @@ ScanEditor::receiveImages(const QImage& left, const QImage& right)
   left_page->setImage(left);
   m_pages.append(left_page);
   m_page_view->append(m_pages.last()->thumbnail());
+  m_ocr_tools->convertImage(m_pages.size() - 1, left);
   Page right_page(new ScanPage());
   right_page->setImage(right);
   m_pages.append(right_page);
   m_page_view->append(m_pages.last()->thumbnail());
+  m_ocr_tools->convertImage(m_pages.size() - 1, right);
+}
+
+void
+ScanEditor::receiveString(int page, const QString& str)
+{
+  m_pages.at(page)->setText(str);
 }
 
 /*!

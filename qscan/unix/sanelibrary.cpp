@@ -19,12 +19,6 @@
 */
 #include "sanelibrary.h"
 
-#include "log4qt/consoleappender.h"
-#include "log4qt/log4qt.h"
-#include "log4qt/logger.h"
-#include "log4qt/logmanager.h"
-#include "log4qt/ttcclayout.h"
-
 using namespace Log4Qt;
 
 QMutex SaneLibrary::_mutex;

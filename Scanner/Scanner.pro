@@ -4,6 +4,8 @@
 #
 #-------------------------------------------------
 
+DEFINES += LOGGER_ENABLE
+
 QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -57,3 +59,24 @@ DEPENDPATH += $$PWD/../qscan
 
 RESOURCES += \
     icons.qrc
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../scanwidgets/release/ -lscanwidgets
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../scanwidgets/debug/ -lscanwidgets
+else:unix: LIBS += -L$$OUT_PWD/../scanwidgets/ -lscanwidgets
+
+INCLUDEPATH += $$PWD/../scanwidgets
+DEPENDPATH += $$PWD/../scanwidgets
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../ocr/release/ -locr
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../ocr/debug/ -locr
+else:unix: LIBS += -L$$OUT_PWD/../ocr/ -locr
+
+INCLUDEPATH += $$PWD/../ocr
+DEPENDPATH += $$PWD/../ocr
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../logger/release/ -llogger
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../logger/debug/ -llogger
+else:unix: LIBS += -L$$OUT_PWD/../logger/ -llogger
+
+INCLUDEPATH += $$PWD/../logger
+DEPENDPATH += $$PWD/../logger

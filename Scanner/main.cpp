@@ -23,11 +23,13 @@
 #include <QPlainTextEdit>
 #include <QTextStream>
 
+#if defined(LOGGER_ENABLE)
 #include <log4qt/consoleappender.h>
 #include <log4qt/logger.h>
 #include <log4qt/logmanager.h>
 #include <log4qt/ttcclayout.h>
 #include <log4qt/writerappender.h>
+#endif
 
 #include "scanoptions.h"
 
@@ -42,6 +44,8 @@ main(int argc, char* argv[])
   QApplication a(argc, argv);
   qRegisterMetaType<Image>();
   qRegisterMetaType<ScanOptions>();
+
+#if defined(LOGGER_ENABLE)
   LogManager::rootLogger();
   auto* p_layout = new TTCCLayout();
   p_layout->setName(QStringLiteral("Logger"));
@@ -65,14 +69,23 @@ main(int argc, char* argv[])
   //  auto* object = new LoggerObject(&a);
   QLoggingCategory::setFilterRules("*.debug=false\n"
                                    "virus.debug=true");
-  //
+
+#endif
+
   MainWindow w;
+
+#if defined(LOGGER_ENABLE)
   w.setLogTextEdit(text_edit);
+#endif
+
   w.show();
   int res = QApplication::exec();
+
+#if defined(LOGGER_ENABLE)
   Logger::rootLogger()->removeAppender(p_writer);
   delete log_io_device;
   delete stream;
   delete text_edit;
+#endif
   return res;
 }

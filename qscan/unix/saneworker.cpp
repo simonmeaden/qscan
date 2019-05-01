@@ -110,10 +110,10 @@ SaneWorker::scan(ScanDevice* device)
         if (parameters.depth == 1) {
           format = QImage::Format_Mono;
 
-          if (parameters.lines < 0) {
-            must_buffer = true;
-            offset = 0;
-          }
+          //          if (parameters.lines < 0) {
+          //            must_buffer = true;
+          //            offset = 0;
+          //          }
 
           emit log(LogLevel::WARN, tr("Sane frame Mono depth 1"));
           break;
@@ -643,57 +643,16 @@ SaneWorker::guardedFree(void* ptr)
   free(p);
 }
 
-///* Get an option descriptor by the name of the option. */
-// const SANE_Option_Descriptor*
-// SaneWorker::getOptionDescriptorByName(SANE_Handle device,
-//                                      const char* name,
-//                                      int* option_num)
-//{
-//  const SANE_Option_Descriptor* opt;
-//  SANE_Int num_dev_options;
-//  SANE_Status status;
-
-//  /* Get the number of options. */
-//  status = sane_control_option(
-//    device, 0, SANE_ACTION_GET_VALUE, &num_dev_options, nullptr);
-//  if (status != SANE_STATUS_GOOD) {
-//    emit log(LogLevel::FATAL,
-//             tr("cannot get option 0 value
-//             (%1)").arg(sane_strstatus(status)));
-//  }
-
-//  for (*option_num = 0; *option_num < num_dev_options; (*option_num)++) {
-
-//    /* Get the option descriptor */
-//    opt = sane_get_option_descriptor(device, *option_num);
-//    if (status != SANE_STATUS_GOOD) {
-//      emit log(
-//        LogLevel::FATAL,
-//        tr("cannot get option descriptor for option %1").arg(*option_num));
-//    }
-
-//    if (opt->name && strcmp(opt->name, name) == 0) {
-//      return (opt);
-//    }
-//  }
-//  return (nullptr);
-//}
-
 /* Returns a string with the value of an option. */
 QVariant
 SaneWorker::getOptionValue(ScanDevice* device, const QString& option_name)
 {
-  const SANE_Option_Descriptor* opt;
   void* optval; /* value for the option */
   int option_id = device->options->optionId(option_name);
   int option_type = device->options->optionType(option_name);
   int option_size = device->options->optionSize(option_name);
-  char str[100];
   SANE_Status status;
   QVariant v;
-
-  //  opt = getOptionDescriptorByName(device->sane_handle, option_name,
-  //  &option_id); if (opt) {
 
   optval = guardedMalloc(option_size);
   status = sane_control_option(
@@ -732,70 +691,3 @@ SaneWorker::getOptionValue(ScanDevice* device, const QString& option_name)
 
   return v;
 }
-
-///* Set a random value for an option amongst the possible values. */
-// void
-// SaneWorker::set_random_value(SANE_Handle device,
-//                             int option_num,
-//                             const SANE_Option_Descriptor* opt)
-//{
-//  SANE_Status status;
-//  SANE_String val_string;
-//  SANE_Int val_int;
-//  int i;
-//  int rc;
-
-//  if (status != SANE_STATUS_GOOD){
-//    emit log(LogLevel::DEBUG,
-//             tr("option is not settable"));
-//  }
-
-//  switch(opt->constraint_type) {
-//    case SANE_CONSTRAINT_WORD_LIST:
-//      if (status != SANE_STATUS_GOOD){
-//        emit log(LogLevel::DEBUG,
-//                 tr("no value in the list for option
-//                 %1").arg(sane_strstatus(status)));
-//        return;
-//      }
-
-//      i=1+(rand() % opt->constraint.word_list[0]);
-//      val_int = opt->constraint.word_list[i];
-//      status = sane_control_option (device, option_num,
-//                                   SANE_ACTION_SET_VALUE, &val_int, NULL);
-//      check(ERR, (status == SANE_STATUS_GOOD),
-//            "cannot set option %s to %d (%s)", opt->name, val_int,
-//            sane_strstatus(status));
-//      break;
-
-//    case SANE_CONSTRAINT_STRING_LIST:
-//      rc = check(ERR, (opt->constraint.string_list[0] != NULL),
-//                 "no value in the list for option %s", opt->name);
-//      if (!rc) return;
-//      for (i=0; opt->constraint.string_list[i] != NULL; i++);
-//      i = rand() % i;
-//      val_string = strdup(opt->constraint.string_list[0]);
-//      assert(val_string);
-//      status = sane_control_option (device, option_num,
-//                                   SANE_ACTION_SET_VALUE, val_string, NULL);
-//      check(ERR, (status == SANE_STATUS_GOOD),
-//            "cannot set option %s to [%s] (%s)", opt->name, val_string,
-//            sane_strstatus(status));
-//      free(val_string);
-//      break;
-
-//    case SANE_CONSTRAINT_RANGE:
-//      i = opt->constraint.range->max - opt->constraint.range->min;
-//      i = rand() % i;
-//      val_int = opt->constraint.range->min + i;
-//      status = sane_control_option (device, option_num,
-//                                   SANE_ACTION_SET_VALUE, &val_int, NULL);
-//      check(ERR, (status == SANE_STATUS_GOOD),
-//            "cannot set option %s to %d (%s)", opt->name, val_int,
-//            sane_strstatus(status));
-//      break;
-
-//    default:
-//      abort();
-//  }
-//}

@@ -4,9 +4,9 @@
 #include <QtCore/qglobal.h>
 
 #if defined(OCR_LIBRARY)
-#  define OCRSHARED_EXPORT Q_DECL_EXPORT
+#define OCRSHARED_EXPORT Q_DECL_EXPORT
 #else
-#  define OCRSHARED_EXPORT Q_DECL_IMPORT
+#define OCRSHARED_EXPORT Q_DECL_IMPORT
 #endif
 
-#endif // OCR_GLOBAL_H
+#endif // TESSTOOLS_GLOBAL_H
