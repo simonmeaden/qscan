@@ -16,6 +16,10 @@ PageView::PageView(QWidget* parent)
   m_image_list->setIconSize(QSize(200, 200));
   m_image_list->setResizeMode(QListWidget::Adjust);
   m_image_list->setDragDropMode(QAbstractItemView::InternalMove);
+  // insert an empty image at zero position. This will be the cover.
+  QListWidgetItem* item = new QListWidgetItem(QIcon(), "", m_image_list);
+  m_image_list->addItem(item);
+
   connect(m_image_list->model(),
           &QAbstractItemModel::rowsMoved,
           this,
@@ -36,6 +40,7 @@ PageView::PageView(QWidget* parent)
 int
 PageView::append(const QImage& thumbnail)
 {
+  // this list will always start at position 1.
   QListWidgetItem* item =
     new QListWidgetItem(QIcon(QPixmap::fromImage(thumbnail)), "", m_image_list);
   m_image_list->addItem(item);
@@ -54,6 +59,14 @@ PageView::insert(int row, const QImage& thumbnail)
   QListWidgetItem* item =
     new QListWidgetItem(QIcon(QPixmap::fromImage(thumbnail)), "", m_image_list);
   m_image_list->insertItem(row, item);
+}
+
+void
+PageView::setCover(const QImage& cover)
+{
+  m_cover = cover;
+  auto* item = m_image_list->item(0);
+  item->setIcon(QIcon(QPixmap::fromImage(cover)));
 }
 
 void

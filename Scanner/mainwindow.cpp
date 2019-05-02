@@ -76,26 +76,14 @@ MainWindow::MainWindow(QWidget* parent)
   m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
   m_lang = "eng";
 
-  QFile file(m_options_file);
-  if (file.exists()) {
-    YAML::Node m_options = YAML::LoadFile(file);
-    if (m_options[CURRENT_DOCUMENT]) {
-      m_current_doc_name = m_options[CURRENT_DOCUMENT].as<QString>();
-      setWindowTitle(m_current_doc_name);
-    }
-    if (m_options[TESSERACT]) {
-      YAML::Node tesseract_options = m_options[TESSERACT];
-      if (tesseract_options[LANGUAGE]) {
-        m_lang = tesseract_options[LANGUAGE].as<QString>();
-      }
-    }
-  }
+  loadOptions();
 
   initActions();
   initGui();
   initMenu();
   connectActions();
 
+  loadExistingFiles();
   m_image_editor->setDocumentName(m_current_doc_name);
 
   connect(
@@ -149,6 +137,31 @@ MainWindow::MainWindow(QWidget* parent)
 
 MainWindow::~MainWindow()
 {
+  saveOptions();
+}
+
+void
+MainWindow::loadOptions()
+{
+  QFile file(m_options_file);
+  if (file.exists()) {
+    YAML::Node m_options = YAML::LoadFile(file);
+    if (m_options[CURRENT_DOCUMENT]) {
+      m_current_doc_name = m_options[CURRENT_DOCUMENT].as<QString>();
+      setWindowTitle(m_current_doc_name);
+    }
+    if (m_options[TESSERACT]) {
+      YAML::Node tesseract_options = m_options[TESSERACT];
+      if (tesseract_options[LANGUAGE]) {
+        m_lang = tesseract_options[LANGUAGE].as<QString>();
+      }
+    }
+  }
+}
+
+void
+MainWindow::saveOptions()
+{
   QFile* file;
   file = new QFile(m_options_file);
 
@@ -171,6 +184,34 @@ MainWindow::~MainWindow()
     QTextStream out(file);
     out << emitter.c_str();
     file->close();
+  }
+}
+
+void
+MainWindow::loadExistingFiles()
+{
+  QString current_path =
+    m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator();
+  QString filename = current_path + "cover.png";
+  QFile file(filename);
+  QImage image;
+  if (file.exists()) {
+    image = QImage(filename, "PNG");
+    Page page(new ScanPage());
+    page->setImage(image);
+    m_image_editor->loadCover(page);
+  }
+  int index = 1;
+  filename = current_path + QString("image%1.png").arg(index);
+  file.setFileName(filename);
+  while (file.exists()) {
+    image = QImage(filename, "PNG");
+    Page page(new ScanPage());
+    page->setImage(image);
+    m_image_editor->loadImage(index, page);
+    index++;
+    filename = current_path + QString("image%1.png").arg(index);
+    file.setFileName(filename);
   }
 }
 

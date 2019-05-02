@@ -1,3 +1,7 @@
+#include <utility>
+
+#include <utility>
+
 /*
     Copyright © Simon Meaden 2019.
     This file was developed as part of the QScan cpp library but could
@@ -17,37 +21,14 @@
     along with QScan.  If not, see <http://www.gnu.org/licenses/>.
     It is also available on request from Simon Meaden simonmeaden@sky.com.
 */
-#include "scaneditor.h"
 #include "qscan.h"
+#include "scaneditor.h"
 
 #include "ocrdialog.h"
 #include "ocrtools.h"
 
 /* ScanEditor
  *****************************************************************************/
-
-ScanEditor::ScanEditor(QScan* scan,
-                       const QString& configdir,
-                       const QString& datadir,
-                       const QString& lang,
-                       QWidget* parent)
-  : QFrame(parent)
-  , m_image_display(nullptr)
-  , m_prog_dlg(nullptr)
-  , m_scan_lib(scan)
-  , m_scroller(nullptr)
-  , m_page_view(nullptr)
-  , m_ocr_tools(new OcrTools(configdir, lang, this))
-  , m_configdir(configdir)
-  , m_datadir(datadir)
-{
-  m_logger = Log4Qt::Logger::logger(tr("ScanEditor"));
-
-  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-  initGui();
-  connectActions();
-}
 
 // ScanEditor::~ScanEditor(){
 //}
@@ -113,8 +94,8 @@ ScanEditor::receiveImage(const QImage& image)
 {
   Page page(new ScanPage());
   page->setImage(image);
-  m_pages.append(page);
   int index = m_pages.size();
+  m_pages.insert(index, page);
   m_page_view->append(m_pages.last()->thumbnail());
   saveImage(index, image);
 }
@@ -128,15 +109,15 @@ ScanEditor::receiveImages(const QImage& left, const QImage& right)
 {
   Page left_page(new ScanPage());
   left_page->setImage(left);
-  m_pages.append(left_page);
   int index = m_pages.size();
+  m_pages.insert(index, left_page);
   m_page_view->append(m_pages.last()->thumbnail());
   saveImage(index, left);
 
   Page right_page(new ScanPage());
   right_page->setImage(right);
-  m_pages.append(right_page);
   index = m_pages.size();
+  m_pages.insert(index, right_page);
   m_page_view->append(m_pages.last()->thumbnail());
   saveImage(index, right);
 }
@@ -144,7 +125,7 @@ ScanEditor::receiveImages(const QImage& left, const QImage& right)
 void
 ScanEditor::receiveString(int page, const QString& str)
 {
-  m_pages.at(page)->setText(str);
+  m_pages.value(page)->setText(str);
 }
 
 void
@@ -163,14 +144,14 @@ ScanEditor::saveImage(int index, const QImage& image)
       path = m_datadir + QDir::separator() + doc_name;
       QDir dir;
       dir.mkpath(path);
-      path += QDir::separator() + QString("image%1").arg(index);
+      path += QDir::separator() + QString("image%1.png").arg(index);
       if (!image.save(path, "PNG", 100)) {
         m_logger->info(tr("Failed to save image %1").arg(path));
       }
     }
   } else {
     path = m_datadir + QDir::separator() + m_document_name + QDir::separator() +
-           QString("image%1").arg(index);
+           QString("image%1.png").arg(index);
     if (!image.save(path, "PNG", 100)) {
       m_logger->info(tr("Failed to save image %1").arg(path));
     }
@@ -181,8 +162,11 @@ void
 ScanEditor::saveAsCover(const QImage& image)
 {
   if (!m_document_name.isEmpty()) {
-
+    // TODO no doc name yet.
   } else {
+    // always
+    m_cover->setImage(image);
+    m_page_view->setCover(m_cover->thumbnail());
     QString path = m_datadir + QDir::separator() + m_document_name +
                    QDir::separator() + "cover.png";
     if (!image.save(path, "PNG", 100)) {
@@ -229,14 +213,15 @@ ScanEditor::makePage()
   QImage image = m_image_display->makePage();
   Page page(new ScanPage());
   page->setImage(image);
-  m_pages.append(page);
-  m_page_view->append(m_pages.last()->thumbnail());
+  int index = m_pages.size();
+  m_pages.insert(index, page);
+  m_page_view->append(page->thumbnail());
 }
 
 void
 ScanEditor::receiveOcrPage(int index)
 {
-  Page page = m_pages.at(index);
+  Page page = m_pages.value(index);
   auto* dlg = new OCRDialog(this);
   dlg->setImage(page->image());
   if (!page->text().isEmpty()) {
@@ -248,6 +233,20 @@ ScanEditor::receiveOcrPage(int index)
       // TODO maybe save tweaked image. maybe only supply list of tweaks?
     }
   }
+}
+
+void
+ScanEditor::loadCover(Page cover)
+{
+  m_cover = std::move(cover);
+  m_page_view->setCover(m_cover->thumbnail());
+}
+
+void
+ScanEditor::loadImage(int index, const Page& page)
+{
+  m_page_view->insert(index, page->thumbnail());
+  m_pages.insert(index, page);
 }
 
 void
@@ -492,5 +491,5 @@ ScanEditor::pageCount()
 Page
 ScanEditor::page(int index)
 {
-  return m_pages.at(index);
+  return m_pages.value(index);
 }

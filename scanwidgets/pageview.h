@@ -22,16 +22,16 @@ public:
   int append(const QImage& thumbnail);
   void remove(int index);
   void insert(int index, const QImage& thumbnail);
+  void setCover(const QImage& cover);
 
 signals:
   void pageMoved(int from, int to);
   void sendOcrPage(int);
 
-public slots:
-
 protected:
   QList<QImage> m_pages;
   QListWidget* m_image_list;
+  QImage m_cover;
 
   void contextMenuEvent(QContextMenuEvent* event) override;
   QSize minimumSizeHint() const override;

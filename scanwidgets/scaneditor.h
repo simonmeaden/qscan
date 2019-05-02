@@ -26,6 +26,7 @@
 #include <QImage>
 #include <QInputDialog>
 #include <QList>
+#include <QMap>
 #include <QMenu>
 #include <QProgressDialog>
 #include <QScrollArea>
@@ -47,9 +48,27 @@ class SCANWIDGETSSHARED_EXPORT ScanEditor : public QFrame
 public:
   ScanEditor(QScan* scan,
              const QString& configdir,
-             const QString& datapath,
+             const QString& datadir,
              const QString& lang,
-             QWidget* parent = nullptr);
+             QWidget* parent = nullptr)
+    : QFrame(parent)
+    , m_image_display(nullptr)
+    , m_prog_dlg(nullptr)
+    , m_scan_lib(scan)
+    , m_scroller(nullptr)
+    , m_page_view(nullptr)
+    , m_ocr_tools(new OcrTools(configdir, lang, this))
+    , m_configdir(configdir)
+    , m_datadir(datadir)
+    , m_cover(Page(new ScanPage()))
+  {
+    m_logger = Log4Qt::Logger::logger(tr("ScanEditor"));
+
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    initGui();
+    connectActions();
+  }
   //  ~ScanEditor() override;
 
   void setImage(const QImage& image);
@@ -86,6 +105,9 @@ public:
   void makePage();
   void receiveOcrPage(int index);
 
+  void loadCover(Page cover);
+  void loadImage(int index, const Page& page);
+
   int pageCount();
   Page page(int index);
 
@@ -109,7 +131,8 @@ protected:
   OcrTools* m_ocr_tools;
   QString m_configdir, m_datadir;
 
-  QList<Page> m_pages;
+  QMap<int, Page> m_pages;
+  Page m_cover;
 
   bool eventFilter(QObject* obj, QEvent* event) override;
 

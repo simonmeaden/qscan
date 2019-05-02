@@ -159,6 +159,9 @@ protected:
   static const QString CURRENT_DOCUMENT;
   static const QString TESSERACT;
   static const QString LANGUAGE;
+  void loadOptions();
+  void saveOptions();
+  void loadExistingFiles();
 };
 
 #endif // MAINWINDOW_H
