@@ -2,9 +2,10 @@
 
 PageView::PageView(QWidget* parent)
   : QWidget(parent)
-  , m_remove_page_act(new QAction(tr("Remove the selected page"), this))
-  , m_move_page_up_act(new QAction(tr("Move page up"), this))
-  , m_move_page_down_act(new QAction(tr("Move page down"), this))
+  , m_remove_page_act(nullptr)
+  , m_move_page_up_act(nullptr)
+  , m_move_page_down_act(nullptr)
+  , m_do_ocr_act(nullptr)
 {
   auto* layout = new QHBoxLayout;
   setLayout(layout);
@@ -19,9 +20,16 @@ PageView::PageView(QWidget* parent)
           &QAbstractItemModel::rowsMoved,
           this,
           &PageView::rowsMoved);
+
+  m_remove_page_act = new QAction(tr("Remove the selected page"), this);
+  m_move_page_up_act = new QAction(tr("Move page up"), this);
+  m_move_page_down_act = new QAction(tr("Move page down"), this);
+  m_do_ocr_act = new QAction(tr("Run OCR on selected image."), this);
+
   connect(m_remove_page_act, &QAction::triggered, this, &PageView::remove);
   connect(m_move_page_up_act, &QAction::triggered, this, &PageView::moveUp);
   connect(m_move_page_down_act, &QAction::triggered, this, &PageView::moveDown);
+  connect(m_do_ocr_act, &QAction::triggered, this, &PageView::doOcr);
   layout->addWidget(m_image_list);
 }
 
@@ -57,6 +65,8 @@ PageView::contextMenuEvent(QContextMenuEvent* event)
   context_menu->addSeparator();
   context_menu->addAction(m_move_page_up_act);
   context_menu->addAction(m_move_page_down_act);
+  context_menu->addSeparator();
+  context_menu->addAction(m_do_ocr_act);
 
   context_menu->popup(event->globalPos());
 }
@@ -93,4 +103,10 @@ void
 PageView::moveDown()
 {
   // TODO move down
+}
+
+void
+PageView::doOcr()
+{
+  emit sendOcrPage(m_image_list->currentIndex().row());
 }

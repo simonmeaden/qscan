@@ -6,14 +6,17 @@
 
 #include "ocrworker.h"
 
-OcrTools::OcrTools(QString datapath, QString lang, QObject* parent)
+OcrTools::OcrTools(const QString& datapath,
+                   const QString& lang,
+                   QObject* parent)
   : QObject(parent)
 {
 
   auto* thread = new QThread;
-  auto* ocr_worker = new OcrWorker(std::move(datapath), std::move(lang));
+  auto* ocr_worker = new OcrWorker(datapath, lang);
 
   // cleanup
+  connect(thread, &QThread::started, ocr_worker, &OcrWorker::process);
   connect(this, &OcrTools::finished, thread, &QThread::quit);
   connect(thread, &QThread::finished, ocr_worker, &OcrWorker::deleteLater);
   connect(thread, &QThread::finished, thread, &QThread::deleteLater);

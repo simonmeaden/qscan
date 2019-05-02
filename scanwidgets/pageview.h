@@ -25,6 +25,7 @@ public:
 
 signals:
   void pageMoved(int from, int to);
+  void sendOcrPage(int);
 
 public slots:
 
@@ -39,6 +40,7 @@ protected:
   QAction* m_remove_page_act;
   QAction* m_move_page_up_act;
   QAction* m_move_page_down_act;
+  QAction* m_do_ocr_act;
 
   void rowsMoved(const QModelIndex&,
                  int start,
@@ -47,6 +49,7 @@ protected:
                  int row);
   void moveUp();
   void moveDown();
+  void doOcr();
 };
 
 #endif // PAGEVIEW_H

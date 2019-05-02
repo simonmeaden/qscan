@@ -81,21 +81,22 @@ protected:
   Log4Qt::Logger* m_logger;
   QScan* m_scan_lib;
   //  QFrame* m_main;
-  QGridLayout* m_main_layout;
-  ScanEditor* m_image_editor;
-  QTableWidget* m_scanners;
-  QComboBox *m_mode_box, *m_source_box;
+  QGridLayout* m_main_layout{};
+  ScanEditor* m_image_editor{};
+  QTableWidget* m_scanners{};
+  QComboBox *m_mode_box{}, *m_source_box{};
   //  QPushButton* m_close_btn;
   QString m_config_dir;
+  QString m_data_dir;
   QString m_lang;
 
   QString m_selected_name;
   bool m_selected;
-  QTextStream* m_log_stream;
-  QPlainTextEdit* m_empty_edit;
-  QPlainTextEdit* m_log_edit;
-  QLabel *m_min_res, *m_max_res, *m_curr_src, *m_curr_mode;
-  QSpinBox* m_res_box;
+  QTextStream* m_log_stream{};
+  QPlainTextEdit* m_empty_edit{};
+  QPlainTextEdit* m_log_edit{};
+  QLabel *m_min_res{}, *m_max_res{}, *m_curr_src{}, *m_curr_mode{};
+  QSpinBox* m_res_box{};
 
   QPixmapCache::Key scan_key;
   QPixmapCache::Key rot_left_key;
@@ -114,22 +115,22 @@ protected:
   QPixmapCache::Key fit_height_key;
   QPixmapCache::Key close_key;
 
-  QAction* m_scan_act;
-  QAction* m_rot_left_act;
-  QAction* m_rot_right_act;
-  QAction* m_rot_angle_act;
-  QAction* m_rot_edge_act;
-  QAction* m_copy_act;
-  QAction* m_crop_act;
-  QAction* m_scale_act;
-  QAction* m_save_act;
-  QAction* m_save_as_act;
-  QAction* m_zoom_in_act;
-  QAction* m_zoom_out_act;
-  QAction* m_fit_best_act;
-  QAction* m_fit_width_act;
-  QAction* m_fit_height_act;
-  QAction* m_close_act;
+  QAction* m_scan_act{};
+  QAction* m_rot_left_act{};
+  QAction* m_rot_right_act{};
+  QAction* m_rot_angle_act{};
+  QAction* m_rot_edge_act{};
+  QAction* m_copy_act{};
+  QAction* m_crop_act{};
+  QAction* m_scale_act{};
+  QAction* m_save_act{};
+  QAction* m_save_as_act{};
+  QAction* m_zoom_in_act{};
+  QAction* m_zoom_out_act{};
+  QAction* m_fit_best_act{};
+  QAction* m_fit_width_act{};
+  QAction* m_fit_height_act{};
+  QAction* m_close_act{};
 
   bool close();
 

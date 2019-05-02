@@ -4,6 +4,7 @@
 #include <QImage>
 #include <QObject>
 #include <QString>
+#include <QThread>
 
 #include "logger.h"
 
@@ -18,6 +19,7 @@ public:
                      QObject* parent = nullptr);
 
   void convertToString(int page, const QImage& image);
+  void process();
 
 signals:
   void converted(int page, const QString&);
@@ -25,6 +27,9 @@ signals:
 
 protected:
   TessTools* m_tesstools;
+  bool m_available;
+  QList<int> m_pages;
+  QList<QImage> m_images;
 };
 
 #endif // OCRWORKER_H

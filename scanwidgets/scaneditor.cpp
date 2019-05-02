@@ -20,22 +20,26 @@
 #include "scaneditor.h"
 #include "qscan.h"
 
+#include "ocrdialog.h"
 #include "ocrtools.h"
 
 /* ScanEditor
  *****************************************************************************/
 
 ScanEditor::ScanEditor(QScan* scan,
-                       QString datapath,
-                       QString lang,
+                       const QString& configdir,
+                       const QString& datadir,
+                       const QString& lang,
                        QWidget* parent)
   : QFrame(parent)
   , m_image_display(nullptr)
   , m_prog_dlg(nullptr)
   , m_scan_lib(scan)
+  , m_scroller(nullptr)
   , m_page_view(nullptr)
-  , scroll(nullptr)
-  , m_ocr_tools(new OcrTools(datapath, lang, this))
+  , m_ocr_tools(new OcrTools(configdir, lang, this))
+  , m_configdir(configdir)
+  , m_datadir(datadir)
 {
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
@@ -53,17 +57,17 @@ ScanEditor::initGui()
   layout->setContentsMargins(0, 0, 0, 0);
   setLayout(layout);
 
-  scroll = new QScrollArea(this);
-  scroll->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-  scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-  scroll->setContentsMargins(0, 0, 0, 0);
+  m_scroller = new QScrollArea(this);
+  m_scroller->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  m_scroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+  m_scroller->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+  m_scroller->setContentsMargins(0, 0, 0, 0);
 
-  m_image_display = new ScanImage(this);
+  m_image_display = new ScanImage(m_datadir, this);
   m_image_display->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
   m_image_display->setScaledContents(true);
-  scroll->setWidget(m_image_display);
-  layout->addWidget(scroll, 0, 0);
+  m_scroller->setWidget(m_image_display);
+  layout->addWidget(m_scroller, 0, 0);
 
   m_page_view = new PageView(this);
   layout->addWidget(m_page_view, 0, 1);
@@ -106,7 +110,6 @@ ScanEditor::receiveImage(const QImage& img)
   page->setImage(img);
   m_pages.append(page);
   m_page_view->append(m_pages.last()->thumbnail());
-  m_ocr_tools->convertImage(m_pages.size() - 1, img);
 }
 
 /*
@@ -120,12 +123,10 @@ ScanEditor::receiveImages(const QImage& left, const QImage& right)
   left_page->setImage(left);
   m_pages.append(left_page);
   m_page_view->append(m_pages.last()->thumbnail());
-  m_ocr_tools->convertImage(m_pages.size() - 1, left);
   Page right_page(new ScanPage());
   right_page->setImage(right);
   m_pages.append(right_page);
   m_page_view->append(m_pages.last()->thumbnail());
-  m_ocr_tools->convertImage(m_pages.size() - 1, right);
 }
 
 void
@@ -177,6 +178,23 @@ ScanEditor::makePage()
 }
 
 void
+ScanEditor::receiveOcrPage(int index)
+{
+  Page page = m_pages.at(index);
+  auto* dlg = new OCRDialog(this);
+  dlg->setImage(page->image());
+  if (!page->text().isEmpty()) {
+    dlg->receiveOcrText(page->text());
+  }
+  if (dlg->exec() == QDialog::Accepted) {
+    page->setText(dlg->text());
+    if (dlg->imageChanged()) {
+      // TODO maybe save tweaked image. maybe only supply list of tweaks?
+    }
+  }
+}
+
+void
 ScanEditor::setImage(const QImage& image)
 {
   if (m_prog_dlg) {
@@ -205,6 +223,12 @@ ScanEditor::scanningStarted()
     m_prog_dlg->setWindowModality(Qt::WindowModal);
     m_prog_dlg->open();
   }
+}
+
+void
+ScanEditor::setDocumentName(const QString& name)
+{
+  m_document_name = name;
 }
 
 void
@@ -250,10 +274,10 @@ ScanEditor::eventFilter(QObject* obj, QEvent* event)
 void
 ScanEditor::adjustScrollbar(qreal factor)
 {
-  QScrollBar* scrollbar = scroll->horizontalScrollBar();
+  QScrollBar* scrollbar = m_scroller->horizontalScrollBar();
   scrollbar->setValue(int(factor * scrollbar->value() +
                           ((factor - 1) * scrollbar->pageStep() / 2)));
-  scrollbar = scroll->verticalScrollBar();
+  scrollbar = m_scroller->verticalScrollBar();
   scrollbar->setValue(int(factor * scrollbar->value() +
                           ((factor - 1) * scrollbar->pageStep() / 2)));
 }
@@ -333,7 +357,19 @@ ScanEditor::scale()
 void
 ScanEditor::save()
 {
+  if (m_document_name.isEmpty()) {
+    QString doc_name =
+      QInputDialog::getText(this,
+                            tr("Get Document Name"),
+                            tr("Please supply a name for this document.\n"
+                               "Do not add file extension as this is\n"
+                               "created internally."));
+    if (!doc_name.isEmpty()) {
+      m_document_name = doc_name;
+    }
+  }
   m_image_display->save();
+  // TODO save text.
 }
 
 void

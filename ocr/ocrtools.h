@@ -14,7 +14,9 @@ class OCRSHARED_EXPORT OcrTools : public QObject
 {
   Q_OBJECT
 public:
-  explicit OcrTools(QString datapath, QString lang, QObject* parent = nullptr);
+  explicit OcrTools(const QString& datapath,
+                    const QString& lang,
+                    QObject* parent = nullptr);
   ~OcrTools() override;
 
   void convertImage(int page, const QImage& image);

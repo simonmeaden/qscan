@@ -46,14 +46,16 @@ class SCANWIDGETSSHARED_EXPORT ScanEditor : public QFrame
   Q_OBJECT
 public:
   ScanEditor(QScan* scan,
-             QString datapath,
-             QString lang,
+             const QString& configdir,
+             const QString& datapath,
+             const QString& lang,
              QWidget* parent = nullptr);
   //  ~ScanEditor() override;
 
   void setImage(const QImage& image);
   void setScanProgress(const int& progress);
   void scanningStarted();
+  void setDocumentName(const QString& name);
 
   void setSelectedName(const QString& selected_name);
 
@@ -81,6 +83,7 @@ public:
   void splitLeftPage();
   void splitRightPage();
   void makePage();
+  void receiveOcrPage(int index);
 
   int pageCount();
   Page page(int index);
@@ -93,14 +96,16 @@ signals:
   void imageIsLoaded();
 
 protected:
+  QString m_document_name;
   ScanImage* m_image_display;
   QProgressDialog* m_prog_dlg;
   QPoint m_origin;
   QScan* m_scan_lib;
   QString m_selected_name;
-  QScrollArea* scroll;
+  QScrollArea* m_scroller;
   PageView* m_page_view;
   OcrTools* m_ocr_tools;
+  QString m_configdir, m_datadir;
 
   QList<Page> m_pages;
 

@@ -95,6 +95,7 @@ MainWindow::MainWindow(QWidget* parent)
   fit_height_key = QPixmapCache::insert(QPixmap(":/icons/fit-height"));
 
   m_config_dir = "/home/simon/.config/Biblos";
+  m_data_dir = "/home/simon/.local/share/Biblos";
   m_lang = "eng";
 
   initActions();

@@ -3,6 +3,7 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QDir>
 #include <QFile>
 #include <QFileDialog>
 #include <QImage>
@@ -21,7 +22,7 @@ class SCANWIDGETSSHARED_EXPORT ScanImage : public QLabel
 {
   Q_OBJECT
 public:
-  explicit ScanImage(QWidget* parent);
+  explicit ScanImage(const QString& datadir, QWidget* parent);
 
   void setImage(const QImage& image);
   //  void rotateBy(int angle);
@@ -33,7 +34,7 @@ public:
   void rotateByEdge();
   void rotateBy(qreal angle);
   void scaleBy();
-  void save();
+  void save(const QString& doc_name = QString());
   void saveAs();
   void zoomIn();
   void zoomOut();
@@ -87,6 +88,7 @@ protected:
     DOING_NOTHING,
   };
   Log4Qt::Logger* m_logger;
+  QString m_datadir;
   QImage m_image;
   qreal m_scale_by;
   QMatrix m_matrix;
@@ -100,14 +102,12 @@ protected:
   QRect m_stretched_band;
   QRect m_default_crop_size;
   bool m_def_crop_set;
-  //  QRect m_scaled_rect;
   bool m_is_inside;
   State m_state;
   QString m_filename;
   QPoint m_edge_start;
   QPoint m_edge_finish;
   bool m_mouse_moved;
-  //  bool m_select_all;
 
   void contextMenuEvent(QContextMenuEvent* event) override;
   void paintEvent(QPaintEvent* event) override;

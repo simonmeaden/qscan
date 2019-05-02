@@ -11,19 +11,20 @@ const QBrush ScanImage::RUBBERBAND_BRUSH = QBrush(QColor(128, 128, 255, 128));
 const qreal ScanImage::ZOOM_IN_FACTOR = 1.1;
 const qreal ScanImage::ZOOM_OUT_FACTOR = 0.9;
 
-ScanImage::ScanImage(QWidget* parent)
+ScanImage::ScanImage(const QString& datadir, QWidget* parent)
   : QLabel(parent)
+  , m_datadir(datadir)
   , m_scale_by(1.0)
+  , m_rotation(0)
   , m_rb_start_x(0)
   , m_rb_start_y(0)
   , m_rb_end_x(0)
   , m_rb_end_y(0)
   , m_rubber_band(QRect())
+  , m_def_crop_set(false)
   , m_is_inside(false)
   , m_state(DOING_NOTHING)
   , m_mouse_moved(false)
-  , m_rotation(0)
-  , m_def_crop_set(false)
   , m_copy_selection_act(new QAction(tr("Copy selection"), this))
   , m_crop_to_selection_act(new QAction(tr("Clear selection"), this))
   , m_clear_selection_act(new QAction(tr("Clear selection"), this))
@@ -41,10 +42,10 @@ ScanImage::ScanImage(QWidget* parent)
   , m_set_def_crop_act(new QAction(tr("Set default page crop size"), this))
   //  , m_select_all(false)
   , m_split_pages_act(new QAction(tr("Split image into two pages"), this))
-  , m_make_page_act(new QAction(tr("Make image into a single page"), this))
-  , m_split_left_act(new QAction(tr("Make left half into a single page"), this))
   , m_split_right_act(
       new QAction(tr("Make right half into a single page"), this))
+  , m_split_left_act(new QAction(tr("Make left half into a single page"), this))
+  , m_make_page_act(new QAction(tr("Make image into a single page"), this))
 {
   m_logger = Log4Qt::Logger::logger(tr("ScanImage"));
   initActions();
@@ -95,12 +96,18 @@ ScanImage::scaleBy()
 }
 
 void
-ScanImage::save()
+ScanImage::save(const QString& doc_name)
 {
-  if (m_filename.isEmpty()) {
-    saveAs();
+  if (doc_name.isEmpty()) {
+    if (m_filename.isEmpty()) {
+      saveAs();
+    } else {
+      m_image.save(m_filename);
+    }
   } else {
-    m_image.save(m_filename);
+    QString path = m_datadir + QDir::separator() + doc_name;
+    QDir dir;
+    dir.mkpath(path);
   }
 }
 
