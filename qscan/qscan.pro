@@ -30,6 +30,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     qscan.cpp \
+    texteditiodevice.cpp \
     version.cpp  \
     scaninterface.cpp \
     scanoptions.cpp
@@ -37,6 +38,7 @@ SOURCES += \
 HEADERS += \
     qscan.h \
     qscan_global.h \
+    texteditiodevice.h \
     version.h \
     scaninterface.h  \
     scanoptions.h

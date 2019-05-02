@@ -41,6 +41,8 @@ ScanEditor::ScanEditor(QScan* scan,
   , m_configdir(configdir)
   , m_datadir(datadir)
 {
+  m_logger = Log4Qt::Logger::logger(tr("ScanEditor"));
+
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
   initGui();
@@ -73,6 +75,9 @@ ScanEditor::initGui()
   layout->addWidget(m_page_view, 0, 1);
   layout->setColumnStretch(0, 30);
   layout->setColumnStretch(1, 10);
+
+  connect(
+    m_image_display, &ScanImage::sendCover, this, &ScanEditor::saveAsCover);
 }
 
 void
@@ -104,12 +109,14 @@ ScanEditor::connectActions()
    and stores it.
 */
 void
-ScanEditor::receiveImage(const QImage& img)
+ScanEditor::receiveImage(const QImage& image)
 {
   Page page(new ScanPage());
-  page->setImage(img);
+  page->setImage(image);
   m_pages.append(page);
+  int index = m_pages.size();
   m_page_view->append(m_pages.last()->thumbnail());
+  saveImage(index, image);
 }
 
 /*
@@ -122,17 +129,66 @@ ScanEditor::receiveImages(const QImage& left, const QImage& right)
   Page left_page(new ScanPage());
   left_page->setImage(left);
   m_pages.append(left_page);
+  int index = m_pages.size();
   m_page_view->append(m_pages.last()->thumbnail());
+  saveImage(index, left);
+
   Page right_page(new ScanPage());
   right_page->setImage(right);
   m_pages.append(right_page);
+  index = m_pages.size();
   m_page_view->append(m_pages.last()->thumbnail());
+  saveImage(index, right);
 }
 
 void
 ScanEditor::receiveString(int page, const QString& str)
 {
   m_pages.at(page)->setText(str);
+}
+
+void
+ScanEditor::saveImage(int index, const QImage& image)
+{
+  QString path;
+  if (m_document_name.isEmpty()) {
+    QString doc_name =
+      QInputDialog::getText(this,
+                            tr("Get Document Name"),
+                            tr("Please supply a name for this document.\n"
+                               "Do not add file extension as this is\n"
+                               "created internally."));
+    if (!doc_name.isEmpty()) {
+      m_document_name = doc_name;
+      path = m_datadir + QDir::separator() + doc_name;
+      QDir dir;
+      dir.mkpath(path);
+      path += QDir::separator() + QString("image%1").arg(index);
+      if (!image.save(path, "PNG", 100)) {
+        m_logger->info(tr("Failed to save image %1").arg(path));
+      }
+    }
+  } else {
+    path = m_datadir + QDir::separator() + m_document_name + QDir::separator() +
+           QString("image%1").arg(index);
+    if (!image.save(path, "PNG", 100)) {
+      m_logger->info(tr("Failed to save image %1").arg(path));
+    }
+  }
+}
+
+void
+ScanEditor::saveAsCover(const QImage& image)
+{
+  if (!m_document_name.isEmpty()) {
+
+  } else {
+    QString path = m_datadir + QDir::separator() + m_document_name +
+                   QDir::separator() + "cover.png";
+    if (!image.save(path, "PNG", 100)) {
+      m_logger->info(tr("failed to save file path"));
+    }
+  }
 }
 
 /*!
@@ -229,6 +285,12 @@ void
 ScanEditor::setDocumentName(const QString& name)
 {
   m_document_name = name;
+}
+
+QString
+ScanEditor::documentName() const
+{
+  return m_document_name;
 }
 
 void
@@ -357,17 +419,24 @@ ScanEditor::scale()
 void
 ScanEditor::save()
 {
-  if (m_document_name.isEmpty()) {
-    QString doc_name =
-      QInputDialog::getText(this,
-                            tr("Get Document Name"),
-                            tr("Please supply a name for this document.\n"
-                               "Do not add file extension as this is\n"
-                               "created internally."));
-    if (!doc_name.isEmpty()) {
-      m_document_name = doc_name;
-    }
-  }
+  //  if (m_document_name.isEmpty()) {
+  //    QString doc_name =
+  //      QInputDialog::getText(this,
+  //                            tr("Get Document Name"),
+  //                            tr("Please supply a name for this document.\n"
+  //                               "Do not add file extension as this is\n"
+  //                               "created internally."));
+  //    if (!doc_name.isEmpty()) {
+  //      m_document_name = doc_name;
+  //      QString path = m_datadir + QDir::separator() + doc_name;
+  //      QDir dir;
+  //      dir.mkpath(path);
+  //      for (int i = 0; i < m_pages.size();i++) {
+  //        Page page = m_pages.at(i);
+  //      }
+  //      return;
+  //    }
+  //  }
   m_image_display->save();
   // TODO save text.
 }

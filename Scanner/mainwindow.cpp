@@ -19,60 +19,37 @@
 #include "mainwindow.h"
 
 #include "qscan.h"
+#include "qyaml-cpp/qyaml-cpp.h"
 #include "scaninterface.h"
-
-/*TextEditIoDevice
-  =============================================================================*/
-TextEditIoDevice::TextEditIoDevice(QPlainTextEdit* text_edit, QObject* parent)
-  : QIODevice(parent)
-  , m_text_edit(text_edit)
-{
-  open(QIODevice::WriteOnly | QIODevice::Text);
-}
-
-void
-TextEditIoDevice::setTextEdit(QPlainTextEdit* text_edit)
-{
-  m_text_edit = text_edit;
-
-  if (!m_pre_data.isEmpty()) {
-    m_text_edit->setPlainText(m_pre_data);
-    m_pre_data.clear();
-  }
-}
-
-qint64
-TextEditIoDevice::readData(char*, qint64)
-{
-  return 0;
-}
-
-qint64
-TextEditIoDevice::writeData(const char* data, qint64 maxSize)
-{
-  if (m_text_edit) {
-    QString d(data);
-    d = d.trimmed();
-
-    if (d.endsWith("\n")) {
-      d = d.left(d.length() - 1);
-    }
-
-    m_text_edit->appendPlainText(d);
-
-  } else {
-    m_pre_data = QString(data);
-  }
-
-  return maxSize;
-}
+#include "yaml-cpp/yaml.h"
 
 /*MainWindow
   =============================================================================*/
+const QString MainWindow::OPTIONS_FILE = QStringLiteral("scanoptions.yaml");
+const QString MainWindow::CURRENT_DOCUMENT = QStringLiteral("current document");
+const QString MainWindow::TESSERACT = "tesseract";
+const QString MainWindow::LANGUAGE = "language";
 
 MainWindow::MainWindow(QWidget* parent)
   : QMainWindow(parent)
   , m_selected(false)
+  , m_scan_act(nullptr)
+  , m_rot_left_act(nullptr)
+  , m_rot_right_act(nullptr)
+  , m_rot_angle_act(nullptr)
+  , m_rot_edge_act(nullptr)
+  , m_copy_act(nullptr)
+  , m_crop_act(nullptr)
+  , m_scale_act(nullptr)
+  , m_save_act(nullptr)
+  , m_save_as_act(nullptr)
+  , m_zoom_in_act(nullptr)
+  , m_zoom_out_act(nullptr)
+  , m_fit_best_act(nullptr)
+  , m_fit_width_act(nullptr)
+  , m_fit_height_act(nullptr)
+  , m_close_act(nullptr)
+  , m_set_docname_act(nullptr)
 {
   m_logger = Log4Qt::Logger::logger(tr("Scanner"));
   m_scan_lib = new QScan(this);
@@ -94,13 +71,32 @@ MainWindow::MainWindow(QWidget* parent)
   fit_width_key = QPixmapCache::insert(QPixmap(":/icons/fit-width"));
   fit_height_key = QPixmapCache::insert(QPixmap(":/icons/fit-height"));
 
-  m_config_dir = "/home/simon/.config/Biblos";
-  m_data_dir = "/home/simon/.local/share/Biblos";
+  m_config_dir = "/home/simonmeaden/.config/Biblos";
+  m_data_dir = "/home/simonmeaden/.local/share/Biblos/library";
+  m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
   m_lang = "eng";
+
+  QFile file(m_options_file);
+  if (file.exists()) {
+    YAML::Node m_options = YAML::LoadFile(file);
+    if (m_options[CURRENT_DOCUMENT]) {
+      m_current_doc_name = m_options[CURRENT_DOCUMENT].as<QString>();
+      setWindowTitle(m_current_doc_name);
+    }
+    if (m_options[TESSERACT]) {
+      YAML::Node tesseract_options = m_options[TESSERACT];
+      if (tesseract_options[LANGUAGE]) {
+        m_lang = tesseract_options[LANGUAGE].as<QString>();
+      }
+    }
+  }
 
   initActions();
   initGui();
+  initMenu();
   connectActions();
+
+  m_image_editor->setDocumentName(m_current_doc_name);
 
   connect(
     m_scan_lib, &QScan::scanCompleted, m_image_editor, &ScanEditor::setImage);
@@ -151,7 +147,32 @@ MainWindow::MainWindow(QWidget* parent)
   }
 }
 
-MainWindow::~MainWindow() = default;
+MainWindow::~MainWindow()
+{
+  QFile* file;
+  file = new QFile(m_options_file);
+
+  if (file->open((QFile::ReadWrite | QFile::Truncate))) {
+    YAML::Emitter emitter;
+
+    emitter << YAML::BeginMap;
+    emitter << YAML::Key << CURRENT_DOCUMENT;
+    emitter << YAML::Value << m_current_doc_name;
+    emitter << YAML::Key << TESSERACT;
+    emitter << YAML::Value;
+
+    emitter << YAML::BeginMap;
+    emitter << YAML::Key << LANGUAGE;
+    emitter << YAML::Value << m_lang;
+    emitter << YAML::EndMap;
+
+    emitter << YAML::EndMap;
+
+    QTextStream out(file);
+    out << emitter.c_str();
+    file->close();
+  }
+}
 
 void
 MainWindow::setLogTextEdit(QPlainTextEdit* log_edit)
@@ -182,6 +203,74 @@ MainWindow::close()
   return true;
 }
 
+void
+MainWindow::initGui()
+{
+  QScreen* screen = QGuiApplication::primaryScreen();
+  QSize size = screen->availableSize();
+  int w = size.width() - 1200;
+  int h = size.height() - 800;
+  int x = int(w / 2.0);
+  int y = int(h / 2.0);
+  setGeometry(x, y, 1200, 1000);
+  QFrame* main_frame = new QFrame(this);
+  setCentralWidget(main_frame);
+  m_main_layout = new QGridLayout;
+  main_frame->setLayout(m_main_layout);
+
+  m_image_editor =
+    new ScanEditor(m_scan_lib, m_config_dir, m_data_dir, m_lang, this);
+  m_image_editor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  installEventFilter(m_image_editor);
+  connect(m_image_editor,
+          &ScanEditor::scanCancelled,
+          this,
+          &MainWindow::cancelScanning);
+
+  int row = 0;
+
+  // Source Scanner list.
+  QStringList labels;
+  labels << "Name"
+         << "Vendor"
+         << "Model"
+         << "Type";
+  m_scanners = new QTableWidget(this);
+  m_scanners->setHorizontalHeaderLabels(labels);
+  m_scanners->horizontalHeader()->setSectionResizeMode(
+    QHeaderView::ResizeToContents);
+  m_scanners->horizontalHeader()->setStretchLastSection(true);
+  m_scanners->setColumnCount(4);
+  m_scanners->setSelectionMode(QAbstractItemView::NoSelection);
+  m_scanners->setSelectionBehavior(QAbstractItemView::SelectRows);
+  m_scanners->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  connect(m_scanners,
+          &QTableWidget::clicked,
+          this,
+          &MainWindow::scannerSelectionChanged);
+  connect(
+    m_scanners, &QTableWidget::doubleClicked, this, &MainWindow::doubleClicked);
+  m_main_layout->addWidget(m_scanners, row++, 1, 1, 4);
+
+  // Scanner source info
+  m_main_layout->addWidget(initSourceFrame(), row++, 1);
+  // Scanner mode info
+  m_main_layout->addWidget(initModeFrame(), row++, 1);
+  // scanner resolution info
+  m_main_layout->addWidget(initResolutionFrame(), row++, 1);
+
+  // logger editor
+  m_empty_edit = new QPlainTextEdit(this);
+  m_empty_edit->setReadOnly(true);
+  m_empty_edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  m_main_layout->addWidget(m_empty_edit, row, 1);
+
+  m_main_layout->addWidget(m_image_editor, 0, 0, row + 1, 1);
+  m_main_layout->setColumnStretch(0, 30);
+  m_main_layout->setColumnStretch(1, 10);
+
+  initToolbar();
+}
 void
 MainWindow::initToolbar()
 {
@@ -214,6 +303,13 @@ MainWindow::initToolbar()
 
   toolbar->addSeparator();
   toolbar->addAction(m_close_act);
+}
+
+void
+MainWindow::initMenu()
+{
+  QMenu* file_menu = menuBar()->addMenu(tr("File"));
+  file_menu->addAction(m_set_docname_act);
 }
 
 QFrame*
@@ -302,74 +398,6 @@ MainWindow::initResolutionFrame()
 }
 
 void
-MainWindow::initGui()
-{
-  QScreen* screen = QGuiApplication::primaryScreen();
-  QSize size = screen->availableSize();
-  int w = size.width() - 1200;
-  int h = size.height() - 800;
-  int x = int(w / 2.0);
-  int y = int(h / 2.0);
-  setGeometry(x, y, 1200, 1000);
-  QFrame* main_frame = new QFrame(this);
-  setCentralWidget(main_frame);
-  m_main_layout = new QGridLayout;
-  main_frame->setLayout(m_main_layout);
-
-  m_image_editor = new ScanEditor(m_scan_lib, m_config_dir, m_lang, this);
-  m_image_editor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  installEventFilter(m_image_editor);
-  connect(m_image_editor,
-          &ScanEditor::scanCancelled,
-          this,
-          &MainWindow::cancelScanning);
-
-  int row = 0;
-
-  // Source Scanner list.
-  QStringList labels;
-  labels << "Name"
-         << "Vendor"
-         << "Model"
-         << "Type";
-  m_scanners = new QTableWidget(this);
-  m_scanners->setHorizontalHeaderLabels(labels);
-  m_scanners->horizontalHeader()->setSectionResizeMode(
-    QHeaderView::ResizeToContents);
-  m_scanners->horizontalHeader()->setStretchLastSection(true);
-  m_scanners->setColumnCount(4);
-  m_scanners->setSelectionMode(QAbstractItemView::NoSelection);
-  m_scanners->setSelectionBehavior(QAbstractItemView::SelectRows);
-  m_scanners->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  connect(m_scanners,
-          &QTableWidget::clicked,
-          this,
-          &MainWindow::scannerSelectionChanged);
-  connect(
-    m_scanners, &QTableWidget::doubleClicked, this, &MainWindow::doubleClicked);
-  m_main_layout->addWidget(m_scanners, row++, 1, 1, 4);
-
-  // Scanner source info
-  m_main_layout->addWidget(initSourceFrame(), row++, 1);
-  // Scanner mode info
-  m_main_layout->addWidget(initModeFrame(), row++, 1);
-  // scanner resolution info
-  m_main_layout->addWidget(initResolutionFrame(), row++, 1);
-
-  // logger editor
-  m_empty_edit = new QPlainTextEdit(this);
-  m_empty_edit->setReadOnly(true);
-  m_empty_edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  m_main_layout->addWidget(m_empty_edit, row, 1);
-
-  m_main_layout->addWidget(m_image_editor, 0, 0, row + 1, 1);
-  m_main_layout->setColumnStretch(0, 30);
-  m_main_layout->setColumnStretch(1, 10);
-
-  initToolbar();
-}
-
-void
 MainWindow::initActions()
 {
   QPixmap scan_icon, rot_left_icon, rot_right_icon, rot_angle_icon,
@@ -417,6 +445,7 @@ MainWindow::initActions()
     new QAction(QIcon(fit_width_icon), tr("Fit to width"), this);
   m_fit_height_act =
     new QAction(QIcon(fit_height_icon), tr("Fit to feight"), this);
+  m_set_docname_act = new QAction(tr("Set document name."), this);
 
   disableImageLoadedBtns();
   disableSelectionBtns();
@@ -470,6 +499,10 @@ MainWindow::connectActions()
           &QAction::triggered,
           m_image_editor,
           &ScanEditor::fitHeight);
+  connect(m_set_docname_act,
+          &QAction::triggered,
+          this,
+          &MainWindow::createDocumentName);
 }
 
 void
@@ -685,4 +718,67 @@ MainWindow::disableImageLoadedBtns()
   m_fit_best_act->setEnabled(false);
   m_fit_width_act->setEnabled(false);
   m_fit_height_act->setEnabled(false);
+}
+
+/*
+  Gets the document name or renames it if it exists. Pops up a dialog
+  asking for the document name if it doesn't exist, otherwise it
+  asks if you are sure, then if you are it asks for the new document
+  name, renaming the document directory if necessary.
+ */
+void
+MainWindow::createDocumentName()
+{
+  QString doc_name;
+  QString old_doc_name = m_image_editor->documentName();
+  if (old_doc_name.isEmpty()) {
+    doc_name =
+      QInputDialog::getText(this,
+                            tr("Get Document Name"),
+                            tr("Please supply a name for this document.\n"
+                               "Do not add file extension as this is\n"
+                               "created internally."));
+    if (!doc_name.isEmpty()) {
+      QDir dir;
+      QString doc_path = m_data_dir + QDir::separator() + doc_name;
+      dir.mkpath(doc_path);
+      m_image_editor->setDocumentName(doc_name);
+      m_current_doc_name = doc_name;
+      setWindowTitle(doc_name);
+    }
+  } else {
+    int btn =
+      QMessageBox::warning(this,
+                           tr("Document name already set."),
+                           tr("The document already has a name (%1).\n"
+                              "This will cause the document to be renamed.\n"
+                              "Are you sure!\n"
+                              "Press 'OK' to continue or 'Cancel' to stop.")
+                             .arg(old_doc_name),
+                           QMessageBox::Ok | QMessageBox::Cancel,
+                           QMessageBox::Cancel);
+    if (btn == QMessageBox::Ok) {
+      doc_name =
+        QInputDialog::getText(this,
+                              tr("Get Document Name"),
+                              tr("Please supply a name for this document.\n"
+                                 "Do not add file extension as this is\n"
+                                 "created internally."));
+      if (!doc_name.isEmpty()) {
+        if (doc_name != old_doc_name) {
+          QDir dir;
+          QString old_doc_path = m_data_dir + QDir::separator() + old_doc_name;
+          QString doc_path = m_data_dir + QDir::separator() + doc_name;
+          if (dir.exists(old_doc_path)) {
+            dir.rename(old_doc_path, doc_path);
+          } else {
+            dir.mkpath(doc_path);
+          }
+          m_image_editor->setDocumentName(doc_name);
+          m_current_doc_name = doc_name;
+          setWindowTitle(doc_name);
+        }
+      }
+    }
+  }
 }

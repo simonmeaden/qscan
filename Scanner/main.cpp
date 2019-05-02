@@ -24,6 +24,7 @@
 #include <QTextStream>
 
 #if defined(LOGGER_ENABLE)
+#include "texteditiodevice.h"
 #include <log4qt/consoleappender.h>
 #include <log4qt/logger.h>
 #include <log4qt/logmanager.h>

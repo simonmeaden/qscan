@@ -79,7 +79,7 @@ OCRDialog::initGui()
   connect(ocr_btn, &QPushButton::clicked, this, &OCRDialog::applyOcr);
   connect(tweaks_btn, &QPushButton::clicked, this, &OCRDialog::applyTweaks);
   connect(btn_box, &QDialogButtonBox::rejected, this, &QDialog::reject);
-  connect(btn_box, &QDialogButtonBox::help, this, &OCRDialog::help);
+  connect(btn_box, &QDialogButtonBox::helpRequested, this, &OCRDialog::help);
   connect(btn_box, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
 

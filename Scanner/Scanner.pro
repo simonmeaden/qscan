@@ -80,3 +80,6 @@ else:unix: LIBS += -L$$OUT_PWD/../logger/ -llogger
 
 INCLUDEPATH += $$PWD/../logger
 DEPENDPATH += $$PWD/../logger
+
+unix|win32: LIBS += -lyaml-cpp
+unix|win32: LIBS += -lqyaml-cpp

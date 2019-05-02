@@ -55,7 +55,8 @@ public:
   void setImage(const QImage& image);
   void setScanProgress(const int& progress);
   void scanningStarted();
-  void setDocumentName(const QString& name);
+  QString documentName() const;
+  void setDocumentName(const QString& documentName);
 
   void setSelectedName(const QString& selected_name);
 
@@ -96,6 +97,7 @@ signals:
   void imageIsLoaded();
 
 protected:
+  Log4Qt::Logger* m_logger;
   QString m_document_name;
   ScanImage* m_image_display;
   QProgressDialog* m_prog_dlg;
@@ -117,6 +119,8 @@ protected:
   void receiveImage(const QImage& img);
   void receiveImages(const QImage& left, const QImage& right);
   void receiveString(int page, const QString& str);
+  void saveImage(int index, const QImage& image);
+  void saveAsCover(const QImage& image);
 };
 
 #endif // SCANEDITOR_H

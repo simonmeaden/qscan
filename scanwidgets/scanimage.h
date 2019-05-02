@@ -34,8 +34,10 @@ public:
   void rotateByEdge();
   void rotateBy(qreal angle);
   void scaleBy();
-  void save(const QString& doc_name = QString());
+  void save();
+  //  void save(const QString& doc_name = QString());
   void saveAs();
+  void saveAsCover();
   void zoomIn();
   void zoomOut();
   void fitBest();
@@ -66,6 +68,7 @@ signals:
   void adjustScrollbar(qreal);
   void sendImage(QImage);
   void sendImages(QImage, QImage);
+  void sendCover(const QImage&);
 
 protected:
   enum State
@@ -146,6 +149,7 @@ protected:
   QAction* m_selectall_act;
   QAction* m_save_act;
   QAction* m_save_as_act;
+  QAction* m_save_as_cover_act{};
   QAction* m_set_def_crop_act;
   QAction* m_split_pages_act;
   QAction* m_split_right_act;

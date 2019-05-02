@@ -21,13 +21,15 @@
 
 #include <QAction>
 #include <QComboBox>
+#include <QDir>
 #include <QGridLayout>
 #include <QGuiApplication>
 #include <QHeaderView>
-#include <QIODevice>
 #include <QImage>
 #include <QLabel>
 #include <QMainWindow>
+#include <QMenu>
+#include <QMenuBar>
 #include <QMessageBox>
 #include <QPainter>
 #include <QPixmapCache>
@@ -37,6 +39,7 @@
 #include <QScrollArea>
 #include <QSpinBox>
 #include <QTableWidget>
+#include <QTextStream>
 #include <QToolBar>
 
 #include "logger.h"
@@ -44,28 +47,9 @@
 #include "scaneditor.h"
 
 class QScan;
-typedef QSharedPointer<QImage> Image;
+using Image = QSharedPointer<QImage>;
 
 class ScanDevice;
-
-class TextEditIoDevice : public QIODevice
-{
-  Q_OBJECT
-
-public:
-  TextEditIoDevice(QPlainTextEdit* text_edit, QObject* parent = nullptr);
-  //  ~TextEditIoDevice() override;
-
-  void setTextEdit(QPlainTextEdit* m_text_edit);
-
-protected:
-  qint64 readData(char*, qint64) override;
-  qint64 writeData(const char* data, qint64 maxSize) override;
-
-private:
-  QPlainTextEdit* m_text_edit;
-  QString m_pre_data;
-};
 
 class MainWindow : public QMainWindow
 {
@@ -89,6 +73,8 @@ protected:
   QString m_config_dir;
   QString m_data_dir;
   QString m_lang;
+  QString m_options_file;
+  QString m_current_doc_name;
 
   QString m_selected_name;
   bool m_selected;
@@ -115,27 +101,30 @@ protected:
   QPixmapCache::Key fit_height_key;
   QPixmapCache::Key close_key;
 
-  QAction* m_scan_act{};
-  QAction* m_rot_left_act{};
-  QAction* m_rot_right_act{};
-  QAction* m_rot_angle_act{};
-  QAction* m_rot_edge_act{};
-  QAction* m_copy_act{};
-  QAction* m_crop_act{};
-  QAction* m_scale_act{};
-  QAction* m_save_act{};
-  QAction* m_save_as_act{};
-  QAction* m_zoom_in_act{};
-  QAction* m_zoom_out_act{};
-  QAction* m_fit_best_act{};
-  QAction* m_fit_width_act{};
-  QAction* m_fit_height_act{};
-  QAction* m_close_act{};
+  QAction* m_scan_act;
+  QAction* m_rot_left_act;
+  QAction* m_rot_right_act;
+  QAction* m_rot_angle_act;
+  QAction* m_rot_edge_act;
+  QAction* m_copy_act;
+  QAction* m_crop_act;
+  QAction* m_scale_act;
+  QAction* m_save_act;
+  QAction* m_save_as_act;
+  QAction* m_zoom_in_act;
+  QAction* m_zoom_out_act;
+  QAction* m_fit_best_act;
+  QAction* m_fit_width_act;
+  QAction* m_fit_height_act;
+  QAction* m_close_act;
+  QAction* m_set_docname_act;
 
   bool close();
 
   void initGui();
   void initActions();
+  void initToolbar();
+  void initMenu();
   void connectActions();
 
   void scannerSelectionChanged();
@@ -155,16 +144,21 @@ protected:
   void receiveSourceChange(ScanDevice* device);
   void modeChangeSelected(const QString& mode);
   void sourceChangeSelected(const QString& source);
-  void initToolbar();
   void enableNoSelectionBtns();
   void enableSelectionBtns();
   void disableSelectionBtns();
   void disableNoSelectionBtns();
   void enableImageLoadedBtns();
   void disableImageLoadedBtns();
+  void createDocumentName();
   QFrame* initModeFrame();
   QFrame* initSourceFrame();
   QFrame* initResolutionFrame();
+
+  static const QString OPTIONS_FILE;
+  static const QString CURRENT_DOCUMENT;
+  static const QString TESSERACT;
+  static const QString LANGUAGE;
 };
 
 #endif // MAINWINDOW_H
