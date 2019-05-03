@@ -28,6 +28,7 @@
 #include "logger.h"
 
 #include "scaninterface.h"
+#include "scanoptions.h"
 
 class SaneWorker : public QObject
 {

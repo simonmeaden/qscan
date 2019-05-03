@@ -10,6 +10,7 @@
 #include <QListWidgetItem>
 #include <QMenu>
 #include <QWidget>
+#include <QLabel>
 
 #include "scanpage.h"
 
@@ -21,8 +22,9 @@ public:
 
   int append(const QImage& thumbnail);
   void remove(int index);
-  void insert(int index, const QImage& thumbnail);
+  void insert(int index, const QImage& thumbnail, bool has_text = false);
   void setCover(const QImage& cover);
+  void setHasText(int index, bool has_text);
 
 signals:
   void pageMoved(int from, int to);
@@ -30,6 +32,7 @@ signals:
 
 protected:
   QList<QImage> m_pages;
+  QList<bool> m_text_done;
   QListWidget* m_image_list;
   QImage m_cover;
 
@@ -50,6 +53,9 @@ protected:
   void moveUp();
   void moveDown();
   void doOcr();
+
+  static const QString HASTEXT;
+  static const QString HASNOTEXT;
 };
 
 #endif // PAGEVIEW_H

@@ -60,12 +60,9 @@ public:
     , m_ocr_tools(new OcrTools(configdir, lang, this))
     , m_configdir(configdir)
     , m_datadir(datadir)
-    , m_cover(Page(new ScanPage()))
-  {
+    , m_cover(Page(new ScanPage())) {
     m_logger = Log4Qt::Logger::logger(tr("ScanEditor"));
-
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
     initGui();
     connectActions();
   }
@@ -76,6 +73,8 @@ public:
   void scanningStarted();
   QString documentName() const;
   void setDocumentName(const QString& documentName);
+  void setDocumentPath(const QString& path);
+  void completeDocument();
 
   void setSelectedName(const QString& selected_name);
 
@@ -105,8 +104,8 @@ public:
   void makePage();
   void receiveOcrPage(int index);
 
-  void loadCover(Page cover);
-  void loadImage(int index, const Page& page);
+  void loadCover(const QImage& cover);
+  void loadImage(int index, const QImage& image, const QString& text);
 
   int pageCount();
   Page page(int index);
@@ -120,12 +119,11 @@ signals:
 
 protected:
   Log4Qt::Logger* m_logger;
-  QString m_document_name;
+  QString m_document_name, m_document_path;
   ScanImage* m_image_display;
   QProgressDialog* m_prog_dlg;
   QPoint m_origin;
   QScan* m_scan_lib;
-  QString m_selected_name;
   QScrollArea* m_scroller;
   PageView* m_page_view;
   OcrTools* m_ocr_tools;

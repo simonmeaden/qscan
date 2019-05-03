@@ -25,7 +25,7 @@
 #include <QStringList>
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
-#include <sane/sane.h>
+  #include <sane/sane.h>
 #endif
 
 #include "scanoptions.h"
@@ -142,8 +142,7 @@ class ScanLibrary
   , public ScanInterface
 {
   Q_OBJECT
-public:
-  ScanLibrary(QObject* parent = nullptr);
+public: ScanLibrary(QObject* parent = nullptr);
   //  ~ScanLibrary();
 
 signals:

@@ -23,12 +23,20 @@
 #include <QMap>
 #include <QObject>
 #include <QRect>
+#include <QVariant>
 
 #include <sane/sane.h>
 #include <sane/saneopts.h>
 
 class ScanDevice;
 using Device = QSharedPointer<ScanDevice>;
+
+struct ScanRange
+{
+  int min;
+  int max;
+};
+Q_DECLARE_METATYPE(ScanRange);
 
 enum ScanUnits
 {
@@ -104,11 +112,14 @@ public:
   int resolution() const;
   void setResolution(int scan_resolution);
 
-  int minResolution() const;
-  void setMinResolution(int minResolution);
+  //  int minResolution() const;
+  //  void setMinResolution(int minResolution);
 
-  int maxResolution() const;
-  void setMaxResolution(int maxResolution);
+  //  int maxResolution() const;
+  //  void setMaxResolution(int maxResolution);
+  bool isResolutionRange();
+  void setResulutionRange(QVariant v);
+  QVariant resolutionRange();
 
   int optionId(const QString& name) const;
   void setOptionId(const QString& name, int option_id);
@@ -143,8 +154,9 @@ protected:
   int m_page_delay;
   QRect m_geometry;
   int m_resolution = -1;
-  int m_min_resolution = 1;
-  int m_max_resolution = 1;
+  QVariant m_resolution_range;
+  //  int m_min_resolution = 1;
+  //  int m_max_resolution = 1;
   int m_resolution_x = -1;
   int m_resolution_y = -1;
   QMap<QString, int> m_option_id_map;
