@@ -30,6 +30,24 @@
 /* ScanEditor
  *****************************************************************************/
 
+ScanEditor::ScanEditor(QScan* scan,
+                       const QString& configdir,
+                       const QString& datadir,
+                       const QString& lang,
+                       QWidget* parent)
+  : QFrame(parent)
+  , m_scan_lib(scan)
+  , m_ocr_tools(new OcrTools(configdir, lang, this))
+  , m_configdir(configdir)
+  , m_datadir(datadir)
+  , m_cover(Page(new ScanPage()))
+{
+  m_logger = Log4Qt::Logger::logger(tr("ScanEditor"));
+  setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  initGui();
+  connectActions();
+}
+
 // ScanEditor::~ScanEditor(){
 //}
 
@@ -43,27 +61,31 @@ void ScanEditor::initGui()
   m_scroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   m_scroller->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   m_scroller->setContentsMargins(0, 0, 0, 0);
-  m_image_display = new ScanImage(m_datadir, this);
-  m_image_display->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-  m_image_display->setScaledContents(true);
-  m_scroller->setWidget(m_image_display);
+  m_scan_display = new ScanImage(m_datadir, this);
+  m_scan_display->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+  m_scan_display->setScaledContents(true);
+  m_scroller->setWidget(m_scan_display);
   layout->addWidget(m_scroller, 0, 0);
   m_page_view = new PageView(this);
+  m_page_view->setContentsMargins(0, 0, 0, 0);
   layout->addWidget(m_page_view, 0, 1);
   layout->setColumnStretch(0, 30);
   layout->setColumnStretch(1, 10);
-  connect(m_image_display, &ScanImage::sendCover, this, &ScanEditor::saveAsCover);
+  connect(m_scan_display, &ScanImage::sendCover, this, &ScanEditor::saveAsCover);
 }
 
 void ScanEditor::connectActions()
 {
-  connect(m_image_display, &ScanImage::selectionUnderway, this, &ScanEditor::selectionUnderway);
-  connect(m_image_display, &ScanImage::selected, this, &ScanEditor::selected);
-  connect(m_image_display, &ScanImage::unselected, this, &ScanEditor::unselected);
-  connect(m_image_display, &ScanImage::imageIsLoaded, this, &ScanEditor::imageIsLoaded);
-  connect(m_image_display, &ScanImage::adjustScrollbar, this, &ScanEditor::adjustScrollbar);
-  connect(m_image_display, &ScanImage::sendImage, this, &ScanEditor::receiveImage);
-  connect(m_image_display, &ScanImage::sendImages, this, &ScanEditor::receiveImages);
+  connect(m_scan_display, &ScanImage::selectionUnderway, this, &ScanEditor::selectionUnderway);
+  connect(m_scan_display, &ScanImage::selected, this, &ScanEditor::selected);
+  connect(m_scan_display, &ScanImage::unselected, this, &ScanEditor::unselected);
+  connect(m_scan_display, &ScanImage::imageIsLoaded, this, &ScanEditor::imageIsLoaded);
+  connect(m_scan_display, &ScanImage::adjustScrollbar, this, &ScanEditor::adjustScrollbar);
+  connect(m_scan_display, &ScanImage::sendImage, this, &ScanEditor::receiveImage);
+  connect(m_scan_display, &ScanImage::sendImages, this, &ScanEditor::receiveImages);
+  connect(m_page_view, &PageView::sendOcrPage, this, &ScanEditor::receiveOcrRequest);
+  connect(this, &ScanEditor::ocrImage, m_ocr_tools, &OcrTools::convertImage);
+  connect(m_ocr_tools, &OcrTools::converted, this, &ScanEditor::receiveOcrResult);
 }
 
 /*
@@ -74,9 +96,9 @@ void ScanEditor::receiveImage(const QImage& image)
 {
   Page page(new ScanPage());
   page->setImage(image);
-  int index = m_pages.size();
+  int index = m_pages.size() + 1;
   m_pages.insert(index, page);
-  m_page_view->insert(index, m_pages.last()->thumbnail());
+  m_page_view->append(m_pages.last()->thumbnail());
   saveImage(index, image);
 }
 
@@ -88,21 +110,23 @@ void ScanEditor::receiveImages(const QImage& left, const QImage& right)
 {
   Page left_page(new ScanPage());
   left_page->setImage(left);
-  int index = m_pages.size();
+  int index = m_pages.size() + 1;
   m_pages.insert(index, left_page);
-  m_page_view->insert(index, m_pages.last()->thumbnail());
+  m_page_view->append(m_pages.last()->thumbnail());
   saveImage(index, left);
   Page right_page(new ScanPage());
   right_page->setImage(right);
-  index = m_pages.size();
+  index++;
   m_pages.insert(index, right_page);
-  m_page_view->insert(index, m_pages.last()->thumbnail());
+  m_page_view->append(m_pages.last()->thumbnail());
   saveImage(index, right);
 }
 
 void ScanEditor::receiveString(int page, const QString& str)
 {
-  m_pages.value(page)->setText(str);
+  if (page > 0) { // 0 is cover page so no text.
+    m_pages.value(page)->setText(str);
+  }
 }
 
 void ScanEditor::saveImage(int index, const QImage& image)
@@ -155,44 +179,17 @@ void ScanEditor::saveAsCover(const QImage& image)
   }
 }
 
-/*!
-   \brief Splits a single page image into two equal size page images.
-*/
-void ScanEditor::splitPages()
+void ScanEditor::receiveOcrRequest(int index)
 {
-  QPair<QImage, QImage> images = m_image_display->splitPages();
-  receiveImages(images.first, images.second);
-}
-
-/*!
-   \brief Splits a single page image into two equal size page images but
-   discards the right hand page.
-*/
-void ScanEditor::splitLeftPage()
-{
-  QImage image = m_image_display->splitLeftPage();
-  receiveImage(image);
-}
-
-/*!
-   \brief Splits a single page image into two equal size page images but
-   discards the left hand page.
-*/
-void ScanEditor::splitRightPage()
-{
-  QImage image = m_image_display->splitRightPage();
-  receiveImage(image);
-}
-
-void ScanEditor::makePage()
-{
-  QImage image = m_image_display->makePage();
-  receiveImage(image);
-}
-
-void ScanEditor::receiveOcrPage(int index)
-{
+  // TODO
   Page page = m_pages.value(index);
+
+  emit ocrImage(page);
+
+}
+
+void ScanEditor::receiveOcrResult(const Page& page)
+{
   auto* dlg = new OCRDialog(this);
   dlg->setImage(page->image());
 
@@ -207,6 +204,44 @@ void ScanEditor::receiveOcrPage(int index)
       // TODO maybe save tweaked image. maybe only supply list of tweaks?
     }
   }
+
+}
+
+
+
+/*!
+   \brief Splits a single page image into two equal size page images.
+*/
+void ScanEditor::splitPages()
+{
+  QPair<QImage, QImage> images = m_scan_display->splitPages();
+  receiveImages(images.first, images.second);
+}
+
+/*!
+   \brief Splits a single page image into two equal size page images but
+   discards the right hand page.
+*/
+void ScanEditor::splitLeftPage()
+{
+  QImage image = m_scan_display->splitLeftPage();
+  receiveImage(image);
+}
+
+/*!
+   \brief Splits a single page image into two equal size page images but
+   discards the left hand page.
+*/
+void ScanEditor::splitRightPage()
+{
+  QImage image = m_scan_display->splitRightPage();
+  receiveImage(image);
+}
+
+void ScanEditor::makePage()
+{
+  QImage image = m_scan_display->makePage();
+  receiveImage(image);
 }
 
 void ScanEditor::loadCover(const QImage& cover)
@@ -233,7 +268,7 @@ void ScanEditor::setImage(const QImage& image)
     m_prog_dlg = nullptr;
   }
 
-  m_image_display->setImage(image);
+  m_scan_display->setImage(image);
 }
 
 void ScanEditor::setScanProgress(const int& progress)
@@ -318,7 +353,7 @@ bool ScanEditor::eventFilter(QObject* obj, QEvent* event)
     result = true;
 
   } else if (event->type() == QEvent::Show || event->type() == QEvent::Resize) {
-    m_image_display->resize(frameRect().size());
+    m_scan_display->resize(frameRect().size());
     result = true;
 
   } else {
@@ -340,103 +375,103 @@ void ScanEditor::adjustScrollbar(qreal factor)
 
 void ScanEditor::selectAll()
 {
-  m_image_display->selectAll();
+  m_scan_display->selectAll();
 }
 
 void ScanEditor::rotate180()
 {
-  m_image_display->rotate180();
+  m_scan_display->rotate180();
 }
 
 void ScanEditor::rotateCW()
 {
-  m_image_display->rotateCW();
+  m_scan_display->rotateCW();
 }
 
 void ScanEditor::rotateACW()
 {
-  m_image_display->rotateACW();
+  m_scan_display->rotateACW();
 }
 
 void ScanEditor::rotateByAngle()
 {
-  m_image_display->rotateByAngle();
+  m_scan_display->rotateByAngle();
 }
 
 void ScanEditor::rotateByEdge()
 {
-  m_image_display->rotateByEdge();
+  m_scan_display->rotateByEdge();
 }
 
 void ScanEditor::copySelection()
 {
-  m_image_display->copySelection();
+  m_scan_display->copySelection();
 }
 
 void ScanEditor::cropToSelection()
 {
-  m_image_display->cropToSelection();
+  m_scan_display->cropToSelection();
 }
 
 void ScanEditor::clearSelection()
 {
-  m_image_display->clearSelection();
+  m_scan_display->clearSelection();
 }
 
 void ScanEditor::cropToContent()
 {
-  m_image_display->cropToContent();
+  m_scan_display->cropToContent();
 }
 
 void ScanEditor::rescan()
 {
-  m_image_display->rescan();
+  m_scan_display->rescan();
 }
 
 void ScanEditor::scale()
 {
-  m_image_display->scale();
+  m_scan_display->scale();
 }
 
 void ScanEditor::save()
 {
-  m_image_display->save();
+  m_scan_display->save();
   // TODO save text.
 }
 
 void ScanEditor::saveAs()
 {
-  m_image_display->saveAs();
+  m_scan_display->saveAs();
 }
 
 void ScanEditor::zoomIn()
 {
-  m_image_display->zoomIn();
+  m_scan_display->zoomIn();
 }
 
 void ScanEditor::zoomOut()
 {
-  m_image_display->zoomOut();
+  m_scan_display->zoomOut();
 }
 
 void ScanEditor::fitBest()
 {
-  m_image_display->fitBest();
+  m_scan_display->fitBest();
 }
 
 void ScanEditor::fitHeight()
 {
-  m_image_display->fitHeight();
+  m_scan_display->fitHeight();
 }
 
 void ScanEditor::fitWidth()
 {
-  m_image_display->fitWidth();
+  m_scan_display->fitWidth();
 }
 
 void ScanEditor::setDefaultPageCropSize()
 {
-  m_image_display->setDefaultPageCropSize();
+  m_scan_display->setDefaultPageCropSize();
 }
 
 int ScanEditor::pageCount()

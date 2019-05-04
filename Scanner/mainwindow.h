@@ -21,6 +21,7 @@
 
 #include <QAction>
 #include <QComboBox>
+#include <QSpinBox>
 #include <QDir>
 #include <QFile>
 #include <QGridLayout>
@@ -39,8 +40,6 @@
 #include <QPushButton>
 #include <QScreen>
 #include <QScrollArea>
-#include <QSpinBox>
-#include <QTableWidget>
 #include <QTextStream>
 #include <QToolBar>
 #include <QVariant>
@@ -64,9 +63,9 @@ public:
 
   void setLogTextEdit(QPlainTextEdit* log_edit);
 
-  void initRightToolbar();
+  QToolBar* initRightToolbar();
 
-  void initModeToolbar();
+  QToolBar* initModeToolbar();
 
 protected:
   Log4Qt::Logger* m_logger;
@@ -89,10 +88,12 @@ protected:
   QPlainTextEdit* m_empty_edit{};
   QPlainTextEdit* m_log_edit{};
   QLabel* m_min_res{}, *m_max_res{}, *m_curr_src{}, *m_curr_mode{};
-  QSpinBox* m_res_spin{};
+  //  QSpinBox* m_res_spin{};
+  QIntValidator* m_res_validator{};
+  QLineEdit* m_res_edit{};
   QFrame* m_res_range{}, *m_res_list{};
-  QStackedLayout* m_res_layout;
-  int m_stack_range, m_stack_list;
+  QStackedLayout* m_res_layout{};
+  int m_stack_range{}, m_stack_list{};
   QComboBox* m_res_combo{};
   QComboBox* m_scanner_box{};
 
@@ -114,23 +115,23 @@ protected:
   QPixmapCache::Key close_key;
 
   QAction* m_scan_act{};
-  QAction* m_rot_left_act;
-  QAction* m_rot_right_act;
-  QAction* m_rot_angle_act;
-  QAction* m_rot_edge_act;
-  QAction* m_copy_act;
-  QAction* m_crop_act;
-  QAction* m_scale_act;
-  QAction* m_save_act;
-  QAction* m_save_as_act;
-  QAction* m_zoom_in_act;
-  QAction* m_zoom_out_act;
-  QAction* m_fit_best_act;
-  QAction* m_fit_width_act;
-  QAction* m_fit_height_act;
-  QAction* m_close_act;
-  QAction* m_set_docname_act;
-  QAction* m_doc_completed_act;
+  QAction* m_rot_left_act{};
+  QAction* m_rot_right_act{};
+  QAction* m_rot_angle_act{};
+  QAction* m_rot_edge_act{};
+  QAction* m_copy_act{};
+  QAction* m_crop_act{};
+  QAction* m_scale_act{};
+  QAction* m_save_act{};
+  QAction* m_save_as_act{};
+  QAction* m_zoom_in_act{};
+  QAction* m_zoom_out_act{};
+  QAction* m_fit_best_act{};
+  QAction* m_fit_width_act{};
+  QAction* m_fit_height_act{};
+  QAction* m_close_act{};
+  QAction* m_set_docname_act{};
+  QAction* m_doc_completed_act{};
 
   bool close();
 
@@ -144,30 +145,30 @@ protected:
   void startScanning();
   void cancelScanning();
 
+  void modeChangeSelected(const QString& mode);
+  void receiveModeChange(ScanDevice* device);
+
+  void sourceChangeSelected(const QString& source);
+  void receiveSourceChange(ScanDevice* device);
+
+  void resolutionEdited(const QString& value);
+
   void scanHasFailed();
   void scanProgressed(const int&);
   void geometry();
-  //  void doubleClicked(const QModelIndex& index);
   void modifyingSelection();
   void editorHasSelection();
   void editorHasNoSelection();
   void imageLoaded();
   void receiveOptionsSet(ScanDevice* device);
-  void receiveModeChange(ScanDevice* device);
-  void receiveSourceChange(ScanDevice* device);
-  void modeChangeSelected(const QString& mode);
-  void sourceChangeSelected(const QString& source);
-  void enableNoSelectionBtns();
-  void enableSelectionBtns();
-  void disableSelectionBtns();
-  void disableNoSelectionBtns();
-  void enableImageLoadedBtns();
-  void disableImageLoadedBtns();
+  void enableNoSelectionActions();
+  void enableSelectionActions();
+  void disableSelectionActions();
+  void disableNoSelectionActions();
+  void enableImageLoadedActions();
+  void disableImageLoadedActions();
   void createDocumentName();
   void completeDocument();
-  //  QFrame* initModeFrame();
-  //  QFrame* initSourceFrame();
-  //  QFrame* initResolutionFrame();
 
   static const QString OPTIONS_FILE;
   static const QString CURRENT_DOCUMENT;
@@ -176,9 +177,9 @@ protected:
   void loadOptions();
   void saveOptions();
   void loadExistingFiles();
-  void initActionToolbar();
-  void initSourceToolbar();
-  void initResToolbar();
+  QToolBar* initActionToolbar();
+  QToolBar* initSourceToolbar();
+  QToolBar* initResourceToolbar();
 };
 
 #endif // MAINWINDOW_H

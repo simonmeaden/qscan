@@ -50,22 +50,7 @@ public:
              const QString& configdir,
              const QString& datadir,
              const QString& lang,
-             QWidget* parent = nullptr)
-    : QFrame(parent)
-    , m_image_display(nullptr)
-    , m_prog_dlg(nullptr)
-    , m_scan_lib(scan)
-    , m_scroller(nullptr)
-    , m_page_view(nullptr)
-    , m_ocr_tools(new OcrTools(configdir, lang, this))
-    , m_configdir(configdir)
-    , m_datadir(datadir)
-    , m_cover(Page(new ScanPage())) {
-    m_logger = Log4Qt::Logger::logger(tr("ScanEditor"));
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    initGui();
-    connectActions();
-  }
+             QWidget* parent = nullptr);
   //  ~ScanEditor() override;
 
   void setImage(const QImage& image);
@@ -102,7 +87,6 @@ public:
   void splitLeftPage();
   void splitRightPage();
   void makePage();
-  void receiveOcrPage(int index);
 
   void loadCover(const QImage& cover);
   void loadImage(int index, const QImage& image, const QString& text);
@@ -116,18 +100,20 @@ signals:
   void unselected();
   void selectionUnderway();
   void imageIsLoaded();
+  void ocrImage(Page page);
 
 protected:
   Log4Qt::Logger* m_logger;
   QString m_document_name, m_document_path;
-  ScanImage* m_image_display;
-  QProgressDialog* m_prog_dlg;
+  ScanImage* m_scan_display{};
+  QProgressDialog* m_prog_dlg{};
   QPoint m_origin;
   QScan* m_scan_lib;
-  QScrollArea* m_scroller;
-  PageView* m_page_view;
+  QScrollArea* m_scroller{};
+  PageView* m_page_view{};
   OcrTools* m_ocr_tools;
-  QString m_configdir, m_datadir;
+  QString m_configdir;
+  QString m_datadir;
 
   QMap<int, Page> m_pages;
   Page m_cover;
@@ -142,6 +128,8 @@ protected:
   void receiveString(int page, const QString& str);
   void saveImage(int index, const QImage& image);
   void saveAsCover(const QImage& image);
+  void receiveOcrRequest(int page);
+  void receiveOcrResult(const Page& page);
 };
 
 #endif // SCANEDITOR_H

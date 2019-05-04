@@ -53,3 +53,10 @@ else:unix: LIBS += -L$$OUT_PWD/../logger/ -llogger
 
 INCLUDEPATH += $$PWD/../logger
 DEPENDPATH += $$PWD/../logger
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../scanwidgets/release/ -lscanwidgets
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../scanwidgets/debug/ -lscanwidgets
+else:unix: LIBS += -L$$OUT_PWD/../scanwidgets/ -lscanwidgets
+
+INCLUDEPATH += $$PWD/../scanwidgets
+DEPENDPATH += $$PWD/../scanwidgets

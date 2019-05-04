@@ -67,7 +67,7 @@ signals:
 protected:
   //  Log4Qt::Logger* m_logger;
   QMutex m_mutex;
-  SANE_Handle m_handle;
+  SANE_Handle m_sane_handle{};
 
   void getIntValue(ScanDevice* device, int option_id, const QString& name);
   void getListValue(ScanDevice* device,

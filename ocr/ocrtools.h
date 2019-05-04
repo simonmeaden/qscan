@@ -7,6 +7,7 @@
 #include "logger.h"
 
 #include "ocr_global.h"
+#include "scanpage.h"
 
 class TessTools;
 
@@ -19,12 +20,12 @@ public:
                     QObject* parent = nullptr);
   ~OcrTools() override;
 
-  void convertImage(int page, const QImage& image);
+  void convertImage(Page page);
 
 signals:
   void finished();
-  void startConverting(int page, const QImage& image);
-  void converted(int, const QString&);
+  void startConverting(Page page);
+  void converted(Page page);
   void log(LogLevel, const QString&);
 
 public slots:

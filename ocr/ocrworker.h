@@ -7,6 +7,7 @@
 #include <QThread>
 
 #include "logger.h"
+#include "scanpage.h"
 
 class TessTools;
 
@@ -18,18 +19,17 @@ public:
                      const QString& lang,
                      QObject* parent = nullptr);
 
-  void convertToString(int page, const QImage& image);
+  void convertToString(const Page& page);
   void process();
 
 signals:
-  void converted(int page, const QString&);
+  void converted(Page page);
   void log(LogLevel, const QString&);
 
 protected:
   TessTools* m_tesstools;
   bool m_available;
-  QList<int> m_pages;
-  QList<QImage> m_images;
+  QList<Page> m_images;
 };
 
 #endif // OCRWORKER_H

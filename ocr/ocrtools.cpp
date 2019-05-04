@@ -2,8 +2,9 @@
 
 #include <utility>
 
-#include "ocrtools.h"
+#include <utility>
 
+#include "ocrtools.h"
 #include "ocrworker.h"
 
 OcrTools::OcrTools(const QString& datapath,
@@ -25,6 +26,8 @@ OcrTools::OcrTools(const QString& datapath,
     this, &OcrTools::startConverting, ocr_worker, &OcrWorker::convertToString);
   connect(ocr_worker, &OcrWorker::converted, this, &OcrTools::converted);
   connect(ocr_worker, &OcrWorker::log, this, &OcrTools::log);
+
+  thread->start();
 }
 
 OcrTools::~OcrTools()
@@ -32,8 +35,7 @@ OcrTools::~OcrTools()
   emit finished();
 }
 
-void
-OcrTools::convertImage(int page, const QImage& image)
+void OcrTools::convertImage(Page page)
 {
-  emit startConverting(page, image);
+  emit startConverting(std::move(page));
 }

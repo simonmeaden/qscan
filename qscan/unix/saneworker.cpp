@@ -24,17 +24,13 @@
 
 SaneWorker::SaneWorker(QObject* parent)
   : QObject(parent)
-  , m_handle(0)
-{
-  //  m_logger = Log4Qt::Logger::logger(tr("SaneWorker"));
-}
+{}
 
 void SaneWorker::scan(ScanDevice* device)
 {
-  SANE_Handle sane_handle;
   SANE_Status status;
   SANE_Parameters parameters;
-  status = sane_open(device->name.toStdString().c_str(), &sane_handle);
+  status = sane_open(device->name.toStdString().c_str(), &m_sane_handle);
   QImage image;
 
   if (status != SANE_STATUS_GOOD) {
@@ -42,14 +38,14 @@ void SaneWorker::scan(ScanDevice* device)
     return;
   }
 
-  status = sane_start(sane_handle);
+  status = sane_start(m_sane_handle);
 
   if (status != SANE_STATUS_GOOD) {
     emit scanFailed();
     return;
   }
 
-  status = sane_get_parameters(sane_handle, &parameters);
+  status = sane_get_parameters(m_sane_handle, &parameters);
 
   if (status != SANE_STATUS_GOOD) {
     emit scanFailed();
@@ -160,7 +156,7 @@ void SaneWorker::scan(ScanDevice* device)
   quint32 value;
 
   while (true) {
-    status = sane_read(sane_handle, buffer.get(), buffer_size, &len);
+    status = sane_read(m_sane_handle, buffer.get(), buffer_size, &len);
 
     if (status == SANE_STATUS_GOOD) {
       if (len > 0) {
@@ -205,7 +201,8 @@ void SaneWorker::scan(ScanDevice* device)
 
   emit log(LogLevel::INFO, tr("Scan has completed"));
 
-  sane_close(sane_handle);
+  sane_close(m_sane_handle);
+  m_sane_handle = nullptr;
 
   emit scanCompleted(image);
   //  emit finished();
@@ -332,7 +329,6 @@ void SaneWorker::loadAvailableScannerOptions(ScanDevice* device)
         }
 
         emit log(LogLevel::INFO, tr("Name : %1, Title : %2").arg(name, title));
-        QStringList list;
 
         if (name == SANE_NAME_SCAN_TL_X || name == SANE_NAME_SCAN_TL_Y ||
             name == SANE_NAME_SCAN_BR_X || name == SANE_NAME_SCAN_BR_Y ||
@@ -437,6 +433,7 @@ void SaneWorker::loadAvailableScannerOptions(ScanDevice* device)
 
 void SaneWorker::setBoolValue(ScanDevice* device, int option_id, const QString& /*name*/, bool value)
 {
+  QMutexLocker locker(&m_mutex);
   SANE_Handle sane_handle;
   SANE_Status status;
   SANE_Int info;
@@ -462,6 +459,7 @@ void SaneWorker::setBoolValue(ScanDevice* device, int option_id, const QString& 
 
 void SaneWorker::setIntValue(ScanDevice* device, int option_id, const QString& name, int value)
 {
+  QMutexLocker locker(&m_mutex);
   SANE_Handle sane_handle;
   SANE_Status status;
   SANE_Int info;
@@ -472,32 +470,41 @@ void SaneWorker::setIntValue(ScanDevice* device, int option_id, const QString& n
       status = sane_control_option(sane_handle, option_id, SANE_ACTION_SET_VALUE, &value, &info);
 
       if (status == SANE_STATUS_GOOD) {
-        if (name == SANE_NAME_SCAN_TL_X) {
-          device->options->setTopLeftX(value);
+        // check that the value has actually been set.
+        int recovered_val = -1;
+        status =
+          sane_control_option(sane_handle, option_id, SANE_ACTION_GET_VALUE, &recovered_val, &info);
 
-        } else if (name == SANE_NAME_SCAN_TL_Y) {
-          device->options->setTopLeftY(value);
+        if (status == SANE_STATUS_GOOD) {
+          if (recovered_val == value) {
+            if (name == SANE_NAME_SCAN_TL_X) {
+              device->options->setTopLeftX(value);
 
-        } else if (name == SANE_NAME_SCAN_BR_X) {
-          device->options->setBottomRightX(value);
+            } else if (name == SANE_NAME_SCAN_TL_Y) {
+              device->options->setTopLeftY(value);
 
-        } else if (name == SANE_NAME_SCAN_BR_Y) {
-          device->options->setBottomRightY(value);
+            } else if (name == SANE_NAME_SCAN_BR_X) {
+              device->options->setBottomRightX(value);
 
-        } else if (name == SANE_NAME_SCAN_RESOLUTION) {
-          device->options->setResolution(value);
+            } else if (name == SANE_NAME_SCAN_BR_Y) {
+              device->options->setBottomRightY(value);
 
-        } else if (name == SANE_NAME_SCAN_X_RESOLUTION) {
-          device->options->setResolutionX(value);
+            } else if (name == SANE_NAME_SCAN_RESOLUTION) {
+              device->options->setResolution(value);
 
-        } else if (name == SANE_NAME_SCAN_Y_RESOLUTION) {
-          device->options->setResolutionY(value);
+            } else if (name == SANE_NAME_SCAN_X_RESOLUTION) {
+              device->options->setResolutionX(value);
 
-        } else if (name == SANE_NAME_CONTRAST) {
-          device->options->setContrast(value);
+            } else if (name == SANE_NAME_SCAN_Y_RESOLUTION) {
+              device->options->setResolutionY(value);
 
-        } else if (name == SANE_NAME_BRIGHTNESS) {
-          device->options->setBrightness(value);
+            } else if (name == SANE_NAME_CONTRAST) {
+              device->options->setContrast(value);
+
+            } else if (name == SANE_NAME_BRIGHTNESS) {
+              device->options->setBrightness(value);
+            }
+          }
         }
 
         if ((info & ~(SANE_INFO_RELOAD_OPTIONS | SANE_INFO_RELOAD_PARAMS)) == 0) {
@@ -654,7 +661,9 @@ void SaneWorker::getListValue(ScanDevice* device,
 
 void SaneWorker::cancelScan()
 {
-  sane_cancel(m_handle);
+  if (m_sane_handle) {
+    sane_cancel(m_sane_handle);
+  }
 }
 
 /* Allocate the requested memory plus enough room to store some guard bytes. */

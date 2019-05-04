@@ -33,27 +33,10 @@ const QString MainWindow::LANGUAGE = "language";
 MainWindow::MainWindow(QWidget* parent)
   : QMainWindow(parent)
   , m_selected(false)
-    //  , m_scan_act(nullptr)
-  , m_rot_left_act(nullptr)
-  , m_rot_right_act(nullptr)
-  , m_rot_angle_act(nullptr)
-  , m_rot_edge_act(nullptr)
-  , m_copy_act(nullptr)
-  , m_crop_act(nullptr)
-  , m_scale_act(nullptr)
-  , m_save_act(nullptr)
-  , m_save_as_act(nullptr)
-  , m_zoom_in_act(nullptr)
-  , m_zoom_out_act(nullptr)
-  , m_fit_best_act(nullptr)
-  , m_fit_width_act(nullptr)
-  , m_fit_height_act(nullptr)
-  , m_close_act(nullptr)
-  , m_set_docname_act(nullptr)
-  , m_doc_completed_act(nullptr)
 {
   m_logger = Log4Qt::Logger::logger(tr("Scanner"));
   m_scan_lib = new QScan(this);
+
   scan_key = QPixmapCache::insert(QPixmap(":/icons/scan"));
   rot_left_key = QPixmapCache::insert(QPixmap(":/icons/rotate-left"));
   rot_right_key = QPixmapCache::insert(QPixmap(":/icons/rotate-right"));
@@ -70,6 +53,7 @@ MainWindow::MainWindow(QWidget* parent)
   fit_best_key = QPixmapCache::insert(QPixmap(":/icons/fit-best"));
   fit_width_key = QPixmapCache::insert(QPixmap(":/icons/fit-width"));
   fit_height_key = QPixmapCache::insert(QPixmap(":/icons/fit-height"));
+
   m_config_dir = "/home/simonmeaden/.config/Biblos";
   m_data_dir = "/home/simonmeaden/.local/share/Biblos/library";
   m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
@@ -85,6 +69,7 @@ MainWindow::MainWindow(QWidget* parent)
   loadExistingFiles();
 
   m_image_editor->setDocumentName(m_current_doc_name);
+
   connect(m_scan_lib, &QScan::scanCompleted, m_image_editor, &ScanEditor::setImage);
   connect(m_scan_lib, &QScan::scanProgress, m_image_editor, &ScanEditor::setScanProgress);
   connect(m_scan_lib, &QScan::scanFailed, this, &MainWindow::scanHasFailed);
@@ -95,6 +80,7 @@ MainWindow::MainWindow(QWidget* parent)
   connect(m_image_editor, &ScanEditor::selected, this, &MainWindow::editorHasSelection);
   connect(m_image_editor, &ScanEditor::imageIsLoaded, this, &MainWindow::imageLoaded);
   connect(m_image_editor, &ScanEditor::unselected, this, &MainWindow::editorHasNoSelection);
+
   m_scan_lib->init();
   QStringList scanners = m_scan_lib->devices();
 
@@ -254,29 +240,7 @@ void MainWindow::initGui()
   installEventFilter(m_image_editor);
   connect(m_image_editor, &ScanEditor::scanCancelled, this, &MainWindow::cancelScanning);
   int row = 0;
-  // Source Scanner list.
-  //  QStringList labels;
-  //  labels << "Name"
-  //         << "Vendor"
-  //         << "Model"
-  //         << "Type";
-  //  m_scanners = new QTableWidget(this);
-  //  m_scanners->setHorizontalHeaderLabels(labels);
-  //  m_scanners->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-  //  m_scanners->horizontalHeader()->setStretchLastSection(true);
-  //  m_scanners->setColumnCount(4);
-  //  m_scanners->setSelectionMode(QAbstractItemView::NoSelection);
-  //  m_scanners->setSelectionBehavior(QAbstractItemView::SelectRows);
-  //  m_scanners->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  //  connect(m_scanners, &QTableWidget::clicked, this, &MainWindow::scannerSelectionChanged);
-  //  connect(m_scanners, &QTableWidget::doubleClicked, this, &MainWindow::doubleClicked);
-  //  m_main_layout->addWidget(m_scanners, row++, 1, 1, 4);
-  //  // Scanner source info
-  //  m_main_layout->addWidget(initSourceFrame(), row++, 1);
-  // Scanner mode info
-  //  m_main_layout->addWidget(initModeFrame(), row++, 1);
-  // scanner resolution info
-  //  m_main_layout->addWidget(initResolutionFrame(), row++, 1);
+
   // logger editor
   m_empty_edit = new QPlainTextEdit(this);
   m_empty_edit->setReadOnly(true);
@@ -287,7 +251,7 @@ void MainWindow::initGui()
   m_main_layout->setColumnStretch(1, 10);
   initToolbar();
 }
-void MainWindow::initActionToolbar()
+QToolBar* MainWindow::initActionToolbar()
 {
   QToolBar* toolbar = addToolBar("action");
   addToolBar(Qt::TopToolBarArea, toolbar);
@@ -317,9 +281,10 @@ void MainWindow::initActionToolbar()
 
   toolbar->addSeparator();
   toolbar->addAction(m_close_act);
+  return toolbar;
 }
 
-void MainWindow::initSourceToolbar()
+QToolBar* MainWindow::initSourceToolbar()
 {
   QToolBar* toolbar = addToolBar("source");
   addToolBar(Qt::TopToolBarArea, toolbar);
@@ -328,17 +293,20 @@ void MainWindow::initSourceToolbar()
   toolbar->addWidget(lbl);
   m_source_box = new QComboBox(this);
   m_source_box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  m_source_box->setSizeAdjustPolicy(QComboBox::AdjustToContents);
   toolbar->addWidget(m_source_box);
   lbl = new QLabel(tr("Current Source :"), this);
   lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  lbl->setContentsMargins(30, 0, 0, 0);
   toolbar->addWidget(lbl);
   m_curr_src = new QLabel(tr("No Source"), this);
   m_curr_src->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   toolbar->addWidget(m_curr_src);
   toolbar->setMovable(true);
+  return toolbar;
 }
 
-void MainWindow::initRightToolbar()
+QToolBar* MainWindow::initRightToolbar()
 {
   QToolBar* toolbar = addToolBar("Right");
   addToolBar(Qt::RightToolBarArea, toolbar);
@@ -361,14 +329,16 @@ void MainWindow::initRightToolbar()
   //  QSizePolicy::Preferred); spacer_widget->setVisible(true);
   //  toolbar3->addWidget(spacer_widget);
   toolbar->setMovable(false);
+  return toolbar;
 }
 
-void MainWindow::initModeToolbar()
+QToolBar* MainWindow::initModeToolbar()
 {
   QToolBar* toolbar = addToolBar("mode bar");
   QLabel* lbl = new QLabel(tr("Mode :"), this);
   lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   m_mode_box = new QComboBox(this);
+  m_mode_box->setSizeAdjustPolicy(QComboBox::AdjustToContents);
   toolbar->addWidget(lbl);
   m_mode_box = new QComboBox(this);
   m_mode_box->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
@@ -379,9 +349,10 @@ void MainWindow::initModeToolbar()
   m_curr_mode = new QLabel(tr("No Mode"), this);
   m_curr_mode->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   toolbar->addWidget(m_curr_mode);
+  return toolbar;
 }
 
-void MainWindow::initResToolbar()
+QToolBar* MainWindow::initResourceToolbar()
 {
   auto* toolbar = addToolBar("mode bar");
 
@@ -393,7 +364,7 @@ void MainWindow::initResToolbar()
     m_res_range = new QFrame(this);
     auto* range_layout = new QGridLayout;
     m_res_range->setLayout(range_layout);
-
+    /*===*/
     auto* lbl = new QLabel(tr("Min Resolution :"), this);
     lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     range_layout->addWidget(lbl, 0, 0);
@@ -402,33 +373,33 @@ void MainWindow::initResToolbar()
     m_min_res = new QLabel(s.arg(1).arg("dpi"), this);
     m_min_res->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     range_layout->addWidget(m_min_res, 0, 1);
-
-    auto* f = new QFrame(this);
-    f->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    f->setContentsMargins(20, 0, 20, 0);
-    auto* l = new QGridLayout;
-    l->setContentsMargins(0, 0, 0, 0);
-    f->setLayout(l);
-
+    /*===*/
     lbl = new QLabel(tr("Resolution :"), this);
+    lbl->setContentsMargins(30, 0, 0, 0);
     lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    l->addWidget(lbl, 0, 0);
+    range_layout->addWidget(lbl, 0, 2);
 
-    m_res_spin = new QSpinBox(this);
-    m_res_spin->setMinimum(1);
-    m_res_spin->setMaximum(1);
-    m_res_spin->setValue(1);
-    l->addWidget(m_res_spin, 0, 1);
+    // the edit lineedit will only accept integers between 100 and 999
+    m_res_edit = new QLineEdit(this);
+    m_res_edit->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    m_res_validator = new QIntValidator(1, 1, this);
+    m_res_edit->setValidator(m_res_validator);
+    m_res_edit->setText("1");
+    range_layout->addWidget(m_res_edit, 0, 3);
 
     lbl = new QLabel("dpi", this);
     lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    l->addWidget(lbl, 0, 2);
-    range_layout->addWidget(f, 0, 2);
-
+    range_layout->addWidget(lbl, 0, 4);
+    /*===*/
     lbl = new QLabel("Max Resolution :", this);
-    range_layout->addWidget(lbl);
+    m_min_res->setContentsMargins(60, 0, 0, 0);
+    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    range_layout->addWidget(lbl, 0, 5);
+
     m_max_res = new QLabel(s.arg(1).arg("dpi"), this);
-    range_layout->addWidget(m_max_res, 0, 3);
+    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    range_layout->addWidget(m_max_res, 0, 6);
+
     m_stack_range = m_res_layout->addWidget(m_res_range);
   }
   {
@@ -442,20 +413,28 @@ void MainWindow::initResToolbar()
 
     m_res_combo = new QComboBox(this);
     list_layout->addWidget(m_res_combo, 0, 1);
+
+    auto* spacer_widget = new QWidget(this);
+    spacer_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    list_layout->addWidget(spacer_widget, 0, 2);
+
     m_stack_list = m_res_layout->addWidget(m_res_list);
   }
   toolbar->addWidget(stack_frame);
+  return toolbar;
 }
 
 void MainWindow::initToolbar()
 {
-  initActionToolbar();
-  addToolBarBreak();
-  initSourceToolbar();
-  addToolBarBreak();
-  initModeToolbar();
-  addToolBarBreak();
-  initResToolbar();
+  /*auto* action_bar =*/initActionToolbar();
+
+  auto* source_bar = initSourceToolbar();
+  auto* mode_bar = initModeToolbar();
+  /*auto* res_bar =*/initResourceToolbar();
+
+  insertToolBarBreak(source_bar);
+  insertToolBarBreak(mode_bar);
+  //  insertToolBarBreak(res_bar);
 
   initRightToolbar();
 }
@@ -465,82 +444,6 @@ void MainWindow::initMenu()
   QMenu* file_menu = menuBar()->addMenu(tr("File"));
   file_menu->addAction(m_set_docname_act);
 }
-
-// QFrame* MainWindow::initModeFrame()
-//{
-//  int col = 0;
-//  QFrame* mode_frame = new QFrame(this);
-//  auto* mode_layout = new QGridLayout;
-//  mode_frame->setLayout(mode_layout);
-//  QLabel* lbl = new QLabel(tr("Mode :"), this);
-//  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//  m_main_layout->addWidget(lbl, 1, 3);
-//  mode_layout->addWidget(lbl, 0, col++);
-//  m_mode_box = new QComboBox(this);
-//  m_mode_box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-//  mode_layout->addWidget(m_mode_box, 0, col++);
-//  lbl = new QLabel(tr("Current Mode :"), this);
-//  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//  mode_layout->addWidget(lbl, 0, col++);
-//  m_curr_mode = new QLabel(tr("No Mode"), this);
-//  m_curr_mode->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//  mode_layout->addWidget(m_curr_mode, 0, col);
-//  return mode_frame;
-//}
-
-// QFrame*
-// MainWindow::initSourceFrame()
-//{
-//  int col = 0;
-//  QFrame* source_frame = new QFrame(this);
-//  auto* source_layout = new QGridLayout;
-//  source_frame->setLayout(source_layout);
-
-//  QLabel* lbl = new QLabel(tr("Source :"), this);
-//  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//  source_layout->addWidget(lbl, 0, col++);
-
-//  m_source_box = new QComboBox(this);
-//  m_source_box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-//  source_layout->addWidget(m_source_box, 0, col++);
-
-//  lbl = new QLabel(tr("Current Source :"), this);
-//  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//  source_layout->addWidget(lbl, 0, col++);
-
-//  m_curr_src = new QLabel(tr("No Source"), this);
-//  m_curr_src->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//  source_layout->addWidget(m_curr_src, 0, col++);
-
-//  return source_frame;
-//}
-
-// QFrame* MainWindow::initResolutionFrame()
-//{
-//  int col = 0;
-//  QFrame* res_frame = new QFrame(this);
-//  auto* res_layout = new QGridLayout;
-//  res_frame->setLayout(res_layout);
-//  QLabel* lbl = new QLabel("Min Resolution :", this);
-//  res_layout->addWidget(lbl, 0, col++);
-//  m_min_res = new QLabel(this);
-//  m_min_res->setNum(1);
-//  res_layout->addWidget(m_min_res, 0, col++);
-//  lbl = new QLabel("Resolution :", this);
-//  res_layout->addWidget(lbl, 0, col++);
-//  m_res_box = new QSpinBox(this);
-//  m_res_box->setMinimum(1);
-//  m_res_box->setMaximum(1);
-//  res_layout->addWidget(m_res_box, 0, col++);
-//  lbl = new QLabel("dpi", this);
-//  res_layout->addWidget(lbl, 0, col++, Qt::AlignLeft);
-//  lbl = new QLabel("Max Resolution :", this);
-//  res_layout->addWidget(lbl, 0, col++);
-//  m_max_res = new QLabel(this);
-//  m_max_res->setNum(1);
-//  res_layout->addWidget(m_max_res, 0, col);
-//  return res_frame;
-//}
 
 void MainWindow::initActions()
 {
@@ -563,6 +466,7 @@ void MainWindow::initActions()
   QPixmapCache::find(fit_width_key, &fit_width_icon);
   QPixmapCache::find(fit_height_key, &fit_height_icon);
   QPixmapCache::find(close_key, &close_icon);
+
   m_close_act = new QAction(QIcon(close_icon), tr("Close Application"), this);
   m_scan_act = new QAction(QIcon(scan_icon), tr("Scan"), this);
   m_scan_act->setEnabled(false);
@@ -583,9 +487,10 @@ void MainWindow::initActions()
   m_set_docname_act = new QAction(tr("Set document name."), this);
   m_doc_completed_act = new QAction(tr("Document completed."), this);
   m_doc_completed_act->setToolTip(tr("This completes the document and prepares to start another."));
-  disableImageLoadedBtns();
-  disableSelectionBtns();
-  disableNoSelectionBtns();
+
+  disableImageLoadedActions();
+  disableSelectionActions();
+  disableNoSelectionActions();
 }
 
 void MainWindow::connectActions()
@@ -647,24 +552,14 @@ void MainWindow::scanProgressed(const int&)
 void MainWindow::geometry()
 {}
 
-// void
-// MainWindow::doubleClicked(const QModelIndex& index)
-//{
-//  int row = index.row();
-//  QString name = m_scanners->item(row, 0)->text();
-//  m_scan_act->setEnabled(false);
-
-//  if (m_scan_lib->openDevice(name)) {
-//    m_selected_name = name;
-//    m_scan_act->setEnabled(true);
-
-//  } else {
-//    m_logger->debug(tr("Unable to open %1").arg(m_selected_name));
-//  }
-//}
 void MainWindow::receiveOptionsSet(ScanDevice* device)
 {
-  //  ScanDevice* device = m_scan_lib->device(m_selected_name);
+  // These objects are having their values set so we don't want to trigger a changed signal.
+  disconnect(m_mode_box, &QComboBox::currentTextChanged, this, &MainWindow::modeChangeSelected);
+  disconnect(m_source_box, &QComboBox::currentTextChanged, this, &MainWindow::sourceChangeSelected);
+  disconnect(m_res_edit, &QLineEdit::textChanged, this, &MainWindow::resolutionEdited);
+  disconnect(m_res_combo, &QComboBox::currentTextChanged, this, &MainWindow::resolutionEdited);
+
   ScanOptions* options = device->options;
   m_mode_box->clear();
   QStringList list = options->modes();
@@ -674,7 +569,7 @@ void MainWindow::receiveOptionsSet(ScanDevice* device)
   m_source_box->addItems(list);
   QVariant v = options->resolutionRange();
 
-  if (v.type() == QMetaType::QVariantList) {
+  if (v.canConvert<ScanRange>()) {
     ScanRange range = v.value<ScanRange>();
     ScanUnits units = options->units();
     QString u = (units == ScanUnits::DPI ? "dpi" : "mm");
@@ -682,12 +577,12 @@ void MainWindow::receiveOptionsSet(ScanDevice* device)
     QString s = QString("%1 %2");
     m_min_res->setText(s.arg(range.min).arg(u));
     m_max_res->setText(s.arg(range.max).arg(u));
-    m_res_spin->setMinimum(range.min);
-    m_res_spin->setMaximum(range.max);
-    m_res_spin->setValue(res);
+    m_res_validator->setBottom(range.min);
+    m_res_validator->setTop(range.max);
+    m_res_edit->setText(QString::number(res));
     m_res_layout->setCurrentIndex(m_stack_range);
 
-  } else {
+  } else if (v.canConvert<QList<int>>()) {
     m_res_combo->clear();
 
     for (int value : v.value<QList<int>>()) {
@@ -701,8 +596,12 @@ void MainWindow::receiveOptionsSet(ScanDevice* device)
   m_source_box->setCurrentText(options->source());
   m_curr_mode->setText(options->mode());
   m_mode_box->setCurrentText(options->mode());
+
+  // reconnect the changed signals
   connect(m_mode_box, &QComboBox::currentTextChanged, this, &MainWindow::modeChangeSelected);
   connect(m_source_box, &QComboBox::currentTextChanged, this, &MainWindow::sourceChangeSelected);
+  connect(m_res_edit, &QLineEdit::textChanged, this, &MainWindow::resolutionEdited);
+  connect(m_res_combo, &QComboBox::currentTextChanged, this, &MainWindow::resolutionEdited);
 }
 
 void MainWindow::receiveModeChange(ScanDevice* device)
@@ -713,6 +612,12 @@ void MainWindow::receiveModeChange(ScanDevice* device)
 void MainWindow::receiveSourceChange(ScanDevice* device)
 {
   m_curr_src->setText(device->options->source());
+}
+
+void MainWindow::resolutionEdited(const QString& value)
+{
+  ScanDevice* device = m_scan_lib->device(m_selected_name);
+  m_scan_lib->setResolution(device, value.toInt());
 }
 
 void MainWindow::modeChangeSelected(const QString& mode)
@@ -729,29 +634,29 @@ void MainWindow::sourceChangeSelected(const QString& source)
 
 void MainWindow::modifyingSelection()
 {
-  disableSelectionBtns();
+  disableSelectionActions();
 }
 
 void MainWindow::editorHasSelection()
 {
-  enableSelectionBtns();
-  disableNoSelectionBtns();
+  enableSelectionActions();
+  disableNoSelectionActions();
 }
 
 void MainWindow::editorHasNoSelection()
 {
-  disableSelectionBtns();
-  enableNoSelectionBtns();
+  disableSelectionActions();
+  enableNoSelectionActions();
 }
 
 void MainWindow::imageLoaded()
 {
-  enableImageLoadedBtns();
-  enableNoSelectionBtns();
-  disableSelectionBtns();
+  enableImageLoadedActions();
+  enableNoSelectionActions();
+  disableSelectionActions();
 }
 
-void MainWindow::disableNoSelectionBtns()
+void MainWindow::disableNoSelectionActions()
 {
   m_rot_left_act->setEnabled(false);
   m_rot_right_act->setEnabled(false);
@@ -760,7 +665,7 @@ void MainWindow::disableNoSelectionBtns()
   m_scale_act->setEnabled(false);
 }
 
-void MainWindow::enableNoSelectionBtns()
+void MainWindow::enableNoSelectionActions()
 {
   m_rot_left_act->setEnabled(true);
   m_rot_right_act->setEnabled(true);
@@ -769,19 +674,19 @@ void MainWindow::enableNoSelectionBtns()
   m_scale_act->setEnabled(true);
 }
 
-void MainWindow::enableSelectionBtns()
+void MainWindow::enableSelectionActions()
 {
   m_crop_act->setEnabled(true);
   m_copy_act->setEnabled(true);
 }
 
-void MainWindow::disableSelectionBtns()
+void MainWindow::disableSelectionActions()
 {
   m_crop_act->setEnabled(false);
   m_copy_act->setEnabled(false);
 }
 
-void MainWindow::enableImageLoadedBtns()
+void MainWindow::enableImageLoadedActions()
 {
   m_save_act->setEnabled(true);
   m_save_as_act->setEnabled(true);
@@ -792,7 +697,7 @@ void MainWindow::enableImageLoadedBtns()
   m_fit_height_act->setEnabled(true);
 }
 
-void MainWindow::disableImageLoadedBtns()
+void MainWindow::disableImageLoadedActions()
 {
   m_save_act->setEnabled(false);
   m_save_as_act->setEnabled(false);

@@ -12,26 +12,25 @@ OcrWorker::OcrWorker(const QString& datapath,
   connect(m_tesstools, &TessTools::log, this, &OcrWorker::log);
 }
 
-void
-OcrWorker::convertToString(int page, const QImage& image)
+void OcrWorker::convertToString(const Page& page)
 {
-  m_pages.append(page);
-  m_images.append(image);
+  m_images.append(page);
 }
 
-void
-OcrWorker::process()
+void OcrWorker::process()
 {
   while (true) {
     if (!m_available) {
       if (!m_images.isEmpty()) {
-        int page = m_pages.takeFirst();
-        QImage image = m_images.takeFirst();
-        QString str = m_tesstools->makeBoxes(image, page);
-        emit converted(page, str);
+        Page  page = m_images.takeFirst();
+        QImage image = page->image();
+        QString str = m_tesstools->makeBoxes(image, 0);
+        page->setText(str);
+        emit converted(page);
         m_available = false;
       }
     }
-    thread()->msleep(200);
+
+    QThread::msleep(1000);
   }
 }
