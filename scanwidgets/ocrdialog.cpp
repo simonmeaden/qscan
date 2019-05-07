@@ -6,50 +6,67 @@ OCRDialog::OCRDialog(QWidget* parent)
   , m_image_display(nullptr)
   , m_image_changed(false)
 {
+  //  QScreen* screen = QGuiApplication::primaryScreen();
+  //  QSize size = screen->availableSize();
+  //  int w = size.width() - 1000;
+  //  int h = size.height() - 600;
+  //  int x = int(w / 2.0);
+  //  int y = int(h / 2.0);
   initGui();
+  //  int w = 600;
+  //  int h = 300;
+
+  //  if (parent)
+  //    setGeometry(parent->x() + int(parent->width() / 2.0) - int(w / 2.0),
+  //                parent->y() + int(parent->height() / 2.0) - int(h / 2.0),
+  //                w, h);
+
+  //  else {
+  //    resize(w, h);
+  //  }
 }
 
-QImage
-OCRDialog::image()
+QImage OCRDialog::image()
 {
   return m_image;
 }
 
-void
-OCRDialog::setImage(const QImage& image)
+void OCRDialog::setImage(const QImage& image)
 {
   m_image = image;
-  m_image_display->setPixmap(QPixmap::fromImage(m_image));
+  QImage scaled_image = m_image.scaled(600, 600, Qt::KeepAspectRatio);
+  m_image_display->setPixmap(QPixmap::fromImage(scaled_image));
   QSize size = m_image_display->frameSize();
-  qreal scale_w = qreal(size.width()) / qreal(m_image.width());
-  qreal scale_h = qreal(size.height()) / qreal(m_image.height());
+  qreal scale_w = qreal(size.width()) / qreal(scaled_image.width());
+  qreal scale_h = qreal(size.height()) / qreal(scaled_image.height());
   qreal factor = (scale_w < scale_h ? scale_w : scale_h);
 
-  size = m_image.size();
+  size = scaled_image.size();
   size *= factor;
   m_image_display->resize(size);
 }
 
-void
-OCRDialog::receiveOcrText(const QString& text)
+void OCRDialog::setOcrText(const QString& text)
 {
   m_text_edit->setPlainText(text);
 }
 
-QString
-OCRDialog::text()
+QString OCRDialog::text()
 {
   return m_text_edit->toPlainText();
 }
 
-bool
-OCRDialog::imageChanged() const
+bool OCRDialog::imageChanged() const
 {
   return m_image_changed;
 }
 
-void
-OCRDialog::initGui()
+QSize OCRDialog::sizeHint() const
+{
+  return {1000, 600};
+}
+
+void OCRDialog::initGui()
 {
   auto* layout = new QGridLayout;
   setLayout(layout);
@@ -66,10 +83,10 @@ OCRDialog::initGui()
   auto* btn_box = new QDialogButtonBox(this);
   layout->addWidget(btn_box, 1, 0);
 
-  auto* ocr_btn = new QPushButton("Do OCR", this);
+  auto* ocr_btn = new QPushButton(tr("Save Text"), this);
   btn_box->addButton(ocr_btn, QDialogButtonBox::ActionRole);
 
-  auto* tweaks_btn = new QPushButton("Apply Tweaks", this);
+  auto* tweaks_btn = new QPushButton(tr("Apply Tweaks"), this);
   btn_box->addButton(tweaks_btn, QDialogButtonBox::ActionRole);
 
   btn_box->addButton(QDialogButtonBox::Close);
@@ -83,22 +100,19 @@ OCRDialog::initGui()
   connect(btn_box, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
 
-void
-OCRDialog::applyOcr()
+void OCRDialog::applyOcr()
 {
-  emit sendOcrImage(m_image);
+  //  emit sendOcrImage(m_image);
 }
 
-void
-OCRDialog::applyTweaks()
+void OCRDialog::applyTweaks()
 {
   // TODO tweaks.
   // make some tweaks to the image then set the changed flag.
   // m_image_changed = true;
 }
 
-void
-OCRDialog::help()
+void OCRDialog::help()
 {
   // TODO help
 }

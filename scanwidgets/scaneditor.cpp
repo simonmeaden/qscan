@@ -2,6 +2,8 @@
 
 #include <utility>
 
+#include <utility>
+
 /*
     Copyright © Simon Meaden 2019.
     This file was developed as part of the QScan cpp library but could
@@ -31,25 +33,24 @@
  *****************************************************************************/
 
 ScanEditor::ScanEditor(QScan* scan,
-                       const QString& configdir,
-                       const QString& datadir,
-                       const QString& lang,
+                       QString& configdir,
+                       QString datadir,
+                       QString lang,
                        QWidget* parent)
   : QFrame(parent)
   , m_scan_lib(scan)
-  , m_ocr_tools(new OcrTools(configdir, lang, this))
-  , m_configdir(configdir)
-  , m_datadir(datadir)
+  , m_ocr_tools(new OcrTools(configdir, lang))
+  , m_configdir(std::move(configdir))
+  , m_datadir(std::move(datadir))
+  , m_lang(std::move(lang))
   , m_cover(Page(new ScanPage()))
 {
   m_logger = Log4Qt::Logger::logger(tr("ScanEditor"));
+
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   initGui();
-  connectActions();
+  makeConnections();
 }
-
-// ScanEditor::~ScanEditor(){
-//}
 
 void ScanEditor::initGui()
 {
@@ -71,10 +72,9 @@ void ScanEditor::initGui()
   layout->addWidget(m_page_view, 0, 1);
   layout->setColumnStretch(0, 30);
   layout->setColumnStretch(1, 10);
-  connect(m_scan_display, &ScanImage::sendCover, this, &ScanEditor::saveAsCover);
 }
 
-void ScanEditor::connectActions()
+void ScanEditor::makeConnections()
 {
   connect(m_scan_display, &ScanImage::selectionUnderway, this, &ScanEditor::selectionUnderway);
   connect(m_scan_display, &ScanImage::selected, this, &ScanEditor::selected);
@@ -84,8 +84,10 @@ void ScanEditor::connectActions()
   connect(m_scan_display, &ScanImage::sendImage, this, &ScanEditor::receiveImage);
   connect(m_scan_display, &ScanImage::sendImages, this, &ScanEditor::receiveImages);
   connect(m_page_view, &PageView::sendOcrPage, this, &ScanEditor::receiveOcrRequest);
-  connect(this, &ScanEditor::ocrImage, m_ocr_tools, &OcrTools::convertImage);
+  connect(m_page_view, &PageView::clearSaveAllFlag, this, &ScanEditor::clearSaveAllTextsFlag);
+  //  connect(this, &ScanEditor::ocrImage, m_ocr_tools, &OcrTools::convertImageToText);
   connect(m_ocr_tools, &OcrTools::converted, this, &ScanEditor::receiveOcrResult);
+  connect(m_scan_display, &ScanImage::sendCover, this, &ScanEditor::saveAsCover);
 }
 
 /*
@@ -181,11 +183,32 @@ void ScanEditor::saveAsCover(const QImage& image)
 
 void ScanEditor::receiveOcrRequest(int index)
 {
-  // TODO
-  Page page = m_pages.value(index);
+  if (index > 0) { //
+    Page page = m_pages.value(index);
 
-  emit ocrImage(page);
+    if (page->text().isEmpty()) {
+      m_ocr_tools->convertImageToText(page);
+    }
 
+  } else {
+    // This will never be called normally as the cover page is filtered out
+    // in the PageView. However someone might use this somewhere else.
+    QMessageBox::warning(this, tr("Cover image."), tr("You cannot OCR the cover image."));
+  }
+}
+
+void ScanEditor::saveText(int index, const Page& page)
+{
+  QString filename = m_datadir + QDir::separator() + m_document_name + QDir::separator() +
+                     QString("text%1.txt").arg(index);
+  QFile file(filename);
+
+  if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+    QTextStream stream(&file);
+    stream << page->text();
+    file.close();
+    m_page_view->setHasText(index, true);
+  }
 }
 
 void ScanEditor::receiveOcrResult(const Page& page)
@@ -194,20 +217,38 @@ void ScanEditor::receiveOcrResult(const Page& page)
   dlg->setImage(page->image());
 
   if (!page->text().isEmpty()) {
-    dlg->receiveOcrText(page->text());
+    dlg->setOcrText(page->text());
   }
 
   if (dlg->exec() == QDialog::Accepted) {
     page->setText(dlg->text());
+    int index = m_pages.key(page);
+
+    if (m_save_all_texts) {
+      saveText(index, page);
+
+    } else {
+      int result = QMessageBox::question(this,
+                                         tr("Image text exists."),
+                                         tr("The image %1 already has text.\n"
+                                            "Do you want to overwrite this text?").arg(index),
+                                         QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll,
+                                         QMessageBox::No);
+
+      if (result == QMessageBox::Yes) {
+        saveText(index, page);
+
+      } else if (result == QMessageBox::YesToAll) {
+        m_save_all_texts = true;
+        saveText(index, page);
+      }
+    }
 
     if (dlg->imageChanged()) {
       // TODO maybe save tweaked image. maybe only supply list of tweaks?
     }
   }
-
 }
-
-
 
 /*!
    \brief Splits a single page image into two equal size page images.
@@ -328,8 +369,8 @@ bool ScanEditor::eventFilter(QObject* obj, QEvent* event)
     auto* key_event = dynamic_cast<QKeyEvent*>(event);
 
     if (key_event) {
-      bool is_keypad = ((key_event->modifiers()) & Qt::KeypadModifier);
-      int key = key_event->key();
+      //      bool is_keypad = ((key_event->modifiers()) & Qt::KeypadModifier);
+      //      int key = key_event->key();
 
       switch (key_event->key()) {
       case Qt::Key_Escape:
@@ -482,4 +523,9 @@ int ScanEditor::pageCount()
 Page ScanEditor::page(int index)
 {
   return m_pages.value(index);
+}
+
+void ScanEditor::clearSaveAllTextsFlag()
+{
+  m_save_all_texts = false;
 }

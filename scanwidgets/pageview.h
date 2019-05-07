@@ -20,7 +20,7 @@ class PageView : public QWidget
 public:
   explicit PageView(QWidget* parent = nullptr);
 
-  int append(const QImage& thumbnail);
+  void append(const QImage& thumbnail);
   void remove(int index);
   void insert(int index, const QImage& thumbnail, bool has_text = false);
   void setCover(const QImage& cover);
@@ -29,6 +29,7 @@ public:
 signals:
   void pageMoved(int from, int to);
   void sendOcrPage(int);
+  void clearSaveAllFlag();
 
 protected:
   QList<QImage> m_pages;
@@ -41,9 +42,10 @@ protected:
   QSize sizeHint() const override;
 
   QAction* m_remove_page_act;
-  QAction* m_move_page_up_act;
-  QAction* m_move_page_down_act;
-  QAction* m_do_ocr_act;
+  QAction* m_move_page_up_act{};
+  QAction* m_move_page_down_act{};
+  QAction* m_do_ocr_act{};
+  QAction* m_do_all_ocr_act{};
 
   void rowsMoved(const QModelIndex&,
                  int start,
@@ -53,6 +55,7 @@ protected:
   void moveUp();
   void moveDown();
   void doOcr();
+  void doAllOcr();
 
   static const QString HASTEXT;
   static const QString HASNOTEXT;

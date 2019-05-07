@@ -40,13 +40,6 @@ unix {
     INSTALLS += target
 }
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../../usr/local/lib/release/ -ltesseract
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../../usr/local/lib/debug/ -ltesseract
-else:unix: LIBS += -L$$PWD/../../../../../usr/local/lib/ -ltesseract
-
-INCLUDEPATH += $$PWD/../../../../../usr/local/include
-DEPENDPATH += $$PWD/../../../../../usr/local/include
-
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../logger/release/ -llogger
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../logger/debug/ -llogger
 else:unix: LIBS += -L$$OUT_PWD/../logger/ -llogger
@@ -60,3 +53,5 @@ else:unix: LIBS += -L$$OUT_PWD/../scanwidgets/ -lscanwidgets
 
 INCLUDEPATH += $$PWD/../scanwidgets
 DEPENDPATH += $$PWD/../scanwidgets
+
+unix|win32: LIBS += -ltesseract

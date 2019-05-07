@@ -31,6 +31,7 @@
 #include <QProgressDialog>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QMessageBox>
 
 #include "logger.h"
 
@@ -46,12 +47,11 @@ class SCANWIDGETSSHARED_EXPORT ScanEditor : public QFrame
 {
   Q_OBJECT
 public:
-  ScanEditor(QScan* scan,
-             const QString& configdir,
-             const QString& datadir,
-             const QString& lang,
-             QWidget* parent = nullptr);
-  //  ~ScanEditor() override;
+  explicit ScanEditor(QScan* scan,
+                      QString& configdir,
+                      QString  datadir,
+                      QString lang,
+                      QWidget* parent = nullptr);
 
   void setImage(const QImage& image);
   void setScanProgress(const int& progress);
@@ -94,13 +94,14 @@ public:
   int pageCount();
   Page page(int index);
 
+
 signals:
   void scanCancelled();
   void selected();
   void unselected();
   void selectionUnderway();
   void imageIsLoaded();
-  void ocrImage(Page page);
+  void ocrImage(const Page& page);
 
 protected:
   Log4Qt::Logger* m_logger;
@@ -114,15 +115,17 @@ protected:
   OcrTools* m_ocr_tools;
   QString m_configdir;
   QString m_datadir;
+  QString m_lang;
 
   QMap<int, Page> m_pages;
   Page m_cover;
+  bool m_save_all_texts;
 
   bool eventFilter(QObject* obj, QEvent* event) override;
 
   void adjustScrollbar(qreal factor);
   void initGui();
-  void connectActions();
+  void makeConnections();
   void receiveImage(const QImage& img);
   void receiveImages(const QImage& left, const QImage& right);
   void receiveString(int page, const QString& str);
@@ -130,6 +133,9 @@ protected:
   void saveAsCover(const QImage& image);
   void receiveOcrRequest(int page);
   void receiveOcrResult(const Page& page);
+  void saveText(int index, const Page& page);
+  void clearSaveAllTextsFlag();
+
 };
 
 #endif // SCANEDITOR_H

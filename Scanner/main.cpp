@@ -24,27 +24,30 @@
 #include <QTextStream>
 
 #if defined(LOGGER_ENABLE)
-#include "texteditiodevice.h"
-#include <log4qt/consoleappender.h>
-#include <log4qt/logger.h>
-#include <log4qt/logmanager.h>
-#include <log4qt/ttcclayout.h>
-#include <log4qt/writerappender.h>
+  #include "texteditiodevice.h"
+  #include <log4qt/consoleappender.h>
+  #include <log4qt/logger.h>
+  #include <log4qt/logmanager.h>
+  #include <log4qt/ttcclayout.h>
+  #include <log4qt/writerappender.h>
 #endif
 
 #include "scanoptions.h"
+#include "scanpage.h"
 
 using Image = QSharedPointer<QImage>;
 Q_DECLARE_METATYPE(Image)
+using Page = QSharedPointer<ScanPage>;
+Q_DECLARE_METATYPE(Page)
 
 using namespace Log4Qt;
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
   //
   QApplication a(argc, argv);
   qRegisterMetaType<Image>();
   qRegisterMetaType<ScanOptions>();
+  qRegisterMetaType<Page>();
 
 #if defined(LOGGER_ENABLE)
   LogManager::rootLogger();

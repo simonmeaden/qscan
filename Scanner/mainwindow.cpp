@@ -55,7 +55,7 @@ MainWindow::MainWindow(QWidget* parent)
   fit_height_key = QPixmapCache::insert(QPixmap(":/icons/fit-height"));
 
   m_config_dir = "/home/simonmeaden/.config/Biblos";
-  m_data_dir = "/home/simonmeaden/.local/share/Biblos/library";
+  m_data_dir = "/home/simonmeaden/.local/share/Biblos/ocr";
   m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
   m_lang = "eng";
 
@@ -251,6 +251,7 @@ void MainWindow::initGui()
   m_main_layout->setColumnStretch(1, 10);
   initToolbar();
 }
+
 QToolBar* MainWindow::initActionToolbar()
 {
   QToolBar* toolbar = addToolBar("action");

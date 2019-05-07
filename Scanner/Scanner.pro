@@ -50,13 +50,6 @@ else:unix: LIBS += -L$$OUT_PWD/../qscan -lqscan
 INCLUDEPATH += $$PWD/../qscan
 DEPENDPATH += $$PWD/../qscan
 
-#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../scaneditor/release/ -lscaneditor
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../scaneditor/debug/ -lscaneditor
-#else:unix: LIBS += -L$$OUT_PWD/../scaneditor/ -lscaneditor
-
-#INCLUDEPATH += $$PWD/../scaneditor
-#DEPENDPATH += $$PWD/../scaneditor
-
 RESOURCES += \
     icons.qrc
 
@@ -83,3 +76,4 @@ DEPENDPATH += $$PWD/../logger
 
 unix|win32: LIBS += -lyaml-cpp
 unix|win32: LIBS += -lqyaml-cpp
+unix|win32: LIBS += -ltesseract

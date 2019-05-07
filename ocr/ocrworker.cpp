@@ -1,30 +1,36 @@
+#include <utility>
+
+#include <utility>
+
 #include "ocrworker.h"
 
 #include "tesstools.h"
 
-OcrWorker::OcrWorker(const QString& datapath,
-                     const QString& lang,
-                     QObject* parent)
-  : QObject(parent)
-  , m_available(true)
+OcrWorker::OcrWorker(QString datapath, QString lang)
+  : m_available(true)
+  , m_running(true)
+  , m_datapath(std::move(datapath))
+  , m_lang(std::move(lang))
 {
-  m_tesstools = new TessTools(datapath, lang, this);
-  connect(m_tesstools, &TessTools::log, this, &OcrWorker::log);
 }
 
-void OcrWorker::convertToString(const Page& page)
+void OcrWorker::convertImage(const Page& page)
 {
+  emit log(LogLevel::INFO, (tr("Converting image in OcrWorker.")));
   m_images.append(page);
 }
 
 void OcrWorker::process()
 {
-  while (true) {
-    if (!m_available) {
+  auto* m_api = new TessTools(m_datapath, m_lang, this);
+  connect(m_api, &TessTools::log, this, &OcrWorker::log);
+
+  while (m_running) {
+    if (m_available) {
       if (!m_images.isEmpty()) {
-        Page  page = m_images.takeFirst();
+        Page page = m_images.takeFirst();
         QImage image = page->image();
-        QString str = m_tesstools->makeBoxes(image, 0);
+        QString str = m_api->makeBoxes(image, 0);
         page->setText(str);
         emit converted(page);
         m_available = false;
@@ -33,4 +39,12 @@ void OcrWorker::process()
 
     QThread::msleep(1000);
   }
+
+  disconnect(m_api, &TessTools::log, this, &OcrWorker::log);
+  delete m_api;
+}
+
+void OcrWorker::stopRunning()
+{
+  m_running = false;
 }

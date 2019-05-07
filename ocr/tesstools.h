@@ -1,10 +1,10 @@
 /**********************************************************************
- * File:        TessTools.cpp
- * Description: Tesseract tools
- * Author:      Zdenko Podobny
- * Created:     2012-03-27
- *
- * (C) Copyright 2012-2013, Zdenko Podobny
+   File:        TessTools.cpp
+   Description: Tesseract tools
+   Author:      Zdenko Podobny
+   Created:     2012-03-27
+
+   (C) Copyright 2012-2013, Zdenko Podobny
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
- *
+
  **********************************************************************/
 #ifndef TESSTOOLS_H
 #define TESSTOOLS_H
@@ -41,8 +41,8 @@ class OCRSHARED_EXPORT TessTools : public QObject
 {
   Q_OBJECT
 public:
-  explicit TessTools(const QString& datapath,
-                     const QString& lang,
+  explicit TessTools(QString  datapath,
+                     QString  lang,
                      QObject* parent = nullptr);
 
   QString makeBoxes(const QImage& qImage, int page);

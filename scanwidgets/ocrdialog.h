@@ -9,6 +9,8 @@
 #include <QObject>
 #include <QPlainTextEdit>
 #include <QPushButton>
+#include <QGuiApplication>
+#include <QScreen>
 
 class OCRDialog : public QDialog
 {
@@ -18,10 +20,11 @@ public:
 
   QImage image();
   void setImage(const QImage& image);
-  void receiveOcrText(const QString& text);
+  void setOcrText(const QString& text);
   QString text();
 
   bool imageChanged() const;
+  QSize sizeHint() const override;
 
 signals:
   void sendOcrImage(const QImage&);

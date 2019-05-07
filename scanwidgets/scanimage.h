@@ -22,7 +22,7 @@ class SCANWIDGETSSHARED_EXPORT ScanImage : public QLabel
 {
   Q_OBJECT
 public:
-  explicit ScanImage(const QString& datadir, QWidget* parent);
+  explicit ScanImage(QString  datadir, QWidget* parent);
 
   void setImage(const QImage& image);
   //  void rotateBy(int angle);
@@ -135,26 +135,26 @@ protected:
   void disableNoSelectionActions();
 
   //  QAction* m_cut_act;
-  QAction* m_copy_selection_act;
-  QAction* m_crop_to_selection_act;
-  QAction* m_clear_selection_act;
-  QAction* m_crop_to_content_act;
-  QAction* m_rotate_cw_act;
-  QAction* m_rotate_acw_act;
-  QAction* m_rotate_180_act;
-  QAction* m_rotate_by_angle_act;
-  QAction* m_rotate_by_edge_act;
-  QAction* m_rescan_act;
-  QAction* m_scale_act;
-  QAction* m_selectall_act;
-  QAction* m_save_act;
-  QAction* m_save_as_act;
+  QAction* m_copy_selection_act{};
+  QAction* m_crop_to_selection_act{};
+  QAction* m_clear_selection_act{};
+  QAction* m_crop_to_content_act{};
+  QAction* m_rotate_cw_act{};
+  QAction* m_rotate_acw_act{};
+  QAction* m_rotate_180_act{};
+  QAction* m_rotate_by_angle_act{};
+  QAction* m_rotate_by_edge_act{};
+  QAction* m_rescan_act{};
+  QAction* m_scale_act{};
+  QAction* m_selectall_act{};
+  QAction* m_save_act{};
+  QAction* m_save_as_act{};
   QAction* m_save_as_cover_act{};
-  QAction* m_set_def_crop_act;
-  QAction* m_split_pages_act;
-  QAction* m_split_right_act;
-  QAction* m_split_left_act;
-  QAction* m_make_page_act;
+  QAction* m_set_def_crop_act{};
+  QAction* m_split_pages_act{};
+  QAction* m_split_right_act{};
+  QAction* m_split_left_act{};
+  QAction* m_make_page_act{};
 
   void initActions();
 

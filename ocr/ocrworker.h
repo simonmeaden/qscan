@@ -15,21 +15,23 @@ class OcrWorker : public QObject
 {
   Q_OBJECT
 public:
-  explicit OcrWorker(const QString& datapath,
-                     const QString& lang,
-                     QObject* parent = nullptr);
+  explicit OcrWorker(QString  datapath, QString  lang);
 
-  void convertToString(const Page& page);
   void process();
+  void convertImage(const Page& page);
+
+  void stopRunning();
 
 signals:
-  void converted(Page page);
+  void converted(const Page& page);
   void log(LogLevel, const QString&);
 
 protected:
-  TessTools* m_tesstools;
-  bool m_available;
+  QString m_datapath, m_lang;
+  std::atomic<bool> m_available;
   QList<Page> m_images;
+  std::atomic<bool> m_running;
+
 };
 
 #endif // OCRWORKER_H

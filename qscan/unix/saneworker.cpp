@@ -52,8 +52,9 @@ void SaneWorker::scan(ScanDevice* device)
     return;
   }
 
-  int len, offset = 0, full_size = 0;
-  bool first_frame = true, must_buffer = true;
+  int len;
+  int full_size = 0;
+  bool first_frame = true;
   //  SANE_Byte min = 0xff, max = 0;
   SANE_Word total_bytes = 0;
   //  SANE_Word expected_bytes;
@@ -62,10 +63,13 @@ void SaneWorker::scan(ScanDevice* device)
   std::unique_ptr<uchar[]> buffer(new uchar[ulong(buffer_size)]);
   //  SANE_Byte* buffer[buffer_size];
   QImage::Format format = QImage::Format_RGB32;
-  bool greyscale = false;
   full_size = parameters.bytes_per_line * parameters.lines;
 
   if (first_frame) {
+    int offset = 0;
+    bool must_buffer = true;
+    bool greyscale = false;
+
     switch (parameters.format) {
     case SANE_FRAME_RED:
     case SANE_FRAME_GREEN:
