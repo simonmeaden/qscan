@@ -50,8 +50,11 @@ public:
   explicit ScanEditor(QScan* scan,
                       QString& configdir,
                       QString  datadir,
-                      QString lang,
                       QWidget* parent = nullptr);
+
+  void loadExistingFiles();
+  void loadOptions(const QString& filename = QString());
+  void saveOptions(const QString& filename = QString());
 
   void setImage(const QImage& image);
   void setScanProgress(const int& progress);
@@ -94,6 +97,11 @@ public:
   int pageCount();
   Page page(int index);
 
+  QString optionsFile() const;
+  void setOptionsFile(const QString& optionsFile);
+
+  QString tesseractLanguage() const;
+  void setTesseractLanguage(const QString& tesseractLanguage);
 
 signals:
   void scanCancelled();
@@ -105,21 +113,21 @@ signals:
 
 protected:
   Log4Qt::Logger* m_logger;
-  QString m_document_name, m_document_path;
+  QString m_current_doc_name;
+  QString m_options_file;
   ScanImage* m_scan_display{};
   QProgressDialog* m_prog_dlg{};
-  QPoint m_origin;
-  QScan* m_scan_lib;
+  QScan* m_scan_lib{};
   QScrollArea* m_scroller{};
   PageView* m_page_view{};
-  OcrTools* m_ocr_tools;
-  QString m_configdir;
-  QString m_datadir;
-  QString m_lang;
+  OcrTools* m_ocr_tools{};
+  QString m_config_dir{};
+  QString m_data_dir{};
+  QString m_lang{};
 
   QMap<int, Page> m_pages;
   Page m_cover;
-  bool m_save_all_texts;
+  bool m_save_all_texts{};
 
   bool eventFilter(QObject* obj, QEvent* event) override;
 
@@ -136,6 +144,10 @@ protected:
   void saveText(int index, const Page& page);
   void clearSaveAllTextsFlag();
 
+  static const QString OPTIONS_FILE;
+  static const QString CURRENT_DOCUMENT;
+  static const QString TESSERACT;
+  static const QString LANGUAGE;
 };
 
 #endif // SCANEDITOR_H

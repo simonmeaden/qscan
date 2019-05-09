@@ -11,7 +11,9 @@ OcrTools::OcrTools(const QString& datapath,
   m_logger = Log4Qt::Logger::logger(tr("OcrTools"));
 
   auto* thread = new QThread;
+
   m_ocr_worker = new OcrWorker(datapath, lang);
+  //  thread->setObjectName(QStringLiteral("OCR Worker"));
 
   // cleanup
   connect(thread, &QThread::started, m_ocr_worker, &OcrWorker::process);

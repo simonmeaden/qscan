@@ -79,7 +79,6 @@ protected:
   QString m_config_dir;
   QString m_data_dir;
   QString m_lang;
-  QString m_options_file;
   QString m_current_doc_name;
 
   QString m_selected_name;

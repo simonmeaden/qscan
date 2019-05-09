@@ -102,7 +102,7 @@ void OCRDialog::initGui()
 
 void OCRDialog::applyOcr()
 {
-  //  emit sendOcrImage(m_image);
+  emit sendOcrImage(m_image);
 }
 
 void OCRDialog::applyTweaks()

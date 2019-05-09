@@ -56,19 +56,15 @@ MainWindow::MainWindow(QWidget* parent)
 
   m_config_dir = "/home/simonmeaden/.config/Biblos";
   m_data_dir = "/home/simonmeaden/.local/share/Biblos/ocr";
-  m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
   m_lang = "eng";
-
-  loadOptions();
 
   initActions();
   initGui();
   initMenu();
   connectActions();
 
+  loadOptions(); // must be called BEFORE   loadExistingFiles();
   loadExistingFiles();
-
-  m_image_editor->setDocumentName(m_current_doc_name);
 
   connect(m_scan_lib, &QScan::scanCompleted, m_image_editor, &ScanEditor::setImage);
   connect(m_scan_lib, &QScan::scanProgress, m_image_editor, &ScanEditor::setScanProgress);
@@ -98,101 +94,17 @@ MainWindow::~MainWindow()
 
 void MainWindow::loadOptions()
 {
-  QFile file(m_options_file);
-
-  if (file.exists()) {
-    YAML::Node m_options = YAML::LoadFile(file);
-
-    if (m_options[CURRENT_DOCUMENT]) {
-      m_current_doc_name = m_options[CURRENT_DOCUMENT].as<QString>();
-      setWindowTitle(m_current_doc_name);
-    }
-
-    if (m_options[TESSERACT]) {
-      YAML::Node tesseract_options = m_options[TESSERACT];
-
-      if (tesseract_options[LANGUAGE]) {
-        m_lang = tesseract_options[LANGUAGE].as<QString>();
-      }
-    }
-  }
+  m_image_editor->loadOptions();
 }
 
 void MainWindow::saveOptions()
 {
-  QFile* file;
-  file = new QFile(m_options_file);
-
-  if (file->open((QFile::ReadWrite | QFile::Truncate))) {
-    YAML::Emitter emitter;
-    emitter << YAML::BeginMap;
-    emitter << YAML::Key << CURRENT_DOCUMENT;
-    emitter << YAML::Value << m_current_doc_name;
-    emitter << YAML::Key << TESSERACT;
-    emitter << YAML::Value;
-    emitter << YAML::BeginMap;
-    emitter << YAML::Key << LANGUAGE;
-    emitter << YAML::Value << m_lang;
-    emitter << YAML::EndMap;
-    emitter << YAML::EndMap;
-    QTextStream out(file);
-    out << emitter.c_str();
-    file->close();
-  }
+  m_image_editor->saveOptions();
 }
 
 void MainWindow::loadExistingFiles()
 {
-  QString current_path = m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator();
-  m_image_editor->setDocumentPath(current_path);
-  QString filename = current_path + "cover.png";
-  QFile file(filename);
-  QImage image;
-
-  if (file.exists()) {
-    image = QImage(filename, "PNG");
-    m_image_editor->loadCover(image);
-  }
-
-  int index = 1;
-  filename = current_path + QString("image%1.png").arg(index);
-  file.setFileName(filename);
-  QMap<int, QPair<QImage, QString>> map;
-  QPair<QImage, QString> pair;
-
-  while (file.exists()) {
-    image = QImage(filename, "PNG");
-    pair = qMakePair<QImage, QString>(image, "");
-    map.insert(index, pair);
-    index++;
-    filename = current_path + QString("image%1.png").arg(index);
-    file.setFileName(filename);
-  }
-
-  index = 1;
-  filename = current_path + QString("text%1.png").arg(index);
-  file.setFileName(filename);
-
-  while (file.exists()) {
-    if (map.contains(index)) {
-      pair = map.value(index);
-
-    } else {
-      pair = qMakePair<QImage, QString>(image, "");
-    }
-
-    QTextStream stream(&file);
-    QString text = stream.readAll();
-    pair.second = text;
-    index++;
-    filename = current_path + QString("text%1.png").arg(index);
-    file.setFileName(filename);
-  }
-
-  for (auto& i : map.keys()) {
-    pair = map.value(i);
-    m_image_editor->loadImage(i, pair.first, pair.second);
-  }
+  m_image_editor->loadExistingFiles();
 }
 
 void MainWindow::setLogTextEdit(QPlainTextEdit* log_edit)
@@ -235,7 +147,7 @@ void MainWindow::initGui()
   setCentralWidget(main_frame);
   m_main_layout = new QGridLayout;
   main_frame->setLayout(m_main_layout);
-  m_image_editor = new ScanEditor(m_scan_lib, m_config_dir, m_data_dir, m_lang, this);
+  m_image_editor = new ScanEditor(m_scan_lib, m_config_dir, m_data_dir, this);
   m_image_editor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   installEventFilter(m_image_editor);
   connect(m_image_editor, &ScanEditor::scanCancelled, this, &MainWindow::cancelScanning);

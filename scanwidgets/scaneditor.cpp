@@ -1,9 +1,3 @@
-#include <utility>
-
-#include <utility>
-
-#include <utility>
-
 /*
     Copyright © Simon Meaden 2019.
     This file was developed as part of the QScan cpp library but could
@@ -23,29 +17,55 @@
     along with QScan.  If not, see <http://www.gnu.org/licenses/>.
     It is also available on request from Simon Meaden simonmeaden@sky.com.
 */
+#include <utility>
+
+#include <yaml-cpp/yaml.h>
+#include <qyaml-cpp/qyaml-cpp.h>
+
 #include "qscan.h"
 #include "scaneditor.h"
 
 #include "ocrdialog.h"
 #include "ocrtools.h"
 
+
 /* ScanEditor
  *****************************************************************************/
+/*!
+  \class ScanEditor.
 
+*/
+
+const QString ScanEditor::OPTIONS_FILE = QStringLiteral("scanoptions.yaml");
+const QString ScanEditor::CURRENT_DOCUMENT = QStringLiteral("current document");
+const QString ScanEditor::TESSERACT = "tesseract";
+const QString ScanEditor::LANGUAGE = "language";
+
+/*!
+   \brief Constructor for the ScanEditor class.
+
+   \param scan - a pointer to the QScan library.
+   \param configdir - the directory for configuration files.
+   \param datadir - the base directory for image and text files.
+   \param lang - the tesseract language.
+   \param parent - the parent QObject.
+*/
 ScanEditor::ScanEditor(QScan* scan,
                        QString& configdir,
                        QString datadir,
-                       QString lang,
                        QWidget* parent)
   : QFrame(parent)
   , m_scan_lib(scan)
-  , m_ocr_tools(new OcrTools(configdir, lang))
-  , m_configdir(std::move(configdir))
-  , m_datadir(std::move(datadir))
-  , m_lang(std::move(lang))
+  , m_config_dir(std::move(configdir))
+  , m_data_dir(std::move(datadir))
   , m_cover(Page(new ScanPage()))
+  , m_lang("end")
 {
   m_logger = Log4Qt::Logger::logger(tr("ScanEditor"));
+
+  m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
+
+  m_ocr_tools = new OcrTools(configdir, m_lang);
 
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   initGui();
@@ -62,7 +82,7 @@ void ScanEditor::initGui()
   m_scroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   m_scroller->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   m_scroller->setContentsMargins(0, 0, 0, 0);
-  m_scan_display = new ScanImage(m_datadir, this);
+  m_scan_display = new ScanImage(m_data_dir, this);
   m_scan_display->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
   m_scan_display->setScaledContents(true);
   m_scroller->setWidget(m_scan_display);
@@ -85,7 +105,6 @@ void ScanEditor::makeConnections()
   connect(m_scan_display, &ScanImage::sendImages, this, &ScanEditor::receiveImages);
   connect(m_page_view, &PageView::sendOcrPage, this, &ScanEditor::receiveOcrRequest);
   connect(m_page_view, &PageView::clearSaveAllFlag, this, &ScanEditor::clearSaveAllTextsFlag);
-  //  connect(this, &ScanEditor::ocrImage, m_ocr_tools, &OcrTools::convertImageToText);
   connect(m_ocr_tools, &OcrTools::converted, this, &ScanEditor::receiveOcrResult);
   connect(m_scan_display, &ScanImage::sendCover, this, &ScanEditor::saveAsCover);
 }
@@ -135,7 +154,7 @@ void ScanEditor::saveImage(int index, const QImage& image)
 {
   QString path;
 
-  if (m_document_name.isEmpty()) {
+  if (m_current_doc_name.isEmpty()) {
     QString doc_name = QInputDialog::getText(this,
                        tr("Get Document Name"),
                        tr("Please supply a name for this document.\n"
@@ -143,8 +162,8 @@ void ScanEditor::saveImage(int index, const QImage& image)
                           "created internally."));
 
     if (!doc_name.isEmpty()) {
-      m_document_name = doc_name;
-      path = m_datadir + QDir::separator() + doc_name;
+      m_current_doc_name = doc_name;
+      path = m_data_dir + QDir::separator() + doc_name;
       QDir dir;
       dir.mkpath(path);
       path += QDir::separator() + QString("image%1.png").arg(index);
@@ -155,7 +174,7 @@ void ScanEditor::saveImage(int index, const QImage& image)
     }
 
   } else {
-    path = m_datadir + QDir::separator() + m_document_name + QDir::separator() +
+    path = m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator() +
            QString("image%1.png").arg(index);
 
     if (!image.save(path, "PNG", 100)) {
@@ -166,14 +185,14 @@ void ScanEditor::saveImage(int index, const QImage& image)
 
 void ScanEditor::saveAsCover(const QImage& image)
 {
-  if (!m_document_name.isEmpty()) {
+  if (!m_current_doc_name.isEmpty()) {
     // TODO no doc name yet.
   } else {
     // always
     m_cover->setImage(image);
     m_page_view->setCover(m_cover->thumbnail());
     QString path =
-      m_datadir + QDir::separator() + m_document_name + QDir::separator() + "cover.png";
+      m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator() + "cover.png";
 
     if (!image.save(path, "PNG", 100)) {
       m_logger->info(tr("failed to save file path"));
@@ -199,7 +218,7 @@ void ScanEditor::receiveOcrRequest(int index)
 
 void ScanEditor::saveText(int index, const Page& page)
 {
-  QString filename = m_datadir + QDir::separator() + m_document_name + QDir::separator() +
+  QString filename = m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator() +
                      QString("text%1.txt").arg(index);
   QFile file(filename);
 
@@ -279,10 +298,189 @@ void ScanEditor::splitRightPage()
   receiveImage(image);
 }
 
+/*!
+   \brief Takes the image and makes it into a single page.
+*/
 void ScanEditor::makePage()
 {
   QImage image = m_scan_display->makePage();
   receiveImage(image);
+}
+
+/*!
+   \brief Loads all existing images and text on the current document path.
+
+  Please note that either loadOptions() or setDocumentName() must be used before
+  loadExistingFile(), otherwise no files will be  imported.
+*/
+void ScanEditor::loadExistingFiles()
+{
+  QString current_path = m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator();
+  setDocumentPath(current_path);
+  QString filename = current_path + "cover.png";
+  QFile file(filename);
+  QImage image;
+  Page page;
+  QStringList filter;
+  filter << "image*.png";
+
+  if (file.exists()) {
+    image = QImage(filename, "PNG");
+    loadCover(image);
+    m_logger->info(tr("Cover file loaded)"));
+  }
+
+  QDir dir(current_path);
+  int index = 0;
+  bool ok;
+
+  for (const QString& fname : dir.entryList(filter, QDir::Files)) {
+    filename = current_path + fname;
+    file.setFileName(filename);
+
+    if (file.exists()) {
+      index = fname.midRef(5, fname.length() - 9).toInt(&ok);
+
+      if (ok) { // is an int value
+        image = QImage(filename, "PNG");
+        page = Page(new ScanPage(this));
+        page->setImage(image);
+        m_pages.insert(index, page);
+        m_page_view->insert(index, page->thumbnail(), false);
+        m_logger->info(tr("Image file %1 loaded)").arg(fname));
+      }
+    }
+  } // end image file list
+
+  filter.clear();
+  filter << "page*.txt";
+
+  filename = current_path + QString("page%1.txt").arg(index);
+  file.setFileName(filename);
+
+  for (const QString& fname : dir.entryList(filter, QDir::Files)) {
+    filename = current_path + fname;
+    file.setFileName(filename);
+
+    if (file.exists()) {
+      index = fname.midRef(4, fname.length() - 8).toInt(&ok);
+
+      if (ok) { // is an int value
+        if (m_pages.contains(index)) {
+          page = m_pages.value(index);
+
+        } else {
+          // should only happen if an image has been removed.
+          page = Page(new ScanPage(this));
+          m_page_view->insert(index, QImage(), false);
+        }
+
+        if (file.open(QFile::ReadOnly)) {
+          QTextStream stream(&file);
+          QString text = stream.readAll();
+          page->setText(text);
+          m_page_view->setHasText(index, true);
+          m_logger->info(tr("Text file %1 loaded)").arg(fname));
+        }
+      }
+    }
+  } // end text file list
+}
+
+/*!
+   \brief Loads the options file.
+
+  Currently the options only include the current document name, which is used as a name
+  for the image/text storage directory and the Tesseract language. If you do not call
+  loadOptions(), for example if you do not want to use the default yaml options then you
+  must set these values manually using setTesseractLanguage() and setDocumentname().
+
+  If you call loadOptions() with no parameter then the default options file
+  "{configdir}/scanoptions.yaml" will be used, otherwise to use a different
+  filename for the options file use
+  loadOptions("path/to/your/options/file.yaml").
+
+  Please note that either loadOptions() or setDocumentName() must be used before
+  loadExistingFile(), otherwise no files will be  imported.
+
+  \param filename - the optional options file name with path.
+*/
+void ScanEditor::loadOptions(const QString& filename)
+{
+  QString fn;
+
+  if (filename.isEmpty()) {
+    fn = m_options_file;
+
+  } else {
+    fn = filename;
+  }
+
+  QFile file(fn);
+
+  if (file.exists()) {
+    YAML::Node m_options = YAML::LoadFile(file);
+
+    if (m_options[CURRENT_DOCUMENT]) {
+      m_current_doc_name = m_options[CURRENT_DOCUMENT].as<QString>();
+      setWindowTitle(m_current_doc_name);
+    }
+
+    if (m_options[TESSERACT]) {
+      YAML::Node tesseract_options = m_options[TESSERACT];
+
+      if (tesseract_options[LANGUAGE]) {
+        m_lang = tesseract_options[LANGUAGE].as<QString>();
+      }
+    }
+  }
+}
+
+/*!
+   \brief Saves the options into the options file.
+
+  Currently the options only include the current document name, which is used as a name
+  for the image/text storage directory and the Tesseract language. If you do not call
+  saveOptions(), for example if you do not want to use the default yaml options then you
+  must set these values manually using setTesseractLanguage() and setDocumentname().
+
+  If you call saveOptions() with no parameter then the default options file
+  "{configdir}/scanoptions.yaml" will be used, otherwise to use a different
+  filename for the options file use
+  saveOptions("path/to/your/options/file.yaml").
+
+  \param filename - the optional options file name with path.
+*/
+void ScanEditor::saveOptions(const QString& filename)
+{
+  QString fn;
+
+  if (filename.isEmpty()) {
+    fn = m_options_file;
+
+  } else {
+    fn = filename;
+  }
+
+  QFile* file;
+  file = new QFile(fn);
+
+  if (file->open((QFile::ReadWrite | QFile::Truncate))) {
+    YAML::Emitter emitter;
+    emitter << YAML::BeginMap;
+    emitter << YAML::Key << CURRENT_DOCUMENT;
+    emitter << YAML::Value << m_current_doc_name;
+    emitter << YAML::Key << TESSERACT;
+    emitter << YAML::Value;
+    emitter << YAML::BeginMap;
+    emitter << YAML::Key << LANGUAGE;
+    emitter << YAML::Value << m_lang;
+    emitter << YAML::EndMap;
+    emitter << YAML::EndMap;
+    QTextStream out(file);
+    out << emitter.c_str();
+    file->close();
+  }
 }
 
 void ScanEditor::loadCover(const QImage& cover)
@@ -336,7 +534,7 @@ void ScanEditor::scanningStarted()
 */
 void ScanEditor::setDocumentName(const QString& name)
 {
-  m_document_name = name;
+  m_current_doc_name = name;
 }
 
 /*!
@@ -348,7 +546,7 @@ void ScanEditor::setDocumentName(const QString& name)
 */
 void ScanEditor::setDocumentPath(const QString& path)
 {
-  m_document_path = path;
+  m_data_dir = path;
 }
 
 void ScanEditor::completeDocument()
@@ -358,7 +556,7 @@ void ScanEditor::completeDocument()
 
 QString ScanEditor::documentName() const
 {
-  return m_document_name;
+  return m_current_doc_name;
 }
 
 bool ScanEditor::eventFilter(QObject* obj, QEvent* event)
@@ -523,6 +721,48 @@ int ScanEditor::pageCount()
 Page ScanEditor::page(int index)
 {
   return m_pages.value(index);
+}
+
+/*!
+   \brief gets the current options file.
+
+   \return the options file name.
+*/
+QString ScanEditor::optionsFile() const
+{
+  return m_options_file;
+}
+
+/*!
+   \brief sets the options file name.
+
+   By default this is {configdir}/scanoptions.yaml.
+
+   \param options_file - the new file name.
+*/
+void ScanEditor::setOptionsFile(const QString& options_file)
+{
+  m_options_file = options_file;
+}
+
+/*!
+   \brief gets the tesseract language.
+
+   \return the tesseract language string.
+*/
+QString ScanEditor::tesseractLanguage() const
+{
+  return m_lang;
+}
+
+/*!
+   \brief sets the tesseract language.
+
+   \param lang - tesseract language string.
+*/
+void ScanEditor::setTesseractLanguage(const QString& lang)
+{
+  m_lang = lang;
 }
 
 void ScanEditor::clearSaveAllTextsFlag()
