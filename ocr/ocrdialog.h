@@ -5,12 +5,13 @@
 #include <QDialogButtonBox>
 #include <QFrame>
 #include <QGridLayout>
-#include <QLabel>
 #include <QObject>
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QGuiApplication>
 #include <QScreen>
+
+class OcrImage;
 
 class OCRDialog : public QDialog
 {
@@ -31,14 +32,19 @@ signals:
 
 protected:
   QPlainTextEdit* m_text_edit;
-  QLabel* m_image_display;
+  OcrImage* m_image_display;
   QImage m_image;
   bool m_image_changed;
+  QPushButton* crop_btn;
 
   void initGui();
   void applyOcr();
-  void applyTweaks();
   void help();
+  void setSelected();
+  void setUnselected();
+  void binarise();
+  void denoise();
+  void rescale();
 };
 
 #endif // OCRDIALOG_H

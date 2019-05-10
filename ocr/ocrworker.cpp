@@ -1,10 +1,11 @@
 #include <utility>
 
-#include <utility>
+#include <opencv2/opencv.hpp>
 
 #include "ocrworker.h"
-
 #include "tesstools.h"
+
+using namespace cv;
 
 OcrWorker::OcrWorker(QString datapath, QString lang)
   : m_available(true)
@@ -26,11 +27,12 @@ void OcrWorker::process()
   connect(m_api, &TessTools::log, this, &OcrWorker::log);
 
   while (m_running) {
+
     if (m_available) {
       if (!m_images.isEmpty()) {
         Page page = m_images.takeFirst();
-        QImage image = page->image();
-        QString str = m_api->makeBoxes(image, 0);
+        QString image_path = page->imagePath();
+        QString str = m_api->getStringFromImage(image_path);
         page->setText(str);
         emit converted(page);
         m_available = false;

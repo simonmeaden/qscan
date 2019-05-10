@@ -27,5 +27,9 @@
         <file alias="fit-width">zoom-fit-width.png</file>
         <file alias="zoom-in">zoom-in.png</file>
         <file alias="zoom-out">zoom-out.png</file>
+        <file alias="help-about">help-about.png</file>
+        <file alias="help-contents">help-contents.png</file>
+        <file alias="help-context">help-contextual.png</file>
+        <file alias="help-hint">help-hint.png</file>
     </qresource>
 </RCC>

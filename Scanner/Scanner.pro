@@ -6,7 +6,7 @@
 
 DEFINES += LOGGER_ENABLE
 
-QT       += core gui
+QT       += core gui help
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -77,3 +77,4 @@ DEPENDPATH += $$PWD/../logger
 unix|win32: LIBS += -lyaml-cpp
 unix|win32: LIBS += -lqyaml-cpp
 unix|win32: LIBS += -ltesseract
+unix|win32: LIBS += -lopencv_core

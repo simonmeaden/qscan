@@ -59,7 +59,7 @@ ScanEditor::ScanEditor(QScan* scan,
   , m_config_dir(std::move(configdir))
   , m_data_dir(std::move(datadir))
   , m_cover(Page(new ScanPage()))
-  , m_lang("end")
+  , m_lang("eng")
 {
   m_logger = Log4Qt::Logger::logger(tr("ScanEditor"));
 
@@ -116,11 +116,11 @@ void ScanEditor::makeConnections()
 void ScanEditor::receiveImage(const QImage& image)
 {
   Page page(new ScanPage());
-  page->setImage(image);
   int index = m_pages.size() + 1;
+  m_page_view->append(thumbnail(image));
+  QString path = saveImage(index, image);
+  page->setImage(path);
   m_pages.insert(index, page);
-  m_page_view->append(m_pages.last()->thumbnail());
-  saveImage(index, image);
 }
 
 /*
@@ -130,17 +130,18 @@ void ScanEditor::receiveImage(const QImage& image)
 void ScanEditor::receiveImages(const QImage& left, const QImage& right)
 {
   Page left_page(new ScanPage());
-  left_page->setImage(left);
   int index = m_pages.size() + 1;
   m_pages.insert(index, left_page);
-  m_page_view->append(m_pages.last()->thumbnail());
-  saveImage(index, left);
+  m_page_view->append(thumbnail(left));
+  QString path = saveImage(index, left);
+  left_page->setImage(path);
+
   Page right_page(new ScanPage());
-  right_page->setImage(right);
   index++;
   m_pages.insert(index, right_page);
-  m_page_view->append(m_pages.last()->thumbnail());
-  saveImage(index, right);
+  m_page_view->append(thumbnail(right));
+  path = saveImage(index, right);
+  right_page->setImage(path);
 }
 
 void ScanEditor::receiveString(int page, const QString& str)
@@ -150,7 +151,7 @@ void ScanEditor::receiveString(int page, const QString& str)
   }
 }
 
-void ScanEditor::saveImage(int index, const QImage& image)
+QString ScanEditor::saveImage(int index, const QImage& image)
 {
   QString path;
 
@@ -181,6 +182,8 @@ void ScanEditor::saveImage(int index, const QImage& image)
       m_logger->info(tr("Failed to save image %1").arg(path));
     }
   }
+
+  return path;
 }
 
 void ScanEditor::saveAsCover(const QImage& image)
@@ -189,14 +192,16 @@ void ScanEditor::saveAsCover(const QImage& image)
     // TODO no doc name yet.
   } else {
     // always
-    m_cover->setImage(image);
-    m_page_view->setCover(m_cover->thumbnail());
+    m_page_view->setCover(thumbnail(image));
     QString path =
       m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator() + "cover.png";
 
     if (!image.save(path, "PNG", 100)) {
       m_logger->info(tr("failed to save file path"));
+      return;
     }
+
+    m_cover->setImage(path);
   }
 }
 
@@ -233,7 +238,8 @@ void ScanEditor::saveText(int index, const Page& page)
 void ScanEditor::receiveOcrResult(const Page& page)
 {
   auto* dlg = new OCRDialog(this);
-  dlg->setImage(page->image());
+  QImage image(page->imagePath(), "PNG");
+  dlg->setImage(image);
 
   if (!page->text().isEmpty()) {
     dlg->setOcrText(page->text());
@@ -325,8 +331,7 @@ void ScanEditor::loadExistingFiles()
   filter << "image*.png";
 
   if (file.exists()) {
-    image = QImage(filename, "PNG");
-    loadCover(image);
+    loadCover(filename);
     m_logger->info(tr("Cover file loaded)"));
   }
 
@@ -344,9 +349,9 @@ void ScanEditor::loadExistingFiles()
       if (ok) { // is an int value
         image = QImage(filename, "PNG");
         page = Page(new ScanPage(this));
-        page->setImage(image);
+        page->setImage(filename);
         m_pages.insert(index, page);
-        m_page_view->insert(index, page->thumbnail(), false);
+        m_page_view->insert(index, thumbnail(image), false);
         m_logger->info(tr("Image file %1 loaded)").arg(fname));
       }
     }
@@ -483,21 +488,13 @@ void ScanEditor::saveOptions(const QString& filename)
   }
 }
 
-void ScanEditor::loadCover(const QImage& cover)
+void ScanEditor::loadCover(const QString& filename)
 {
+  QImage image = QImage(filename, "PNG");
   Page page(new ScanPage());
-  page->setImage(cover);
+  page->setImage(filename);
   m_cover = page;
-  m_page_view->setCover(m_cover->thumbnail());
-}
-
-void ScanEditor::loadImage(int index, const QImage& image, const QString& text)
-{
-  Page page(new ScanPage());
-  page->setImage(image);
-  page->setText(text);
-  m_page_view->insert(index, page->thumbnail(), !text.isEmpty());
-  m_pages.insert(index, page);
+  m_page_view->setCover(thumbnail(image));
 }
 
 void ScanEditor::setImage(const QImage& image)
@@ -768,4 +765,19 @@ void ScanEditor::setTesseractLanguage(const QString& lang)
 void ScanEditor::clearSaveAllTextsFlag()
 {
   m_save_all_texts = false;
+}
+
+QImage ScanEditor::thumbnail(const QImage& image) const
+{
+  if (!image.isNull()) {
+    int w = image.width();
+    qreal factor = w / 100.0;
+    w = 100;
+    int h = int(image.height() / factor);
+    QSize size(w, h);
+    QImage thumbnail = image.scaled(w, h, Qt::KeepAspectRatio);
+    return thumbnail;
+  }
+
+  return  QImage();
 }

@@ -43,6 +43,7 @@
 #include <QTextStream>
 #include <QToolBar>
 #include <QVariant>
+#include <QtHelp/QtHelp>
 
 #include "logger.h"
 
@@ -87,7 +88,6 @@ protected:
   QPlainTextEdit* m_empty_edit{};
   QPlainTextEdit* m_log_edit{};
   QLabel* m_min_res{}, *m_max_res{}, *m_curr_src{}, *m_curr_mode{};
-  //  QSpinBox* m_res_spin{};
   QIntValidator* m_res_validator{};
   QLineEdit* m_res_edit{};
   QFrame* m_res_range{}, *m_res_list{};
@@ -96,6 +96,7 @@ protected:
   QComboBox* m_res_combo{};
   QComboBox* m_scanner_box{};
 
+  QPixmapCache::Key help_key;
   QPixmapCache::Key scan_key;
   QPixmapCache::Key rot_left_key;
   QPixmapCache::Key rot_right_key;
@@ -114,6 +115,7 @@ protected:
   QPixmapCache::Key close_key;
 
   QAction* m_scan_act{};
+  QAction* m_help_act{};
   QAction* m_rot_left_act{};
   QAction* m_rot_right_act{};
   QAction* m_rot_angle_act{};
@@ -176,7 +178,7 @@ protected:
   void loadOptions();
   void saveOptions();
   void loadExistingFiles();
-  QToolBar* initActionToolbar();
+  QToolBar* initMainToolbar();
   QToolBar* initSourceToolbar();
   QToolBar* initResourceToolbar();
 };

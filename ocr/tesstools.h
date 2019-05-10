@@ -37,6 +37,11 @@
 
 #include "ocr_global.h"
 
+class Mat;
+
+//void monitorProgress(ETEXT_DESC *monitor, int page);
+void ocrProcess(tesseract::TessBaseAPI* api, ETEXT_DESC* monitor);
+
 class OCRSHARED_EXPORT TessTools : public QObject
 {
   Q_OBJECT
@@ -45,13 +50,7 @@ public:
                      QString  lang,
                      QObject* parent = nullptr);
 
-  QString makeBoxes(const QImage& qImage, int page);
-
-  PIX* qImage2PIX(const QImage& qImage);
-  QImage PIX2qImage(PIX* pixImage);
-  QImage GetThresholded(const QImage& qImage);
-  const char* qString2Char(QString string);
-  QList<QString> getLanguages(const QString& datapath);
+  QString getStringFromImage(const QString& image_path);
 
 signals:
   void log(LogLevel, const QString&);
@@ -59,6 +58,7 @@ signals:
 protected:
   QString m_datapath;
   QString m_lang;
+  //  ETEXT_DESC *monitor;
 
   static const char* kTrainedDataSuffix;
 };

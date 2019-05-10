@@ -25,12 +25,16 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    ocrdialog.cpp \
+    ocrimage.cpp \
     ocrtools.cpp \
     ocrworker.cpp \
     tesstools.cpp
 
 HEADERS += \
         ocr_global.h \
+        ocrdialog.h \
+        ocrimage.h \
         ocrtools.h \
         ocrworker.h \
         tesstools.h
@@ -55,3 +59,6 @@ INCLUDEPATH += $$PWD/../scanwidgets
 DEPENDPATH += $$PWD/../scanwidgets
 
 unix|win32: LIBS += -ltesseract
+unix|win32: LIBS += -lopencv_core
+
+unix|win32: LIBS += -lopencv_imgcodecs

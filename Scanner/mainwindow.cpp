@@ -18,6 +18,8 @@
 */
 #include "mainwindow.h"
 
+#include <opencv2/opencv.hpp>
+
 #include "qscan.h"
 #include "qyaml-cpp/qyaml-cpp.h"
 #include "scaninterface.h"
@@ -37,6 +39,7 @@ MainWindow::MainWindow(QWidget* parent)
   m_logger = Log4Qt::Logger::logger(tr("Scanner"));
   m_scan_lib = new QScan(this);
 
+  help_key = QPixmapCache::insert(QPixmap(":/icons/help-contents"));
   scan_key = QPixmapCache::insert(QPixmap(":/icons/scan"));
   rot_left_key = QPixmapCache::insert(QPixmap(":/icons/rotate-left"));
   rot_right_key = QPixmapCache::insert(QPixmap(":/icons/rotate-right"));
@@ -149,6 +152,7 @@ void MainWindow::initGui()
   main_frame->setLayout(m_main_layout);
   m_image_editor = new ScanEditor(m_scan_lib, m_config_dir, m_data_dir, this);
   m_image_editor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  m_image_editor->setTesseractLanguage(m_lang);
   installEventFilter(m_image_editor);
   connect(m_image_editor, &ScanEditor::scanCancelled, this, &MainWindow::cancelScanning);
   int row = 0;
@@ -164,7 +168,7 @@ void MainWindow::initGui()
   initToolbar();
 }
 
-QToolBar* MainWindow::initActionToolbar()
+QToolBar* MainWindow::initMainToolbar()
 {
   QToolBar* toolbar = addToolBar("action");
   addToolBar(Qt::TopToolBarArea, toolbar);
@@ -187,13 +191,16 @@ QToolBar* MainWindow::initActionToolbar()
           this,
           &MainWindow::scannerSelectionChanged);
 
-  //  QWidget* spacer_widget = new QWidget(this);
-  //  spacer_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-  //  spacer_widget->setVisible(true);
-  //  toolbar->addWidget(spacer_widget);
+  QWidget* spacer_widget = new QWidget(this);
+  spacer_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  spacer_widget->setVisible(true);
+  toolbar->addWidget(spacer_widget);
 
   toolbar->addSeparator();
+  toolbar->addAction(m_help_act);
+  toolbar->addSeparator();
   toolbar->addAction(m_close_act);
+
   return toolbar;
 }
 
@@ -339,15 +346,14 @@ QToolBar* MainWindow::initResourceToolbar()
 
 void MainWindow::initToolbar()
 {
-  /*auto* action_bar =*/initActionToolbar();
+  initMainToolbar();
 
   auto* source_bar = initSourceToolbar();
   auto* mode_bar = initModeToolbar();
-  /*auto* res_bar =*/initResourceToolbar();
+  initResourceToolbar();
 
   insertToolBarBreak(source_bar);
   insertToolBarBreak(mode_bar);
-  //  insertToolBarBreak(res_bar);
 
   initRightToolbar();
 }
@@ -362,7 +368,8 @@ void MainWindow::initActions()
 {
   QPixmap scan_icon, rot_left_icon, rot_right_icon, rot_angle_icon, rot_edge_icon, copy_icon,
           scale_icon, crop_icon, close_icon, save_icon, save_as_icon, zoom_in_icon, zoom_out_icon,
-          fit_best_icon, fit_width_icon, fit_height_icon;
+          fit_best_icon, fit_width_icon, fit_height_icon, help_icon;
+  QPixmapCache::find(help_key, &help_icon);
   QPixmapCache::find(scan_key, &scan_icon);
   QPixmapCache::find(rot_left_key, &rot_left_icon);
   QPixmapCache::find(rot_right_key, &rot_right_icon);
@@ -381,6 +388,7 @@ void MainWindow::initActions()
   QPixmapCache::find(close_key, &close_icon);
 
   m_close_act = new QAction(QIcon(close_icon), tr("Close Application"), this);
+  m_help_act = new QAction(QIcon(help_icon), tr("Help"), this);
   m_scan_act = new QAction(QIcon(scan_icon), tr("Scan"), this);
   m_scan_act->setEnabled(false);
   m_rot_left_act = new QAction(QIcon(rot_left_icon), tr("Rotate Anti-clockwise"), this);

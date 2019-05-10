@@ -10,18 +10,19 @@ class ScanPage : public QObject
 public:
   explicit ScanPage(QObject* parent = nullptr);
 
-  QImage image() const;
-  void setImage(const QImage& image);
+  QString imagePath() const;
+  void setImage(const QString& imagePath);
 
   QString text() const;
   void setText(const QString& text);
 
-  QImage thumbnail() const;
+  //  QImage thumbnail() const;
 
 signals:
 
 protected:
-  QImage m_image;
+  //  QImage m_image;
+  QString m_image;
   QString m_text;
 };
 using Page = QSharedPointer<ScanPage>;

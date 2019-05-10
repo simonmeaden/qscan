@@ -34,11 +34,13 @@
 
 #include "scanoptions.h"
 #include "scanpage.h"
+#include "logger.h"
 
 using Image = QSharedPointer<QImage>;
 Q_DECLARE_METATYPE(Image)
 using Page = QSharedPointer<ScanPage>;
 Q_DECLARE_METATYPE(Page)
+Q_DECLARE_METATYPE(LogLevel)
 
 using namespace Log4Qt;
 int main(int argc, char* argv[])
@@ -48,6 +50,7 @@ int main(int argc, char* argv[])
   qRegisterMetaType<Image>();
   qRegisterMetaType<ScanOptions>();
   qRegisterMetaType<Page>();
+  qRegisterMetaType<LogLevel>();
 
 #if defined(LOGGER_ENABLE)
   LogManager::rootLogger();

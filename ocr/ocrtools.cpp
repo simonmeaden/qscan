@@ -3,6 +3,7 @@
 #include "ocrtools.h"
 #include "ocrworker.h"
 
+
 OcrTools::OcrTools(const QString& datapath,
                    const QString& lang, QObject* parent)
   : QObject(parent)
@@ -13,7 +14,6 @@ OcrTools::OcrTools(const QString& datapath,
   auto* thread = new QThread;
 
   m_ocr_worker = new OcrWorker(datapath, lang);
-  //  thread->setObjectName(QStringLiteral("OCR Worker"));
 
   // cleanup
   connect(thread, &QThread::started, m_ocr_worker, &OcrWorker::process);
@@ -21,13 +21,9 @@ OcrTools::OcrTools(const QString& datapath,
   connect(thread, &QThread::finished, m_ocr_worker, &OcrWorker::deleteLater);
   connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
-  // actual work.
-  //  connect(this, &OcrTools::convertImage, m_ocr_worker, &OcrWorker::convertImage);
-  //  connect(
-  //    this, &OcrTools::startConverting, m_ocr_worker, &OcrWorker::convertImage);
-  //  connect(m_ocr_worker, &OcrWorker::converted, this, &OcrTools::converted);
   connect(m_ocr_worker, &OcrWorker::converted, this, &OcrTools::converted);
   connect(m_ocr_worker, &OcrWorker::log, this, &OcrTools::log);
+  m_logger->info(QString("Starting OCR Thread"));
 
   m_ocr_worker->moveToThread(thread);
   thread->start();

@@ -91,8 +91,7 @@ public:
   void splitRightPage();
   void makePage();
 
-  void loadCover(const QImage& cover);
-  void loadImage(int index, const QImage& image, const QString& text);
+  void loadCover(const QString& filename);
 
   int pageCount();
   Page page(int index);
@@ -137,12 +136,13 @@ protected:
   void receiveImage(const QImage& img);
   void receiveImages(const QImage& left, const QImage& right);
   void receiveString(int page, const QString& str);
-  void saveImage(int index, const QImage& image);
+  QString saveImage(int index, const QImage& image);
   void saveAsCover(const QImage& image);
   void receiveOcrRequest(int page);
   void receiveOcrResult(const Page& page);
   void saveText(int index, const Page& page);
   void clearSaveAllTextsFlag();
+  QImage thumbnail(const QImage& image) const;
 
   static const QString OPTIONS_FILE;
   static const QString CURRENT_DOCUMENT;
