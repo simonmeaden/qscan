@@ -48,7 +48,7 @@ bool OCRDialog::imageChanged() const
 
 QSize OCRDialog::sizeHint() const
 {
-  return {1000, 600};
+  return { 1000, 600 };
 }
 
 void OCRDialog::initGui()
@@ -69,6 +69,7 @@ void OCRDialog::initGui()
 
   auto* ocr_btn = new QPushButton(tr("Run OCR"), this);
   ocr_btn->setToolTip(tr("Re run the OCR on tweaked image."));
+  connect(ocr_btn, &QPushButton::clicked, this, &OCRDialog::applyOcr);
   btn_box->addButton(ocr_btn, QDialogButtonBox::ActionRole);
 
   crop_btn = new QPushButton(tr("Crop"), this);
@@ -78,24 +79,43 @@ void OCRDialog::initGui()
 
   auto* binarise_btn = new QPushButton(tr("Binarise"), this);
   binarise_btn->setToolTip(tr("Binarisation turns the image to blackl and white."));
+  connect(binarise_btn, &QPushButton::clicked, this, &OCRDialog::binarise);
   btn_box->addButton(binarise_btn, QDialogButtonBox::ActionRole);
 
   auto* denoise_btn = new QPushButton(tr("De-noise"), this);
   denoise_btn->setToolTip(tr("Noise removal attempts to clean up the image."));
+  connect(denoise_btn, &QPushButton::clicked, this, &OCRDialog::denoise);
   btn_box->addButton(denoise_btn, QDialogButtonBox::ActionRole);
 
+  auto* dewarp_btn = new QPushButton(tr("De-warp"), this);
+  dewarp_btn->setToolTip(tr("Straigntens lines that are curved."));
+  connect(dewarp_btn, &QPushButton::clicked, this, &OCRDialog::dewarp);
+  btn_box->addButton(dewarp_btn, QDialogButtonBox::ActionRole);
+
+  auto* descew_btn = new QPushButton(tr("De-scew"), this);
+  descew_btn->setToolTip(tr("Rotates non-horizontal up lines."));
+  connect(descew_btn, &QPushButton::clicked, this, &OCRDialog::descew);
+  btn_box->addButton(descew_btn, QDialogButtonBox::ActionRole);
+
   auto* rescale_btn = new QPushButton(tr("Rescale"), this);
+  rescale_btn->setToolTip(tr("Increase the DPI of the image."));
+  connect(rescale_btn, &QPushButton::clicked, this, &OCRDialog::rescale);
   btn_box->addButton(rescale_btn, QDialogButtonBox::ActionRole);
 
-  btn_box->addButton(QDialogButtonBox::Save);
-  btn_box->addButton(QDialogButtonBox::Discard);
-  btn_box->addButton(QDialogButtonBox::Close);
-  btn_box->addButton(QDialogButtonBox::Help);
+  auto* save_btn = new QPushButton(tr("Save Text"), this);
+  save_btn->setToolTip(tr("Increase the DPI of the image."));
+  connect(save_btn, &QPushButton::clicked, this, &OCRDialog::save);
+  btn_box->addButton(save_btn, QDialogButtonBox::ActionRole);
 
-  connect(ocr_btn, &QPushButton::clicked, this, &OCRDialog::applyOcr);
-  connect(btn_box, &QDialogButtonBox::rejected, this, &QDialog::reject);
-  connect(btn_box, &QDialogButtonBox::helpRequested, this, &OCRDialog::help);
-  connect(btn_box, &QDialogButtonBox::rejected, this, &QDialog::reject);
+  auto* discard_btn = new QPushButton(tr("Discard changes"), this);
+  discard_btn->setToolTip(tr("Closes the dialog, discarding any changes."));
+  connect(discard_btn, &QPushButton::clicked, this, &OCRDialog::discard);
+  btn_box->addButton(discard_btn, QDialogButtonBox::ActionRole);
+
+  auto* help_btn = new QPushButton(tr("Help"), this);
+  help_btn->setToolTip(tr("Help."));
+  connect(help_btn, &QPushButton::clicked, this, &OCRDialog::help);
+  btn_box->addButton(help_btn, QDialogButtonBox::ActionRole);
 }
 
 void OCRDialog::applyOcr()
@@ -128,7 +148,38 @@ void OCRDialog::denoise()
   // TODO denoise
 }
 
+void OCRDialog::dewarp()
+{
+  // TODO dewarp
+}
+
+void OCRDialog::descew()
+{
+  // TODO descew
+}
+
 void OCRDialog::rescale()
 {
   // TODO rescale
+}
+
+void OCRDialog::save()
+{
+  accept();
+}
+
+void OCRDialog::discard()
+{
+  int result = QMessageBox::warning(
+                 this,
+                 tr("Discaring Changes"),
+                 tr("You are about to discard any changes you have made\n"
+                    "This cannot be undone\n"
+                    "Are you sure?"),
+                 QMessageBox::Yes | QMessageBox::No,
+                 QMessageBox::No);
+
+  if (result == QMessageBox::Yes) {
+    reject();
+  }
 }

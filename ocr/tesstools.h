@@ -39,16 +39,20 @@
 
 class Mat;
 
-//void monitorProgress(ETEXT_DESC *monitor, int page);
+// void monitorProgress(ETEXT_DESC *monitor, int page);
 void ocrProcess(tesseract::TessBaseAPI* api, ETEXT_DESC* monitor);
 
 class OCRSHARED_EXPORT TessTools : public QObject
 {
   Q_OBJECT
 public:
-  explicit TessTools(QString  datapath,
-                     QString  lang,
-                     QObject* parent = nullptr);
+  explicit TessTools(const QString& datapath, const QString& lang, QObject* parent = nullptr);
+  TessTools(const TessTools& other);     // copy constructor
+  TessTools(TessTools&& other) noexcept; // move constructor
+  ~TessTools() override;                 // destructor
+
+  TessTools& operator=(TessTools const& other);     // copy assignment
+  TessTools& operator=(TessTools&& other) noexcept; // move assignment
 
   QString getStringFromImage(const QString& image_path);
 
@@ -56,11 +60,13 @@ signals:
   void log(LogLevel, const QString&);
 
 protected:
-  QString m_datapath;
-  QString m_lang;
+  tesseract::TessBaseAPI* m_api{};
+  const char* m_api_lang{};
+  const char* m_datapath{};
   //  ETEXT_DESC *monitor;
 
   static const char* kTrainedDataSuffix;
+  void init(const char* datapath, const char* lang, tesseract::TessBaseAPI* api);
 };
 
 #endif // TESSTOOLS_H

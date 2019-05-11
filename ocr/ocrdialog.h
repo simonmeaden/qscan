@@ -10,6 +10,7 @@
 #include <QPushButton>
 #include <QGuiApplication>
 #include <QScreen>
+#include <QMessageBox>
 
 class OcrImage;
 
@@ -44,7 +45,11 @@ protected:
   void setUnselected();
   void binarise();
   void denoise();
+  void dewarp();
+  void descew();
   void rescale();
+  void save();
+  void discard();
 };
 
 #endif // OCRDIALOG_H

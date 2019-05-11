@@ -10,7 +10,7 @@
 class OcrImage: public BaseScanImage
 {
 public:
-  OcrImage(QWidget* parent = nullptr);
+  explicit OcrImage(QWidget* parent = nullptr);
 };
 
 #endif // OCRIMAGE_H

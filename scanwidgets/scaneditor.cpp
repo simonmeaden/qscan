@@ -19,15 +19,14 @@
 */
 #include <utility>
 
-#include <yaml-cpp/yaml.h>
 #include <qyaml-cpp/qyaml-cpp.h>
+#include <yaml-cpp/yaml.h>
 
 #include "qscan.h"
 #include "scaneditor.h"
 
 #include "ocrdialog.h"
 #include "ocrtools.h"
-
 
 /* ScanEditor
  *****************************************************************************/
@@ -50,10 +49,7 @@ const QString ScanEditor::LANGUAGE = "language";
    \param lang - the tesseract language.
    \param parent - the parent QObject.
 */
-ScanEditor::ScanEditor(QScan* scan,
-                       QString& configdir,
-                       QString datadir,
-                       QWidget* parent)
+ScanEditor::ScanEditor(QScan* scan, QString& configdir, QString datadir, QWidget* parent)
   : QFrame(parent)
   , m_scan_lib(scan)
   , m_config_dir(std::move(configdir))
@@ -65,7 +61,8 @@ ScanEditor::ScanEditor(QScan* scan,
 
   m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
 
-  m_ocr_tools = new OcrTools(configdir, m_lang);
+  QString datapath = configdir + QStringLiteral("/tesseract/tessdata");
+  m_ocr_tools = new OcrTools(datapath, m_lang);
 
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   initGui();
@@ -212,6 +209,17 @@ void ScanEditor::receiveOcrRequest(int index)
 
     if (page->text().isEmpty()) {
       m_ocr_tools->convertImageToText(page);
+
+    } else {
+      if (QMessageBox::warning(this,
+                               tr("Overwrite Text"),
+                               tr("Text already exists for this image.\n"
+                                  "Continuing will overwrite the existing text.\n"
+                                  "Do you want to continue?"),
+                               QMessageBox::Yes | QMessageBox::No,
+                               QMessageBox::No) == QMessageBox::Yes) {
+        m_ocr_tools->convertImageToText(page);
+      }
     }
 
   } else {
@@ -245,7 +253,9 @@ void ScanEditor::receiveOcrResult(const Page& page)
     dlg->setOcrText(page->text());
   }
 
-  if (dlg->exec() == QDialog::Accepted) {
+  int result = dlg->exec();
+
+  if (result == QDialog::Accepted) {
     page->setText(dlg->text());
     int index = m_pages.key(page);
 
@@ -256,7 +266,8 @@ void ScanEditor::receiveOcrResult(const Page& page)
       int result = QMessageBox::question(this,
                                          tr("Image text exists."),
                                          tr("The image %1 already has text.\n"
-                                            "Do you want to overwrite this text?").arg(index),
+                                            "Do you want to overwrite this text?")
+                                         .arg(index),
                                          QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll,
                                          QMessageBox::No);
 
@@ -272,6 +283,10 @@ void ScanEditor::receiveOcrResult(const Page& page)
     if (dlg->imageChanged()) {
       // TODO maybe save tweaked image. maybe only supply list of tweaks?
     }
+  } else if (result == QMessageBox::Help) {
+    // TODO
+  } else if (result == QMessageBox::Save) {
+    // TODO
   }
 }
 
@@ -779,5 +794,5 @@ QImage ScanEditor::thumbnail(const QImage& image) const
     return thumbnail;
   }
 
-  return  QImage();
+  return QImage();
 }
