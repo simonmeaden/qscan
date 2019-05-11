@@ -118,23 +118,23 @@ void TessTools::init(const char* datapath, const char* lang, tesseract::TessBase
 }
 
 
-QString TessTools::getStringFromImage(const QString& image_path)
+void TessTools::getStringFromImage(Page page)
 {
-  cv::Mat image = cv::imread(image_path.toStdString(), cv::IMREAD_COLOR);
-  QString outText;
+  cv::Mat mat_image = cv::imread(page->imagePath().toStdString(), cv::IMREAD_COLOR);
+  page->setMatImage(mat_image);
+  QString out_text;
   //  monitor = new ETEXT_DESC();
 
   m_api->SetPageSegMode(tesseract::PSM_AUTO);
 
   QApplication::setOverrideCursor(Qt::WaitCursor);
 
-  m_api->SetImage(image.data, image.cols, image.rows, 3, image.step);
+  m_api->SetImage(mat_image.data, mat_image.cols, mat_image.rows, 3, mat_image.step);
   // for some reason internal to tesseract it sometimes crashes with
   // a Segmentation Fault without this.
   m_api->ClearAdaptiveClassifier();
-  outText = QString::fromUtf8(m_api->GetUTF8Text());
+  out_text = QString::fromUtf8(m_api->GetUTF8Text());
+  page->setText(out_text);
 
   QApplication::restoreOverrideCursor();
-
-  return outText;
 }

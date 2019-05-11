@@ -137,10 +137,12 @@ protected:
   void receiveImages(const QImage& left, const QImage& right);
   void receiveString(int page, const QString& str);
   QString saveImage(int index, const QImage& image);
+  void saveModifiedImage(int index, const QImage& image);
   void saveAsCover(const QImage& image);
   void receiveOcrRequest(int page);
   void receiveOcrResult(const Page& page);
   void saveText(int index, const Page& page);
+  void saveModifiedText(int index, const QString& text);
   void clearSaveAllTextsFlag();
   QImage thumbnail(const QImage& image) const;
 

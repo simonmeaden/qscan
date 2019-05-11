@@ -11,6 +11,7 @@ const qreal BaseScanImage::ZOOM_OUT_FACTOR = 0.9;
 BaseScanImage::BaseScanImage(QWidget* parent)
   : QLabel(parent)
   , m_state(DOING_NOTHING)
+  , m_fit_type(FIT_BEST)
   , m_rubber_band(QRect())
   , m_mouse_moved(false)
   , m_rb_start_x(0)
@@ -22,6 +23,9 @@ BaseScanImage::BaseScanImage(QWidget* parent)
   , m_is_inside(false)
 {
   m_logger = Log4Qt::Logger::logger(tr("ScanImage"));
+
+  //  setScaledContents(true);
+  //  setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
 }
 
 bool BaseScanImage::hasSelection()
@@ -29,13 +33,26 @@ bool BaseScanImage::hasSelection()
   return (m_state == RUBBERBAND_COMPLETE);
 }
 
+QImage BaseScanImage::image() const
+{
+  return m_image;
+}
+
+QImage BaseScanImage::modifiedImage() const
+{
+  return m_modified_image;
+}
+
+void BaseScanImage::undoChanges()
+{
+  m_modified_image = m_image;
+  fitBest();
+}
+
 void BaseScanImage::setImage(const QImage& image)
 {
   m_image = image;
-  //  m_display_scaled_by = 1.0; //qreal(width()) / qreal(m_image.width());
-  //  m_scaled_image = m_image;
-  setPixmap(QPixmap::fromImage(m_image));
-  fitBest();
+  m_modified_image = image;
   emit imageIsLoaded();
 
   // allows multi use of the same crop size.
@@ -50,7 +67,6 @@ void BaseScanImage::setImage(const QImage& image)
 void BaseScanImage::cropToSelection()
 {
   if (hasSelection()) {
-    m_logger->info(tr("Cropping to selection"));
     QRect scaled_rect;
     scaled_rect.setX(int(m_rubber_band.x() / m_scale_by));
     scaled_rect.setY(int(m_rubber_band.y() / m_scale_by));
@@ -66,9 +82,12 @@ void BaseScanImage::cropToSelection()
 
 void BaseScanImage::scaleImage(qreal factor)
 {
-  QSize size = m_image.size();
-  size *= factor;
-  resize(size);
+  QImage scaled_image;
+  int w = int(m_modified_image.width() * factor);
+  int h = int(m_modified_image.height() * factor);
+  scaled_image = m_modified_image.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  setPixmap(QPixmap::fromImage(m_modified_image));
+
   emit adjustScrollbar(factor);
 }
 
@@ -87,31 +106,54 @@ void BaseScanImage::clearSelection()
 
 void BaseScanImage::fitBest()
 {
-  QSize frame_size = frameSize();
-  qreal scale_w = qreal(frame_size.width()) / qreal(m_image.width());
-  qreal scale_h = qreal(frame_size.height()) / qreal(m_image.height());
-  qreal factor = (scale_w < scale_h ? scale_w : scale_h);
-  m_logger->info(tr("Fit Best scale %1 to %2").arg(m_scale_by).arg(factor));
-  m_scale_by = factor;
-  scaleImage(m_scale_by);
+  m_fit_type = FIT_BEST;
+  update();
 }
 
 void BaseScanImage::fitHeight()
 {
-  qreal factor = qreal(height()) / qreal(m_image.height());
-  m_logger->info(tr("Fit Height scale %1 to %2").arg(m_scale_by).arg(factor));
-  m_scale_by = factor;
-  scaleImage(m_scale_by);
+  m_fit_type = FIT_HEIGHT;
+  update();
 }
 
 void BaseScanImage::fitWidth()
 {
-  qreal factor = qreal(width()) / qreal(m_image.width());
-  m_logger->info(tr("Fit Width scale %1 to %2").arg(m_scale_by).arg(factor));
-  m_scale_by = factor;
-  scaleImage(m_scale_by);
+  m_fit_type = FIT_WIDTH;
+  update();
 }
 
+void BaseScanImage::fitByType()
+{
+  qreal factor;
+  int w = width();
+  int h = height();
+  qreal scale_w;
+  qreal scale_h;
+
+  switch (m_fit_type) {
+  case FIT_BEST:
+    scale_w = qreal(qreal(qreal(w) / m_image.width()));
+    scale_h = qreal(qreal(qreal(h) / m_image.height()));
+    factor = (scale_w < scale_h ? scale_w : scale_h);
+    m_scale_by = factor;
+    break;
+
+  case FIT_WIDTH:
+    factor = qreal(qreal(qreal(w) / m_image.width()));
+    m_scale_by = factor;
+    break;
+
+  case FIT_HEIGHT:
+    factor = qreal(qreal(qreal(h) / m_image.height()));
+    m_scale_by = factor;
+    break;
+
+  default:
+    break;
+  }
+
+  scaleImage(m_scale_by);
+}
 
 void BaseScanImage::mousePressEvent(QMouseEvent* event)
 {
@@ -469,6 +511,159 @@ void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
       update();
     } // end of switch.
   }
+}
+void BaseScanImage::paintEvent(QPaintEvent* event)
+{
+  if (!m_image.isNull()) {
+    fitByType();
+    QLabel::paintEvent(event);
+    QPainter painter(this);
+    paintRubberBand(&painter);
+    painter.end();
+  }
+}
+
+void BaseScanImage::paintRubberBand(QPainter* painter)
+{
+  QPen pen;
+  QBrush brush;
+
+  switch (m_state) {
+  //      case EDGE_STARTING:
+  //        break;
+  case EDGE_DRAWING:
+    pen = QPen(EDGING_COLOR);
+    pen.setWidth(EDGE_WIDTH);
+    painter->setPen(pen);
+    painter->drawLine(m_edge_start, m_edge_finish);
+    break;
+
+  case RUBBERBANDING: {
+    pen = QPen(QColor("green"));
+    pen.setWidth(RUBBERBAND_WIDTH);
+    brush = QBrush(QColor(128, 128, 255, 128));
+    painter->setPen(pen);
+    painter->setBrush(brush);
+    painter->drawRect(m_rubber_band);
+    break;
+  } // end of RUBBER_BANDING
+
+  case RUBBERBAND_COMPLETE: {
+    pen = QPen(QColor("blue"));
+    pen.setWidth(RUBBERBAND_WIDTH);
+    brush = QBrush(QColor(128, 128, 255, 128));
+    painter->setPen(pen);
+    painter->setBrush(brush);
+    painter->drawRect(m_rubber_band);
+    painter->drawRect(m_rubber_band.x() - 10, m_rubber_band.y() - 10, 20, 20);
+    painter->drawRect(m_rubber_band.x() + m_rubber_band.width() - 10,
+                      m_rubber_band.y() - 10,
+                      20,
+                      20);
+    painter->drawRect(m_rubber_band.x() - 10,
+                      m_rubber_band.y() + m_rubber_band.height() - 10,
+                      20,
+                      20);
+    painter->drawRect(m_rubber_band.x() + m_rubber_band.width() - 10,
+                      m_rubber_band.y() + m_rubber_band.height() - 10,
+                      20,
+                      20);
+    break;
+  } // end of RB_COMPLETE
+
+  case DOING_NOTHING:
+    break;
+
+  case STRETCH_TOP:
+  case STRETCH_BOTTOM:
+  case STRETCH_LEFT:
+  case STRETCH_RIGHT:
+  case STRETCH_TOPLEFT:
+  case STRETCH_TOPRIGHT:
+  case STRETCH_BOTTOMLEFT:
+  case STRETCH_BOTTOMRIGHT:
+    pen = QPen(QColor("green"));
+    pen.setWidth(RUBBERBAND_WIDTH);
+    brush = QBrush(QColor(128, 128, 255, 128));
+    painter->setPen(pen);
+    painter->setBrush(brush);
+    painter->drawRect(m_stretched_band);
+    painter->drawRect(
+      m_stretched_band.x() - 10, m_stretched_band.y() - 10, 20, 20);
+    painter->drawRect(m_stretched_band.x() + m_stretched_band.width() - 10,
+                      m_stretched_band.y() - 10,
+                      20,
+                      20);
+    painter->drawRect(m_stretched_band.x() - 10,
+                      m_stretched_band.y() + m_stretched_band.height() - 10,
+                      20,
+                      20);
+    painter->drawRect(m_stretched_band.x() + m_stretched_band.width() - 10,
+                      m_stretched_band.y() + m_stretched_band.height() - 10,
+                      20,
+                      20);
+    break;
+
+  default:
+    break;
+  } // end of switch
+}
+
+
+void BaseScanImage::enterEvent(QEvent*)
+{
+  m_is_inside = true;
+}
+
+void BaseScanImage::leaveEvent(QEvent*)
+{
+  m_is_inside = false;
+}
+
+
+void BaseScanImage::wheelEvent(QWheelEvent* event)
+{
+  int delta = event->delta();
+
+  if (event->modifiers().testFlag(Qt::ControlModifier)) {
+    // zoom in/out
+    if (delta < 0) {
+      zoomOut();
+
+    } else {
+      zoomIn();
+    }
+
+    update();
+
+  } else {
+    // scroll up/down
+  }
+}
+
+//void BaseScanImage::resizeEvent(QResizeEvent* event)
+//{
+//  if (!m_image.isNull()) {
+//    fitByType();
+//  }
+
+//  QLabel::resizeEvent(event);
+//}
+
+void BaseScanImage::zoomIn()
+{
+  qreal factor = m_scale_by * ZOOM_IN_FACTOR;
+  m_logger->info(tr("ZoomIn scale %1 to %2").arg(m_scale_by).arg(factor));
+  m_scale_by = factor;
+  scaleImage(m_scale_by);
+}
+
+void BaseScanImage::zoomOut()
+{
+  qreal factor = m_scale_by * ZOOM_OUT_FACTOR;
+  m_logger->info(tr("ZoomIn scale %1 to %2").arg(m_scale_by).arg(factor));
+  m_scale_by = factor;
+  scaleImage(m_scale_by);
 }
 
 void BaseScanImage::rotateBy(qreal angle)

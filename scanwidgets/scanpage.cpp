@@ -24,6 +24,16 @@ void ScanPage::setText(const QString& text)
   m_text = text;
 }
 
+cv::Mat ScanPage::matImage() const
+{
+  return m_mat_image;
+}
+
+void ScanPage::setMatImage(const cv::Mat& mat_image)
+{
+  m_mat_image = mat_image;
+}
+
 //QImage ScanPage::thumbnail() const
 //{
 //  if (!m_image.isNull()) {

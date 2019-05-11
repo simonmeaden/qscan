@@ -183,6 +183,16 @@ QString ScanEditor::saveImage(int index, const QImage& image)
   return path;
 }
 
+void ScanEditor::saveModifiedImage(int index, const QImage& image)
+{
+  Page page  = m_pages.value(index);
+  QString path = page->imagePath();
+
+  if (!image.save(path, "PNG", 100)) {
+    m_logger->info(tr("Failed to save image %1").arg(path));
+  }
+}
+
 void ScanEditor::saveAsCover(const QImage& image)
 {
   if (!m_current_doc_name.isEmpty()) {
@@ -243,15 +253,32 @@ void ScanEditor::saveText(int index, const Page& page)
   }
 }
 
+void ScanEditor::saveModifiedText(int index, const QString& text)
+{
+  Page page = m_pages.value(index);
+  page->setText(text);
+
+  QString filename = m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator() +
+                     QString("text%1.txt").arg(index);
+  QFile file(filename);
+
+  if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+    QTextStream stream(&file);
+    stream << page->text();
+    file.close();
+    m_page_view->setHasText(index, true);
+  }
+}
+
 void ScanEditor::receiveOcrResult(const Page& page)
 {
   auto* dlg = new OCRDialog(this);
-  QImage image(page->imagePath(), "PNG");
-  dlg->setImage(image);
+  connect(dlg, &OCRDialog::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
+  connect(dlg, &OCRDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
 
-  if (!page->text().isEmpty()) {
-    dlg->setOcrText(page->text());
-  }
+  int index = m_pages.key(page);
+  QImage image(page->imagePath(), "PNG");
+  dlg->setData(index, image, page);
 
   int result = dlg->exec();
 
@@ -263,13 +290,13 @@ void ScanEditor::receiveOcrResult(const Page& page)
       saveText(index, page);
 
     } else {
-      int result = QMessageBox::question(this,
-                                         tr("Image text exists."),
-                                         tr("The image %1 already has text.\n"
-                                            "Do you want to overwrite this text?")
-                                         .arg(index),
-                                         QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll,
-                                         QMessageBox::No);
+      result = QMessageBox::question(this,
+                                     tr("Image text exists."),
+                                     tr("The image %1 already has text.\n"
+                                        "Do you want to overwrite this text?")
+                                     .arg(index),
+                                     QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll,
+                                     QMessageBox::No);
 
       if (result == QMessageBox::Yes) {
         saveText(index, page);

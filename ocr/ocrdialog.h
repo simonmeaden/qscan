@@ -6,11 +6,13 @@
 #include <QFrame>
 #include <QGridLayout>
 #include <QObject>
-#include <QPlainTextEdit>
+#include <QTextEdit>
 #include <QPushButton>
 #include <QGuiApplication>
 #include <QScreen>
 #include <QMessageBox>
+
+#include "scanpage.h"
 
 class OcrImage;
 
@@ -21,7 +23,8 @@ public:
   explicit OCRDialog(QWidget* parent = nullptr);
 
   QImage image();
-  void setImage(const QImage& image);
+  void setData(int index, const QImage& image, const Page&  page);
+  void setOcrImage(const QImage& image);
   void setOcrText(const QString& text);
   QString text();
 
@@ -30,11 +33,15 @@ public:
 
 signals:
   void sendOcrImage(const QImage&);
+  void saveModifiedImage(int index, const QImage& image);
+  void saveModifiedText(int index, const QString& text);
 
 protected:
-  QPlainTextEdit* m_text_edit;
+  QTextEdit* m_text_edit;
   OcrImage* m_image_display;
-  QImage m_image;
+  int m_page_no;
+  Page m_page;
+  //  QImage m_image;
   bool m_image_changed;
   QPushButton* crop_btn;
 
@@ -48,8 +55,10 @@ protected:
   void dewarp();
   void descew();
   void rescale();
-  void save();
+  void saveText();
+  void saveImage();
   void discard();
+  void undoChanges();
 };
 
 #endif // OCRDIALOG_H

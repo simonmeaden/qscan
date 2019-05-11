@@ -5,8 +5,10 @@
 #include <QRect>
 #include <QPoint>
 #include <QtMath>
+#include <QPainter>
 
 #include "logger.h"
+//#include "aspectratiopixmaplabel.h"
 
 class BaseScanImage : public QLabel
 {
@@ -16,12 +18,19 @@ public:
 
   bool hasSelection();
   void cropToSelection();
-  void setImage(const QImage& image);
   void fitBest();
   void fitHeight();
   void fitWidth();
   void clearSelection();
   void rotateBy(qreal angle);
+
+  void setImage(const QImage& image);
+  QImage image() const;
+  QImage modifiedImage() const;
+
+  void undoChanges();
+  void zoomIn();
+  void zoomOut();
 
 signals:
   void imageIsLoaded();
@@ -52,10 +61,19 @@ protected:
     EDGE_DRAWING,
     DOING_NOTHING,
   };
+  enum FitType
+  {
+    FIT_BEST,
+    FIT_WIDTH,
+    FIT_HEIGHT,
+    NO_FIT,
+  };
 
   Log4Qt::Logger* m_logger;
   State m_state;
-  QImage m_image;
+  FitType m_fit_type;
+  QImage m_image; // original unmodified image.
+  QImage m_modified_image; // modified image.
   QRect m_rubber_band;
   QRect m_stretched_band;
   bool m_mouse_moved;
@@ -73,8 +91,16 @@ protected:
   void mousePressEvent(QMouseEvent* event) override;
   void mouseReleaseEvent(QMouseEvent* event) override;
   void mouseMoveEvent(QMouseEvent* event) override;
+  void paintEvent(QPaintEvent* event) override;
+  void enterEvent(QEvent*) override;
+  void leaveEvent(QEvent*) override;
+  void wheelEvent(QWheelEvent* event) override;
+  //  void resizeEvent(QResizeEvent* event) override;
+
   void scaleImage(qreal factor);
   void rotateUsingEdge();
+  void paintRubberBand(QPainter* painter);
+  void fitByType();
 
   static const int EDGE_WIDTH = 2;
   static const int RUBBERBAND_WIDTH = 2;

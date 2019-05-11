@@ -37,8 +37,6 @@ public:
   //  void save(const QString& doc_name = QString());
   void saveAs();
   void saveAsCover();
-  void zoomIn();
-  void zoomOut();
   void rescan();
   void scale();
 
@@ -66,12 +64,7 @@ protected:
   QString m_filename;
 
   void contextMenuEvent(QContextMenuEvent* event) override;
-  void paintEvent(QPaintEvent* event) override;
-  void enterEvent(QEvent*) override;
-  void leaveEvent(QEvent*) override;
-  void wheelEvent(QWheelEvent* event) override;
 
-  void paintRubberBand(QPainter* painter);
   QPointF getRotatedPoint(QPointF p, QPointF center, qreal angleRads);
   QRectF getMinimumBoundingRect(QRect r, qreal angleRads);
   qreal getMax(qreal a, qreal b, qreal c, qreal d);

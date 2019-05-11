@@ -25,14 +25,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+        aspectratiopixmaplabel.cpp \
         basescanimage.cpp \
+        opencvimage.cpp \
         pageview.cpp \
         scaneditor.cpp \
         scanimage.cpp \
         scanpage.cpp
 
 HEADERS += \
+        aspectratiopixmaplabel.h \
         basescanimage.h \
+        opencvimage.h \
         pageview.h \
         scaneditor.h \
         scanimage.h \

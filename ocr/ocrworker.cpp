@@ -32,8 +32,7 @@ void OcrWorker::process()
       if (!m_images.isEmpty()) {
         Page page = m_images.takeFirst();
         QString image_path = page->imagePath();
-        QString str = m_api->getStringFromImage(image_path);
-        page->setText(str);
+        m_api->getStringFromImage(page);
         emit converted(page);
         m_available = false;
       }

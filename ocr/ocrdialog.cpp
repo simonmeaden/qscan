@@ -13,27 +13,25 @@ OCRDialog::OCRDialog(QWidget* parent)
 
 QImage OCRDialog::image()
 {
-  return m_image;
+  return m_image_display->image();
 }
 
-void OCRDialog::setImage(const QImage& image)
+void OCRDialog::setData(int index, const QImage& image, const Page&  page)
 {
-  m_image = image;
-  QImage scaled_image = m_image.scaled(600, 600, Qt::KeepAspectRatio);
-  m_image_display->setPixmap(QPixmap::fromImage(scaled_image));
-  QSize size = m_image_display->frameSize();
-  qreal scale_w = qreal(size.width()) / qreal(scaled_image.width());
-  qreal scale_h = qreal(size.height()) / qreal(scaled_image.height());
-  qreal factor = (scale_w < scale_h ? scale_w : scale_h);
+  m_page_no = index;
+  m_page = page;
+  setOcrImage(image);
+  setOcrText(page->text());
+}
 
-  size = scaled_image.size();
-  size *= factor;
-  m_image_display->resize(size);
+void OCRDialog::setOcrImage(const QImage& image)
+{
+  m_image_display->setImage(image);
 }
 
 void OCRDialog::setOcrText(const QString& text)
 {
-  m_text_edit->setPlainText(text);
+  m_text_edit->setText(text);
 }
 
 QString OCRDialog::text()
@@ -56,7 +54,7 @@ void OCRDialog::initGui()
   auto* layout = new QGridLayout;
   setLayout(layout);
 
-  m_text_edit = new QPlainTextEdit(this);
+  m_text_edit = new QTextEdit(this);
   layout->addWidget(m_text_edit, 0, 0);
 
   auto* btn_box = new QDialogButtonBox(Qt::Vertical, this);
@@ -102,10 +100,20 @@ void OCRDialog::initGui()
   connect(rescale_btn, &QPushButton::clicked, this, &OCRDialog::rescale);
   btn_box->addButton(rescale_btn, QDialogButtonBox::ActionRole);
 
-  auto* save_btn = new QPushButton(tr("Save Text"), this);
-  save_btn->setToolTip(tr("Increase the DPI of the image."));
-  connect(save_btn, &QPushButton::clicked, this, &OCRDialog::save);
-  btn_box->addButton(save_btn, QDialogButtonBox::ActionRole);
+  auto* save_txt_btn = new QPushButton(tr("Save Text"), this);
+  save_txt_btn->setToolTip(tr("Save the text."));
+  connect(save_txt_btn, &QPushButton::clicked, this, &OCRDialog::saveText);
+  btn_box->addButton(save_txt_btn, QDialogButtonBox::ActionRole);
+
+  auto* save_img_btn = new QPushButton(tr("Save Image"), this);
+  save_img_btn->setToolTip(tr("Save the image."));
+  connect(save_img_btn, &QPushButton::clicked, this, &OCRDialog::saveImage);
+  btn_box->addButton(save_img_btn, QDialogButtonBox::ActionRole);
+
+  auto* undo_btn = new QPushButton(tr("Undo changes"), this);
+  undo_btn->setToolTip(tr("Undo changes and revert to original image."));
+  connect(undo_btn, &QPushButton::clicked, this, &OCRDialog::undoChanges);
+  btn_box->addButton(undo_btn, QDialogButtonBox::ActionRole);
 
   auto* discard_btn = new QPushButton(tr("Discard changes"), this);
   discard_btn->setToolTip(tr("Closes the dialog, discarding any changes."));
@@ -120,7 +128,7 @@ void OCRDialog::initGui()
 
 void OCRDialog::applyOcr()
 {
-  emit sendOcrImage(m_image);
+  emit sendOcrImage(m_image_display->image());
 }
 
 void OCRDialog::help()
@@ -141,6 +149,9 @@ void OCRDialog::setUnselected()
 void OCRDialog::binarise()
 {
   // TODO binarise
+  cv::Mat mat = m_page->matImage();
+  cv::Mat gray;
+  cv::cvtColor(mat, gray, CV_BGR2GRAY);
 }
 
 void OCRDialog::denoise()
@@ -163,12 +174,34 @@ void OCRDialog::rescale()
   // TODO rescale
 }
 
-void OCRDialog::save()
+void OCRDialog::saveText()
 {
-  accept();
+  emit saveModifiedText(m_page_no, m_text_edit->toPlainText());
+}
+
+void OCRDialog::saveImage()
+{
+  emit saveModifiedImage(m_page_no, m_image_display->modifiedImage());
 }
 
 void OCRDialog::discard()
+{
+  int result = QMessageBox::warning(
+                 this,
+                 tr("Discaring Changes"),
+                 tr("You are about to discard any changes you have made\n"
+                    "and quit the dialog.\n"
+                    "This cannot be undone\n"
+                    "Are you sure?"),
+                 QMessageBox::Yes | QMessageBox::No,
+                 QMessageBox::No);
+
+  if (result == QMessageBox::Yes) {
+    reject();
+  }
+}
+
+void OCRDialog::undoChanges()
 {
   int result = QMessageBox::warning(
                  this,
@@ -180,6 +213,6 @@ void OCRDialog::discard()
                  QMessageBox::No);
 
   if (result == QMessageBox::Yes) {
-    reject();
+    m_image_display->undoChanges();
   }
 }

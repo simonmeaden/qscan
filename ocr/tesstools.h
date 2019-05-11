@@ -34,6 +34,7 @@
 #include "logger.h"
 #include <leptonica/allheaders.h>
 #include <tesseract/baseapi.h>
+#include "scanpage.h"
 
 #include "ocr_global.h"
 
@@ -54,7 +55,7 @@ public:
   TessTools& operator=(TessTools const& other);     // copy assignment
   TessTools& operator=(TessTools&& other) noexcept; // move assignment
 
-  QString getStringFromImage(const QString& image_path);
+  void getStringFromImage(Page page);
 
 signals:
   void log(LogLevel, const QString&);
