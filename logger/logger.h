@@ -14,6 +14,7 @@ enum LogLevel
   FATAL,
   OFF,
 };
+Q_DECLARE_METATYPE(LogLevel)
 
 #if defined(LOGGER_ENABLE)
 #include "log4qt/consoleappender.h"
@@ -32,7 +33,9 @@ class LOGGERSHARED_EXPORT Logger
 public:
   Logger() {}
 
-  static Logger logger(const QString&) { return new Logger(); }
+  static Logger logger(const QString&) {
+    return new Logger();
+  }
 
   void info(const QString&) {}
   void warn(const QString&) {}

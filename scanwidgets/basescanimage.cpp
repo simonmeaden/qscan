@@ -23,9 +23,6 @@ BaseScanImage::BaseScanImage(QWidget* parent)
   , m_is_inside(false)
 {
   m_logger = Log4Qt::Logger::logger(tr("ScanImage"));
-
-  //  setScaledContents(true);
-  //  setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
 }
 
 bool BaseScanImage::hasSelection()
@@ -38,30 +35,28 @@ QImage BaseScanImage::image() const
   return m_image;
 }
 
-QImage BaseScanImage::modifiedImage() const
-{
-  return m_modified_image;
-}
 
-void BaseScanImage::undoChanges()
+void BaseScanImage::updateImage(const QImage& image)
 {
-  m_modified_image = m_image;
-  fitBest();
-}
-
-void BaseScanImage::setImage(const QImage& image)
-{
-  m_image = image;
   m_modified_image = image;
-  emit imageIsLoaded();
+  imageIsLoaded();
 
   // allows multi use of the same crop size.
   if (m_def_crop_set) {
     m_rubber_band = m_default_crop_size;
     m_state = RUBBERBAND_COMPLETE;
   }
+}
 
-  update();
+void BaseScanImage::setImage(const QImage& image)
+{
+  m_image = image;
+  emit updateImage(m_image);
+}
+
+QImage BaseScanImage::modifiedImage() const
+{
+  return m_modified_image;
 }
 
 void BaseScanImage::cropToSelection()
@@ -75,18 +70,17 @@ void BaseScanImage::cropToSelection()
 
     QImage cropped = m_image.copy(scaled_rect);
 
-    setImage(cropped);
+    updateImage(cropped);
     clearSelection();
   }
 }
 
-void BaseScanImage::scaleImage(qreal factor)
+void BaseScanImage::scaleImage(qreal factor, QImage image)
 {
-  QImage scaled_image;
-  int w = int(m_modified_image.width() * factor);
-  int h = int(m_modified_image.height() * factor);
-  scaled_image = m_modified_image.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-  setPixmap(QPixmap::fromImage(m_modified_image));
+  int w = int(image.width() * factor);
+  int h = int(image.height() * factor);
+  m_scaled_image = image.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  setPixmap(QPixmap::fromImage(m_scaled_image));
 
   emit adjustScrollbar(factor);
 }
@@ -102,6 +96,11 @@ void BaseScanImage::clearSelection()
   setCursor(Qt::ArrowCursor);
   update();
   emit unselected();
+}
+
+QRect BaseScanImage::selection()
+{
+  return m_rubber_band;
 }
 
 void BaseScanImage::fitBest()
@@ -122,37 +121,43 @@ void BaseScanImage::fitWidth()
   update();
 }
 
-void BaseScanImage::fitByType()
+void BaseScanImage::fitByType(QSize size)
 {
-  qreal factor;
-  int w = width();
-  int h = height();
-  qreal scale_w;
-  qreal scale_h;
+  if (!m_image.isNull()) {
+    qreal factor;
+    int w = size.width();
+    int h = size.height();
 
-  switch (m_fit_type) {
-  case FIT_BEST:
-    scale_w = qreal(qreal(qreal(w) / m_image.width()));
-    scale_h = qreal(qreal(qreal(h) / m_image.height()));
-    factor = (scale_w < scale_h ? scale_w : scale_h);
-    m_scale_by = factor;
-    break;
+    switch (m_fit_type) {
+    case FIT_BEST: {
+      qreal scale_w = qreal(qreal(qreal(w) / qreal(m_image.width())));
+      qreal scale_h = qreal(qreal(qreal(h) / qreal(m_image.height())));
+      factor = (scale_w < scale_h ? scale_w : scale_h);
+      m_scale_by = factor;
+      break;
+    }
 
-  case FIT_WIDTH:
-    factor = qreal(qreal(qreal(w) / m_image.width()));
-    m_scale_by = factor;
-    break;
+    case FIT_WIDTH:
+      factor = qreal(qreal(qreal(w) / qreal(m_image.width())));
+      m_scale_by = factor;
+      break;
 
-  case FIT_HEIGHT:
-    factor = qreal(qreal(qreal(h) / m_image.height()));
-    m_scale_by = factor;
-    break;
+    case FIT_HEIGHT:
+      factor = qreal(qreal(qreal(h) / qreal(m_image.height())));
+      m_scale_by = factor;
+      break;
 
-  default:
-    break;
+    default:
+      break;
+    }
+
+    scaleImage(m_scale_by, m_image);
   }
+}
 
-  scaleImage(m_scale_by);
+void BaseScanImage::undoAllChanges()
+{
+  m_modified_image = m_image;
 }
 
 void BaseScanImage::mousePressEvent(QMouseEvent* event)
@@ -515,7 +520,7 @@ void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
 void BaseScanImage::paintEvent(QPaintEvent* event)
 {
   if (!m_image.isNull()) {
-    fitByType();
+    fitByType(frameSize());
     QLabel::paintEvent(event);
     QPainter painter(this);
     paintRubberBand(&painter);
@@ -643,10 +648,6 @@ void BaseScanImage::wheelEvent(QWheelEvent* event)
 
 //void BaseScanImage::resizeEvent(QResizeEvent* event)
 //{
-//  if (!m_image.isNull()) {
-//    fitByType();
-//  }
-
 //  QLabel::resizeEvent(event);
 //}
 
@@ -655,7 +656,7 @@ void BaseScanImage::zoomIn()
   qreal factor = m_scale_by * ZOOM_IN_FACTOR;
   m_logger->info(tr("ZoomIn scale %1 to %2").arg(m_scale_by).arg(factor));
   m_scale_by = factor;
-  scaleImage(m_scale_by);
+  scaleImage(m_scale_by, m_image);
 }
 
 void BaseScanImage::zoomOut()
@@ -663,7 +664,7 @@ void BaseScanImage::zoomOut()
   qreal factor = m_scale_by * ZOOM_OUT_FACTOR;
   m_logger->info(tr("ZoomIn scale %1 to %2").arg(m_scale_by).arg(factor));
   m_scale_by = factor;
-  scaleImage(m_scale_by);
+  scaleImage(m_scale_by, m_image);
 }
 
 void BaseScanImage::rotateBy(qreal angle)

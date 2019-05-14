@@ -1,6 +1,7 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
+    document \
     logger \
     ocr \
     qscan \

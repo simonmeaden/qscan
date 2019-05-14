@@ -390,7 +390,7 @@ void ScanEditor::loadExistingFiles()
 
       if (ok) { // is an int value
         image = QImage(filename, "PNG");
-        page = Page(new ScanPage(this));
+        page = Page(new ScanPage());
         page->setImage(filename);
         m_pages.insert(index, page);
         m_page_view->insert(index, thumbnail(image), false);
@@ -418,7 +418,7 @@ void ScanEditor::loadExistingFiles()
 
         } else {
           // should only happen if an image has been removed.
-          page = Page(new ScanPage(this));
+          page = Page(new ScanPage());
           m_page_view->insert(index, QImage(), false);
         }
 

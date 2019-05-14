@@ -121,7 +121,6 @@ void TessTools::init(const char* datapath, const char* lang, tesseract::TessBase
 void TessTools::getStringFromImage(Page page)
 {
   cv::Mat mat_image = cv::imread(page->imagePath().toStdString(), cv::IMREAD_COLOR);
-  page->setMatImage(mat_image);
   QString out_text;
   //  monitor = new ETEXT_DESC();
 

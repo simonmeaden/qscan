@@ -38,9 +38,6 @@
 
 using Image = QSharedPointer<QImage>;
 Q_DECLARE_METATYPE(Image)
-using Page = QSharedPointer<ScanPage>;
-Q_DECLARE_METATYPE(Page)
-Q_DECLARE_METATYPE(LogLevel)
 
 using namespace Log4Qt;
 int main(int argc, char* argv[])
@@ -49,6 +46,7 @@ int main(int argc, char* argv[])
   QApplication a(argc, argv);
   qRegisterMetaType<Image>();
   qRegisterMetaType<ScanOptions>();
+  qRegisterMetaType<ScanPage>();
   qRegisterMetaType<Page>();
   qRegisterMetaType<LogLevel>();
 

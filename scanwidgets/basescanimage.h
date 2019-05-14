@@ -7,8 +7,11 @@
 #include <QtMath>
 #include <QPainter>
 
+#include <opencv2/opencv.hpp>
+
 #include "logger.h"
-//#include "aspectratiopixmaplabel.h"
+
+using namespace cv;
 
 class BaseScanImage : public QLabel
 {
@@ -22,15 +25,18 @@ public:
   void fitHeight();
   void fitWidth();
   void clearSelection();
+  QRect selection();
   void rotateBy(qreal angle);
 
   void setImage(const QImage& image);
   QImage image() const;
   QImage modifiedImage() const;
 
-  void undoChanges();
   void zoomIn();
   void zoomOut();
+
+  void fitByType(QSize size);
+  void undoAllChanges();
 
 signals:
   void imageIsLoaded();
@@ -73,7 +79,8 @@ protected:
   State m_state;
   FitType m_fit_type;
   QImage m_image; // original unmodified image.
-  QImage m_modified_image; // modified image.
+  QImage m_scaled_image;
+  QImage m_modified_image;
   QRect m_rubber_band;
   QRect m_stretched_band;
   bool m_mouse_moved;
@@ -97,10 +104,10 @@ protected:
   void wheelEvent(QWheelEvent* event) override;
   //  void resizeEvent(QResizeEvent* event) override;
 
-  void scaleImage(qreal factor);
+  void scaleImage(qreal factor, QImage image);
+  void updateImage(const QImage& image);
   void rotateUsingEdge();
   void paintRubberBand(QPainter* painter);
-  void fitByType();
 
   static const int EDGE_WIDTH = 2;
   static const int RUBBERBAND_WIDTH = 2;
