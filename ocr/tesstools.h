@@ -55,7 +55,9 @@ public:
   TessTools& operator=(TessTools const& other);     // copy assignment
   TessTools& operator=(TessTools&& other) noexcept; // move assignment
 
-  void getStringFromImage(Page page);
+  void getStringFromPage(Page page);
+  QString getStringFromImage(const QImage& image);
+
 
 signals:
   void log(LogLevel, const QString&);

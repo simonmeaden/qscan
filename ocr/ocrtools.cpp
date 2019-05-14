@@ -21,7 +21,8 @@ OcrTools::OcrTools(const QString& datapath,
   connect(thread, &QThread::finished, m_ocr_worker, &OcrWorker::deleteLater);
   connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
-  connect(m_ocr_worker, &OcrWorker::converted, this, &OcrTools::converted);
+  connect(m_ocr_worker, &OcrWorker::pageConverted, this, &OcrTools::convertedPage);
+  connect(m_ocr_worker, &OcrWorker::imageConverted, this, &OcrTools::convertedImage);
   connect(m_ocr_worker, &OcrWorker::log, this, &OcrTools::log);
   m_logger->info(QString("Starting OCR Thread"));
 
@@ -36,7 +37,12 @@ OcrTools::~OcrTools()
 
 void OcrTools::convertImageToText(const Page& page)
 {
-  m_ocr_worker->convertImage(page);
+  m_ocr_worker->convertPage(page);
+}
+
+void OcrTools::convertImageToText(int page_no, const QImage& image)
+{
+  m_ocr_worker->convertImage(page_no, image);
 }
 
 void OcrTools::log(LogLevel level, const QString& msg)

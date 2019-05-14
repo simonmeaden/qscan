@@ -100,9 +100,10 @@ void ScanEditor::makeConnections()
   connect(m_scan_display, &ScanImage::adjustScrollbar, this, &ScanEditor::adjustScrollbar);
   connect(m_scan_display, &ScanImage::sendImage, this, &ScanEditor::receiveImage);
   connect(m_scan_display, &ScanImage::sendImages, this, &ScanEditor::receiveImages);
-  connect(m_page_view, &PageView::sendOcrPage, this, &ScanEditor::receiveOcrRequest);
+  connect(m_page_view, &PageView::sendOcrPage, this, &ScanEditor::receiveOcrPageRequest);
   connect(m_page_view, &PageView::clearSaveAllFlag, this, &ScanEditor::clearSaveAllTextsFlag);
-  connect(m_ocr_tools, &OcrTools::converted, this, &ScanEditor::receiveOcrResult);
+  connect(m_ocr_tools, &OcrTools::convertedPage, this, &ScanEditor::receiveOcrPageResult);
+  connect(m_ocr_tools, &OcrTools::convertedImage, this, &ScanEditor::receiveOcrImageResult);
   connect(m_scan_display, &ScanImage::sendCover, this, &ScanEditor::saveAsCover);
 }
 
@@ -212,10 +213,10 @@ void ScanEditor::saveAsCover(const QImage& image)
   }
 }
 
-void ScanEditor::receiveOcrRequest(int index)
+void ScanEditor::receiveOcrPageRequest(int page_no)
 {
-  if (index > 0) { //
-    Page page = m_pages.value(index);
+  if (page_no > 0) { //
+    Page page = m_pages.value(page_no);
 
     if (page->text().isEmpty()) {
       m_ocr_tools->convertImageToText(page);
@@ -236,6 +237,13 @@ void ScanEditor::receiveOcrRequest(int index)
     // This will never be called normally as the cover page is filtered out
     // in the PageView. However someone might use this somewhere else.
     QMessageBox::warning(this, tr("Cover image."), tr("You cannot OCR the cover image."));
+  }
+}
+
+void ScanEditor::receiveOcrImageRequest(int page_no, const QImage& image)
+{
+  if (page_no > 0) {
+    m_ocr_tools->convertImageToText(page_no, image);
   }
 }
 
@@ -270,11 +278,12 @@ void ScanEditor::saveModifiedText(int index, const QString& text)
   }
 }
 
-void ScanEditor::receiveOcrResult(const Page& page)
+void ScanEditor::receiveOcrPageResult(const Page& page)
 {
-  auto* dlg = new OCRDialog(this);
+  dlg = new OCRDialog(this);
   connect(dlg, &OCRDialog::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
   connect(dlg, &OCRDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
+  connect(dlg, &OCRDialog::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
 
   int index = m_pages.key(page);
   QImage image(page->imagePath(), "PNG");
@@ -314,6 +323,16 @@ void ScanEditor::receiveOcrResult(const Page& page)
     // TODO
   } else if (result == QMessageBox::Save) {
     // TODO
+  }
+
+  dlg->deleteLater();
+  dlg == nullptr;
+}
+
+void ScanEditor::receiveOcrImageResult(int page_no, const QString& text)
+{
+  if (dlg) {
+    dlg->setOcrText(page_no, text);
   }
 }
 

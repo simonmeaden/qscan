@@ -26,6 +26,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "imageconverter.h"
+
 //using namespace cv;
 
 //void monitorProgress(ETEXT_DESC *monitor, int page) {
@@ -118,7 +120,7 @@ void TessTools::init(const char* datapath, const char* lang, tesseract::TessBase
 }
 
 
-void TessTools::getStringFromImage(Page page)
+void TessTools::getStringFromPage(Page page)
 {
   cv::Mat mat_image = cv::imread(page->imagePath().toStdString(), cv::IMREAD_COLOR);
   QString out_text;
@@ -136,4 +138,25 @@ void TessTools::getStringFromImage(Page page)
   page->setText(out_text);
 
   QApplication::restoreOverrideCursor();
+}
+
+QString TessTools::getStringFromImage(const QImage& image)
+{
+  cv::Mat mat_image = ImageConverter::imageToMat(image);
+  QString out_text;
+  //  monitor = new ETEXT_DESC();
+
+  m_api->SetPageSegMode(tesseract::PSM_AUTO);
+
+  QApplication::setOverrideCursor(Qt::WaitCursor);
+
+  m_api->SetImage(mat_image.data, mat_image.cols, mat_image.rows, 3, mat_image.step);
+  // for some reason internal to tesseract it sometimes crashes with
+  // a Segmentation Fault without this.
+  m_api->ClearAdaptiveClassifier();
+  out_text = QString::fromUtf8(m_api->GetUTF8Text());
+
+  QApplication::restoreOverrideCursor();
+
+  return out_text;
 }

@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QFrame>
+#include <QLabel>
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <QStackedLayout>
@@ -24,19 +25,19 @@ class OCRDialog : public QDialog
   Q_OBJECT
 public:
   explicit OCRDialog(QWidget* parent = nullptr);
-  ~OCRDialog() = default;
+  ~OCRDialog() override = default;
 
   QImage image();
   void setData(int index, const QImage& image, const Page&  page);
-  void setOcrImage(const QImage& image);
-  void setOcrText(const QString& text);
+  void setOcrImage(int index, const QImage& image);
+  void setOcrText(int page_no, const QString& text);
   QString text();
 
   bool imageChanged() const;
   QSize sizeHint() const override;
 
 signals:
-  void sendOcrImage(const QImage&);
+  void sendOcrRequest(int, const QImage&);
   void saveModifiedImage(int index, const QImage& image);
   void saveModifiedText(int index, const QString& text);
 
@@ -46,15 +47,15 @@ protected:
   int m_page_no{};
   Page m_page;
   bool m_image_changed;
-  QPushButton* crop_btn{};
-
-  QStackedLayout* m_ctl_stack;
-  int m_btn_stack, m_threshold_stack;
+  QPushButton* m_crop_btn{};
+  QLabel* threshold_lbl;
+  QStackedLayout* m_ctl_stack{};
+  int m_btn_stack{}, m_threshold_stack{};
 
   void resizeEvent(QResizeEvent* event) override;
 
   void initGui();
-  void applyOcr();
+  void requestOcr();
   void help();
   void setSelected();
   void setUnselected();
@@ -67,6 +68,10 @@ protected:
   void saveImage();
   void discard();
   void undoChanges();
+  void close();
+
+  void setThreshold(int threshold);
+  void thresholdAccepted();
 };
 
 #endif // OCRDIALOG_H

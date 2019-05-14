@@ -83,6 +83,7 @@ protected:
   QImage m_modified_image;
   QRect m_rubber_band;
   QRect m_stretched_band;
+  //  QRect m_contents_rect;
   bool m_mouse_moved;
   int m_rb_start_x;
   int m_rb_start_y;
@@ -104,7 +105,7 @@ protected:
   void wheelEvent(QWheelEvent* event) override;
   //  void resizeEvent(QResizeEvent* event) override;
 
-  void scaleImage(qreal factor, QImage image);
+  void scaleImage(qreal factor, const QImage& image);
   void updateImage(const QImage& image);
   void rotateUsingEdge();
   void paintRubberBand(QPainter* painter);

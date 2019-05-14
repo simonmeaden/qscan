@@ -23,6 +23,8 @@ BaseScanImage::BaseScanImage(QWidget* parent)
   , m_is_inside(false)
 {
   m_logger = Log4Qt::Logger::logger(tr("ScanImage"));
+
+  setAlignment(Qt::AlignTop | Qt::AlignLeft);
 }
 
 bool BaseScanImage::hasSelection()
@@ -39,7 +41,7 @@ QImage BaseScanImage::image() const
 void BaseScanImage::updateImage(const QImage& image)
 {
   m_modified_image = image;
-  imageIsLoaded();
+  emit imageIsLoaded();
 
   // allows multi use of the same crop size.
   if (m_def_crop_set) {
@@ -51,7 +53,7 @@ void BaseScanImage::updateImage(const QImage& image)
 void BaseScanImage::setImage(const QImage& image)
 {
   m_image = image;
-  emit updateImage(m_image);
+  updateImage(m_image);
 }
 
 QImage BaseScanImage::modifiedImage() const
@@ -68,14 +70,15 @@ void BaseScanImage::cropToSelection()
     scaled_rect.setWidth(int(m_rubber_band.width() / m_scale_by));
     scaled_rect.setHeight(int(m_rubber_band.height() / m_scale_by));
 
-    QImage cropped = m_image.copy(scaled_rect);
+    QImage cropped = m_modified_image.copy(scaled_rect);
 
     updateImage(cropped);
+    scaleImage(m_scale_by, m_modified_image);
     clearSelection();
   }
 }
 
-void BaseScanImage::scaleImage(qreal factor, QImage image)
+void BaseScanImage::scaleImage(qreal factor, const QImage& image)
 {
   int w = int(image.width() * factor);
   int h = int(image.height() * factor);
@@ -123,27 +126,27 @@ void BaseScanImage::fitWidth()
 
 void BaseScanImage::fitByType(QSize size)
 {
-  if (!m_image.isNull()) {
+  if (!m_modified_image.isNull()) {
     qreal factor;
     int w = size.width();
     int h = size.height();
 
     switch (m_fit_type) {
     case FIT_BEST: {
-      qreal scale_w = qreal(qreal(qreal(w) / qreal(m_image.width())));
-      qreal scale_h = qreal(qreal(qreal(h) / qreal(m_image.height())));
+      qreal scale_w = qreal(qreal(qreal(w) / qreal(m_modified_image.width())));
+      qreal scale_h = qreal(qreal(qreal(h) / qreal(m_modified_image.height())));
       factor = (scale_w < scale_h ? scale_w : scale_h);
       m_scale_by = factor;
       break;
     }
 
     case FIT_WIDTH:
-      factor = qreal(qreal(qreal(w) / qreal(m_image.width())));
+      factor = qreal(qreal(qreal(w) / qreal(m_modified_image.width())));
       m_scale_by = factor;
       break;
 
     case FIT_HEIGHT:
-      factor = qreal(qreal(qreal(h) / qreal(m_image.height())));
+      factor = qreal(qreal(qreal(h) / qreal(m_modified_image.height())));
       m_scale_by = factor;
       break;
 
@@ -151,7 +154,7 @@ void BaseScanImage::fitByType(QSize size)
       break;
     }
 
-    scaleImage(m_scale_by, m_image);
+    scaleImage(m_scale_by, m_modified_image);
   }
 }
 
@@ -162,7 +165,7 @@ void BaseScanImage::undoAllChanges()
 
 void BaseScanImage::mousePressEvent(QMouseEvent* event)
 {
-  if (!m_image.isNull()) {
+  if (!m_modified_image.isNull()) {
     m_mouse_moved = false;
     int e_x = event->x();
     int e_y = event->y();
@@ -244,7 +247,7 @@ void BaseScanImage::mousePressEvent(QMouseEvent* event)
 
 void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
 {
-  if (!m_image.isNull()) {
+  if (!m_modified_image.isNull()) {
     int e_x = event->x();
     int e_y = event->y();
 
@@ -417,7 +420,7 @@ void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
 
 void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
 {
-  if (!m_image.isNull()) {
+  if (!m_modified_image.isNull()) {
     int e_x = event->x();
     int e_y = event->y();
 
@@ -519,7 +522,8 @@ void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
 }
 void BaseScanImage::paintEvent(QPaintEvent* event)
 {
-  if (!m_image.isNull()) {
+  if (!m_modified_image.isNull()) {
+    //    m_contents_rect = contentsRect();
     fitByType(frameSize());
     QLabel::paintEvent(event);
     QPainter painter(this);
@@ -656,7 +660,7 @@ void BaseScanImage::zoomIn()
   qreal factor = m_scale_by * ZOOM_IN_FACTOR;
   m_logger->info(tr("ZoomIn scale %1 to %2").arg(m_scale_by).arg(factor));
   m_scale_by = factor;
-  scaleImage(m_scale_by, m_image);
+  scaleImage(m_scale_by, m_modified_image);
 }
 
 void BaseScanImage::zoomOut()
@@ -664,7 +668,7 @@ void BaseScanImage::zoomOut()
   qreal factor = m_scale_by * ZOOM_OUT_FACTOR;
   m_logger->info(tr("ZoomIn scale %1 to %2").arg(m_scale_by).arg(factor));
   m_scale_by = factor;
-  scaleImage(m_scale_by, m_image);
+  scaleImage(m_scale_by, m_modified_image);
 }
 
 void BaseScanImage::rotateBy(qreal angle)

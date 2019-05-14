@@ -15,10 +15,17 @@ OcrWorker::OcrWorker(QString datapath, QString lang)
 {
 }
 
-void OcrWorker::convertImage(const Page& page)
+void OcrWorker::convertPage(const Page& page)
+{
+  emit log(LogLevel::INFO, (tr("Converting page in OcrWorker.")));
+  m_pages.append(page);
+}
+
+void OcrWorker::convertImage(int page_no, const QImage& image)
 {
   emit log(LogLevel::INFO, (tr("Converting image in OcrWorker.")));
-  m_images.append(page);
+  m_images.append(image);
+  m_page_nos.append(page_no);
 }
 
 void OcrWorker::process()
@@ -28,15 +35,20 @@ void OcrWorker::process()
 
   while (m_running) {
 
-    if (m_available) {
-      if (!m_images.isEmpty()) {
-        Page page = m_images.takeFirst();
-        QString image_path = page->imagePath();
-        m_api->getStringFromImage(page);
-        emit converted(page);
-        m_available = false;
-      }
+    if (!m_images.isEmpty()) {
+      QImage image = m_images.takeFirst();
+      int page_no = m_page_nos.takeFirst();
+      QString text = m_api->getStringFromImage(image);
+      emit imageConverted(page_no, text);
+
+    } else if (!m_pages.isEmpty()) {
+      Page page = m_pages.takeFirst();
+      QString image_path = page->imagePath();
+      m_api->getStringFromPage(page);
+      emit pageConverted(page);
     }
+
+    //    }
 
     QThread::msleep(1000);
   }

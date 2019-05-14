@@ -24,12 +24,13 @@ public:
   OcrTools(OcrTools&&) = delete;
   OcrTools& operator=(OcrTools&&) = delete;
   void convertImageToText(const Page& page);
+  void convertImageToText(int page_no, const QImage& image);
 
 signals:
   void finished();
   //  void startConverting(Page page);
-  void converted(const Page& page);
-  void convertImage(const Page& page);
+  void convertedPage(const Page& page);
+  void convertedImage(int page_no, const QString& text);
 
 
 public slots:

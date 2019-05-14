@@ -42,6 +42,7 @@
 #include "scanwidgets_global.h"
 
 class QScan;
+class OCRDialog;
 
 class SCANWIDGETSSHARED_EXPORT ScanEditor : public QFrame
 {
@@ -123,6 +124,7 @@ protected:
   QString m_config_dir{};
   QString m_data_dir{};
   QString m_lang{};
+  OCRDialog* dlg;
 
   QMap<int, Page> m_pages;
   Page m_cover;
@@ -139,8 +141,10 @@ protected:
   QString saveImage(int index, const QImage& image);
   void saveModifiedImage(int index, const QImage& image);
   void saveAsCover(const QImage& image);
-  void receiveOcrRequest(int page);
-  void receiveOcrResult(const Page& page);
+  void receiveOcrPageRequest(int page);
+  void receiveOcrImageRequest(int page_no, const QImage& image);
+  void receiveOcrPageResult(const Page& page);
+  void receiveOcrImageResult(int page_no, const QString& text);
   void saveText(int index, const Page& page);
   void saveModifiedText(int index, const QString& text);
   void clearSaveAllTextsFlag();

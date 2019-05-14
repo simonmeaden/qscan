@@ -18,19 +18,23 @@ public:
   explicit OcrWorker(QString  datapath, QString  lang);
 
   void process();
-  void convertImage(const Page& page);
+  void convertPage(const Page& page);
+  void convertImage(int page_no, const QImage& image);
 
   void stopRunning();
 
 signals:
-  void converted(const Page& page);
+  void pageConverted(const Page& page);
+  void imageConverted(int page_no, const QString& text);
   void log(LogLevel, const QString&);
 
 protected:
   QString m_datapath, m_lang;
-  std::atomic<bool> m_available;
-  QList<Page> m_images;
-  std::atomic<bool> m_running;
+  bool m_available;
+  QList<Page> m_pages;
+  QList<QImage> m_images;
+  QList<int> m_page_nos;
+  bool m_running;
 
 };
 

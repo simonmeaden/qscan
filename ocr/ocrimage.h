@@ -30,10 +30,14 @@ public:
   void binarise();
   void setThreshold(int thresh_value = 100);
   void acceptThreshold();
+  void applyThreshold();
   void cancelThreshold();
 
+signals:
+  void thresholdAccepted();
+
 protected:
-  Mat m_mat_image, *m_modifiable;
+  Mat m_mat_image, *m_modifiable{};
   int m_modifiable_int;
   QList<Operations> m_operations;
   QList<QVariant> m_op_data;
