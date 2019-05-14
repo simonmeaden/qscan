@@ -2,7 +2,7 @@
 
 #include "ocrimage.h"
 
-OCRDialog::OCRDialog(QWidget* parent)
+OcrDialog::OcrDialog(QWidget* parent)
   : QDialog(parent)
   , m_text_edit(nullptr)
   , m_image_display(nullptr)
@@ -19,12 +19,12 @@ OCRDialog::OCRDialog(QWidget* parent)
 
 }
 
-QImage OCRDialog::image()
+QImage OcrDialog::image()
 {
   return m_image_display->image();
 }
 
-void OCRDialog::setData(int index, const QImage& image, const Page&  page)
+void OcrDialog::setData(int index, const QImage& image, const Page&  page)
 {
   m_page_no = index;
   m_page = page;
@@ -33,30 +33,30 @@ void OCRDialog::setData(int index, const QImage& image, const Page&  page)
   m_text_edit->setText(page->text());
 }
 
-void OCRDialog::setOcrImage(int index, const QImage& image)
+void OcrDialog::setOcrImage(int index, const QImage& image)
 {
   m_page_no = index,
   m_image_display->setImage(image);
 }
 
-void OCRDialog::setOcrText(int page_no, const QString& text)
+void OcrDialog::setOcrText(int page_no, const QString& text)
 {
   if (page_no == m_page_no) {
     m_text_edit->setText(text);
   }
 }
 
-QString OCRDialog::text()
+QString OcrDialog::text()
 {
   return m_text_edit->toPlainText();
 }
 
-bool OCRDialog::imageChanged() const
+bool OcrDialog::imageChanged() const
 {
   return m_image_changed;
 }
 
-QSize OCRDialog::sizeHint() const
+QSize OcrDialog::sizeHint() const
 {
   QWidget* widget = qobject_cast<QWidget*>(parent());
   QSize size = widget->sizeHint();
@@ -66,7 +66,7 @@ QSize OCRDialog::sizeHint() const
   return { size };
 }
 
-void OCRDialog::initGui()
+void OcrDialog::initGui()
 {
   auto* layout = new QGridLayout;
   setLayout(layout);
@@ -82,10 +82,9 @@ void OCRDialog::initGui()
   // This needs to be done before threshold/btns
   // so m_image_display exists for them to connect to.
   m_image_display = new OcrImage(this);
-  connect(m_image_display, &OcrImage::selected, this, &OCRDialog::setSelected);
-  connect(m_image_display, &OcrImage::unselected, this, &OCRDialog::setUnselected);
-  connect(m_image_display, &OcrImage::thresholdAccepted, this, &OCRDialog::thresholdAccepted);
-  )
+  connect(m_image_display, &OcrImage::selected, this, &OcrDialog::setSelected);
+  connect(m_image_display, &OcrImage::unselected, this, &OcrDialog::setUnselected);
+  connect(m_image_display, &OcrImage::thresholdAccepted, this, &OcrDialog::thresholdAccepted);
   layout->addWidget(m_image_display, 0, 2);
 
   auto* threshold_frame = new QFrame();
@@ -98,13 +97,13 @@ void OCRDialog::initGui()
     threshold_slider->setMinimum(0);
     threshold_slider->setMaximum(255);
     threshold_slider->setValue(200); // 200 is a reasonable start point for threshold.
-    threshold_layout->addWidget(threshold_slider, 0, 0, Qt::AlignHCenter);
     connect(threshold_slider, &QSlider::valueChanged, m_image_display, &OcrImage::setThreshold);
-    connect(threshold_slider, &QSlider::valueChanged, this, &OCRDialog::setThreshold);
+    connect(threshold_slider, &QSlider::valueChanged, this, &OcrDialog::setThreshold);
+    threshold_layout->addWidget(threshold_slider, 0, 0, Qt::AlignHCenter);
 
     threshold_lbl = new QLabel("0", this);
     threshold_lbl->setAlignment(Qt::AlignHCenter);
-    threshold_layout->addWidget(threshold_lbl, 1, 0);
+    threshold_layout->addWidget(threshold_lbl, 0, 0);
 
     auto* apply_thresh_btn = new QPushButton(tr("Apply Threshold"), this);
     connect(apply_thresh_btn, &QPushButton::clicked, m_image_display, &OcrImage::applyThreshold);
@@ -127,7 +126,7 @@ void OCRDialog::initGui()
     // initialise button box
     auto* ocr_btn = new QPushButton(tr("Run OCR"), this);
     ocr_btn->setToolTip(tr("Re run the OCR on tweaked image."));
-    connect(ocr_btn, &QPushButton::clicked, this, &OCRDialog::requestOcr);
+    connect(ocr_btn, &QPushButton::clicked, this, &OcrDialog::requestOcr);
     btn_layout->addWidget(ocr_btn);
 
     btn_layout->addStretch(1);
@@ -139,62 +138,68 @@ void OCRDialog::initGui()
     btn_layout->addWidget(m_crop_btn);
 
     auto* binarise_btn = new QPushButton(tr("Binarise"), this);
-    binarise_btn->setToolTip(tr("Binarisation turns the image to blackl and white."));
-    connect(binarise_btn, &QPushButton::clicked, this, &OCRDialog::binarise);
+    binarise_btn->setToolTip(tr("Binarisation turns the image to blackl and white.\n"
+                                "OCR text is generally better on black and white images."));
+    connect(binarise_btn, &QPushButton::clicked, this, &OcrDialog::binarise);
     btn_layout->addWidget(binarise_btn);
+
+    auto* invert_btn = new QPushButton(tr("Invert Image"), this);
+    invert_btn->setToolTip(tr("Converts from black text on white to white on black and back."));
+    connect(invert_btn, &QPushButton::clicked, this, &OcrDialog::invert);
+    btn_layout->addWidget(invert_btn);
 
     auto* denoise_btn = new QPushButton(tr("De-noise"), this);
     denoise_btn->setToolTip(tr("Noise removal attempts to clean up the image."));
-    connect(denoise_btn, &QPushButton::clicked, this, &OCRDialog::denoise);
+    connect(denoise_btn, &QPushButton::clicked, this, &OcrDialog::denoise);
     btn_layout->addWidget(denoise_btn);
 
     auto* dewarp_btn = new QPushButton(tr("De-warp"), this);
     dewarp_btn->setToolTip(tr("Straigntens lines that are curved."));
-    connect(dewarp_btn, &QPushButton::clicked, this, &OCRDialog::dewarp);
+    connect(dewarp_btn, &QPushButton::clicked, this, &OcrDialog::dewarp);
     btn_layout->addWidget(dewarp_btn);
 
     auto* descew_btn = new QPushButton(tr("De-scew"), this);
     descew_btn->setToolTip(tr("Rotates non-horizontal up lines."));
-    connect(descew_btn, &QPushButton::clicked, this, &OCRDialog::descew);
+    connect(descew_btn, &QPushButton::clicked, this, &OcrDialog::descew);
     btn_layout->addWidget(descew_btn);
 
     auto* rescale_btn = new QPushButton(tr("Rescale"), this);
     rescale_btn->setToolTip(tr("Increase the DPI of the image."));
-    connect(rescale_btn, &QPushButton::clicked, this, &OCRDialog::rescale);
+    connect(rescale_btn, &QPushButton::clicked, this, &OcrDialog::rescale);
     btn_layout->addWidget(rescale_btn);
 
     auto* undo_btn = new QPushButton(tr("Undo last operation"), this);
     undo_btn->setToolTip(tr("Undo changes and revert to previous image."));
-    connect(undo_btn, &QPushButton::clicked, this, &OCRDialog::undoChanges);
+    connect(undo_btn, &QPushButton::clicked, this, &OcrDialog::undoChanges);
     btn_layout->addWidget(undo_btn);
 
     btn_layout->addStretch(1);
 
     auto* save_txt_btn = new QPushButton(tr("Save Text"), this);
     save_txt_btn->setToolTip(tr("Save the text."));
-    connect(save_txt_btn, &QPushButton::clicked, this, &OCRDialog::saveText);
+    connect(save_txt_btn, &QPushButton::clicked, this, &OcrDialog::saveText);
     btn_layout->addWidget(save_txt_btn);
 
     auto* save_img_btn = new QPushButton(tr("Save Image"), this);
     save_img_btn->setToolTip(tr("Save the image."));
-    connect(save_img_btn, &QPushButton::clicked, this, &OCRDialog::saveImage);
+    connect(save_img_btn, &QPushButton::clicked, this, &OcrDialog::saveImage);
     btn_layout->addWidget(save_img_btn);
 
     auto* discard_btn = new QPushButton(tr("Discard changes"), this);
     discard_btn->setToolTip(tr("Closes the dialog, discarding any changes."));
-    connect(discard_btn, &QPushButton::clicked, this, &OCRDialog::discard);
+    connect(discard_btn, &QPushButton::clicked, this, &OcrDialog::discard);
     btn_layout->addWidget(discard_btn);
 
     auto* close_btn = new QPushButton(tr("Close and Save"), this);
     close_btn->setToolTip(tr("Closes the dialog, discarding any changes."));
-    connect(close_btn, &QPushButton::clicked, this, &OCRDialog::close);
+    connect(close_btn, &QPushButton::clicked, this, &OcrDialog::close);
     btn_layout->addWidget(close_btn);
 
     btn_layout->addStretch(1);
 
     auto* help_btn = new QPushButton(tr("Help"), this);
     help_btn->setToolTip(tr("Help."));
-    connect(help_btn, &QPushButton::clicked, this, &OCRDialog::help);
+    connect(help_btn, &QPushButton::clicked, this, &OcrDialog::help);
     btn_layout->addWidget(help_btn);
   }
 
@@ -206,63 +211,68 @@ void OCRDialog::initGui()
 
 }
 
-void OCRDialog::requestOcr()
+void OcrDialog::requestOcr()
 {
   emit sendOcrRequest(m_page_no, m_image_display->modifiedImage());
 }
 
-void OCRDialog::help()
+void OcrDialog::help()
 {
   // TODO help
 }
 
-void OCRDialog::setSelected()
+void OcrDialog::setSelected()
 {
   m_crop_btn->setEnabled(true);
 }
 
-void OCRDialog::setUnselected()
+void OcrDialog::setUnselected()
 {
   m_crop_btn->setEnabled(false);
 }
 
-void OCRDialog::binarise()
+void OcrDialog::binarise()
 {
   m_ctl_stack->setCurrentIndex(m_threshold_stack);
   m_image_display->binarise();
 }
 
-void OCRDialog::denoise()
+void OcrDialog::invert()
 {
-  // TODO denoise
+  m_image_display->invert();
 }
 
-void OCRDialog::dewarp()
+void OcrDialog::denoise()
+{
+  m_image_display->denoise();
+}
+
+void OcrDialog::dewarp()
 {
   // TODO dewarp
 }
 
-void OCRDialog::descew()
+void OcrDialog::descew()
 {
   // TODO descew
 }
 
-void OCRDialog::rescale()
+void OcrDialog::rescale()
 {
   // TODO rescale
 }
 
-void OCRDialog::saveText()
+void OcrDialog::saveText()
 {
   emit saveModifiedText(m_page_no, m_text_edit->toPlainText());
 }
 
-void OCRDialog::saveImage()
+void OcrDialog::saveImage()
 {
   emit saveModifiedImage(m_page_no, m_image_display->modifiedImage());
 }
 
-void OCRDialog::discard()
+void OcrDialog::discard()
 {
   int result = QMessageBox::warning(
                  this,
@@ -279,7 +289,7 @@ void OCRDialog::discard()
   }
 }
 
-void OCRDialog::undoChanges()
+void OcrDialog::undoChanges()
 {
   int result = QMessageBox::warning(
                  this,
@@ -295,24 +305,24 @@ void OCRDialog::undoChanges()
   }
 }
 
-void OCRDialog::close()
+void OcrDialog::close()
 {
   saveImage();
   saveText();
   accept();
 }
 
-void OCRDialog::setThreshold(int threshold)
+void OcrDialog::setThreshold(int threshold)
 {
   threshold_lbl->setText(QString::number(threshold));
 }
 
-void OCRDialog::thresholdAccepted()
+void OcrDialog::thresholdAccepted()
 {
   m_ctl_stack->setCurrentIndex(m_btn_stack);
 }
 
-void OCRDialog::resizeEvent(QResizeEvent* event)
+void OcrDialog::resizeEvent(QResizeEvent* event)
 {
   QSize parent_size = qobject_cast<QWidget*>(parent())->frameSize();
   auto size = parent_size;

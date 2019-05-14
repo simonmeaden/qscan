@@ -25,15 +25,17 @@ public:
   void insert(int index, const QImage& thumbnail, bool has_text = false);
   void setCover(const QImage& cover);
   void setHasText(int index, bool has_text);
+  bool hasText(int page_no);
 
 signals:
   void pageMoved(int from, int to);
   void sendOcrPage(int);
   void clearSaveAllFlag();
+  void loadText(int);
 
 protected:
   QList<QImage> m_pages;
-  QList<bool> m_text_done;
+  QMap<int, bool> m_has_text;
   QListWidget* m_image_list;
   QImage m_cover;
 
@@ -44,6 +46,7 @@ protected:
   QAction* m_remove_page_act;
   QAction* m_move_page_up_act{};
   QAction* m_move_page_down_act{};
+  QAction* m_load_text_act{};
   QAction* m_do_ocr_act{};
   QAction* m_do_all_ocr_act{};
 
@@ -56,6 +59,7 @@ protected:
   void moveDown();
   void doOcr();
   void doAllOcr();
+  void loadTextIntoEditor();
 
   static const QString HASTEXT;
   static const QString HASNOTEXT;

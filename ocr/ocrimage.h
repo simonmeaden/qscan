@@ -14,6 +14,8 @@ class OcrImage: public BaseScanImage
   {
     BINARISE,
     CROP,
+    DENOISE,
+    INVERT,
   };
 
 public:
@@ -32,6 +34,10 @@ public:
   void acceptThreshold();
   void applyThreshold();
   void cancelThreshold();
+
+  void invert();
+
+  void denoise();
 
 signals:
   void thresholdAccepted();

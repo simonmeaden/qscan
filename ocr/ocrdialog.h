@@ -20,12 +20,12 @@
 
 class OcrImage;
 
-class OCRDialog : public QDialog
+class OcrDialog : public QDialog
 {
   Q_OBJECT
 public:
-  explicit OCRDialog(QWidget* parent = nullptr);
-  ~OCRDialog() override = default;
+  explicit OcrDialog(QWidget* parent = nullptr);
+  ~OcrDialog() override = default;
 
   QImage image();
   void setData(int index, const QImage& image, const Page&  page);
@@ -60,6 +60,7 @@ protected:
   void setSelected();
   void setUnselected();
   void binarise();
+  void invert();
   void denoise();
   void dewarp();
   void descew();

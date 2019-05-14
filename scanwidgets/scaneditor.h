@@ -42,7 +42,7 @@
 #include "scanwidgets_global.h"
 
 class QScan;
-class OCRDialog;
+class OcrDialog;
 
 class SCANWIDGETSSHARED_EXPORT ScanEditor : public QFrame
 {
@@ -95,7 +95,7 @@ public:
   void loadCover(const QString& filename);
 
   int pageCount();
-  Page page(int index);
+  Page page_no(int index);
 
   QString optionsFile() const;
   void setOptionsFile(const QString& optionsFile);
@@ -109,7 +109,7 @@ signals:
   void unselected();
   void selectionUnderway();
   void imageIsLoaded();
-  void ocrImage(const Page& page);
+  void ocrImage(const Page& page_no);
 
 protected:
   Log4Qt::Logger* m_logger;
@@ -124,7 +124,7 @@ protected:
   QString m_config_dir{};
   QString m_data_dir{};
   QString m_lang{};
-  OCRDialog* dlg;
+  OcrDialog* dlg;
 
   QMap<int, Page> m_pages;
   Page m_cover;
@@ -137,15 +137,16 @@ protected:
   void makeConnections();
   void receiveImage(const QImage& img);
   void receiveImages(const QImage& left, const QImage& right);
-  void receiveString(int page, const QString& str);
+  void receiveString(int page_no, const QString& str);
   QString saveImage(int index, const QImage& image);
   void saveModifiedImage(int index, const QImage& image);
   void saveAsCover(const QImage& image);
-  void receiveOcrPageRequest(int page);
+  void receiveLoadText(int page_no);
+  void receiveOcrPageRequest(int page_no);
   void receiveOcrImageRequest(int page_no, const QImage& image);
-  void receiveOcrPageResult(const Page& page);
+  void receiveOcrPageResult(const Page& page_no);
   void receiveOcrImageResult(int page_no, const QString& text);
-  void saveText(int index, const Page& page);
+  void saveText(int index, const Page& page_no);
   void saveModifiedText(int index, const QString& text);
   void clearSaveAllTextsFlag();
   QImage thumbnail(const QImage& image) const;

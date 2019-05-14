@@ -44,7 +44,7 @@ void OcrImage::binarise()
   m_operations.append(BINARISE);
   m_op_data.append(QVariant()); // no actual data.
   m_op_images.append(m_modified_image);
-  m_modifiable_int = 0;
+  m_modifiable_int = 200;
 
   // create a modifiable image.
   m_modifiable = new Mat(ImageConverter::imageToMat(m_modified_image));
@@ -78,10 +78,40 @@ void OcrImage::cancelThreshold()
   delete m_modifiable;
 }
 
+void OcrImage::invert()
+{
+  // save undo shit
+  m_operations.append(INVERT);
+  m_op_data.append(QVariant()); // no actual data.
+  m_op_images.append(m_modified_image);
+
+  // create a modifiable image.
+  Mat modified = ImageConverter::imageToMat(m_modified_image);
+  bitwise_not(modified, modified);
+  updateImage(ImageConverter::matToImage(modified));
+}
+
 void OcrImage::setThreshold(int thresh_value)
 {
   // modify modifiable image to new threshold
   m_modifiable_int = thresh_value;
 }
+
+void OcrImage::denoise()
+{
+  // save undo shit
+  m_operations.append(BINARISE);
+  m_op_data.append(QVariant()); // no actual data.
+  m_op_images.append(m_modified_image);
+  m_modifiable_int = 10; // a reasonable value
+
+  // create a modifiable image.
+  m_modifiable = new Mat(ImageConverter::imageToMat(m_modified_image));
+
+  if (m_modifiable->type()) {
+
+  }
+}
+
 
 

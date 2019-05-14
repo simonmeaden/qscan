@@ -21,6 +21,7 @@ PageView::PageView(QWidget* parent)
   m_remove_page_act = new QAction(tr("Remove the selected page"), this);
   m_move_page_up_act = new QAction(tr("Move page up"), this);
   m_move_page_down_act = new QAction(tr("Move page down"), this);
+  m_load_text_act = new QAction(tr("Load text."), this);
   m_do_ocr_act = new QAction(tr("Run OCR on selected image."), this);
   m_do_all_ocr_act = new QAction(tr("Run OCR on all text-free images."), this);
   connect(m_remove_page_act, &QAction::triggered, this, &PageView::remove);
@@ -28,6 +29,7 @@ PageView::PageView(QWidget* parent)
   connect(m_move_page_down_act, &QAction::triggered, this, &PageView::moveDown);
   connect(m_do_ocr_act, &QAction::triggered, this, &PageView::doOcr);
   connect(m_do_all_ocr_act, &QAction::triggered, this, &PageView::doAllOcr);
+  connect(m_load_text_act, &QAction::triggered, this, &PageView::loadTextIntoEditor);
   layout->addWidget(m_image_list);
 }
 
@@ -82,6 +84,7 @@ void PageView::setHasText(int index, bool has_text)
 {
   auto* item = m_image_list->item(index);
   auto* lbl = m_image_list->itemWidget(item);
+  m_has_text.insert(index, has_text);
 
   if (has_text) {
     lbl->setStyleSheet(HASTEXT);
@@ -89,6 +92,15 @@ void PageView::setHasText(int index, bool has_text)
   } else {
     lbl->setStyleSheet(HASNOTEXT);
   }
+}
+
+bool PageView::hasText(int page_no)
+{
+  if (m_has_text.contains(page_no)) {
+    return m_has_text.value(page_no);
+  }
+
+  return false;
 }
 
 void PageView::contextMenuEvent(QContextMenuEvent* event)
@@ -104,6 +116,8 @@ void PageView::contextMenuEvent(QContextMenuEvent* event)
     context_menu->addSeparator();
     context_menu->addAction(m_do_ocr_act);
     context_menu->addAction(m_do_all_ocr_act);
+    context_menu->addSeparator();
+    context_menu->addAction(m_load_text_act);
   }
 
   context_menu->popup(event->globalPos());
@@ -152,4 +166,9 @@ void PageView::doAllOcr()
   }
 
   emit clearSaveAllFlag();
+}
+
+void PageView::loadTextIntoEditor()
+{
+  emit loadText(m_image_list->currentIndex().row());
 }
