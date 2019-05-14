@@ -25,6 +25,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         block.cpp \
         document.cpp \
+        paragraphblock.cpp \
         textblock.cpp \
         titleblock.cpp
 
@@ -32,6 +33,7 @@ HEADERS += \
         block.h \
         document.h \
         document_global.h  \
+        paragraphblock.h \
         textblock.h \
         titleblock.h
 

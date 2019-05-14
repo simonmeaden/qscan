@@ -1,7 +1,6 @@
 #ifndef DOCUMENTBLOCK_H
 #define DOCUMENTBLOCK_H
 
-#include <QObject>
 #include <QSharedPointer>
 #include <QMap>
 

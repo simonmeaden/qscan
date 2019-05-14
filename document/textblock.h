@@ -2,6 +2,7 @@
 #define TEXTBLOCK_H
 
 #include <QString>
+#include <QSharedPointer.
 
 #include "block.h"
 
@@ -9,7 +10,7 @@ class TextBlock : public Block
 {
 public:
   TextBlock();
-  TextBlock(QString title);
+  explicit TextBlock(QString title);
 
 protected:
   QString m_text;
