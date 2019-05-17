@@ -11,7 +11,7 @@ class TitleBlock : public TextBlock
 {
 public:
   TitleBlock();
-  TitleBlock(QString title);
+  TitleBlock(const QString& title);
 
 protected:
 

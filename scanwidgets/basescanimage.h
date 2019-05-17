@@ -1,11 +1,12 @@
 #ifndef BASESCANIMAGE_H
 #define BASESCANIMAGE_H
 
+#include <QImage>
 #include <QLabel>
-#include <QRect>
-#include <QPoint>
-#include <QtMath>
 #include <QPainter>
+#include <QPoint>
+#include <QRect>
+#include <QtMath>
 
 #include <opencv2/opencv.hpp>
 
@@ -20,6 +21,7 @@ public:
   explicit BaseScanImage(QWidget* parent = nullptr);
 
   bool hasSelection();
+  void cutSelection();
   void cropToSelection();
   void fitBest();
   void fitHeight();
@@ -29,13 +31,14 @@ public:
   void rotateBy(qreal angle);
 
   void setImage(const QImage& image);
-  QImage image() const;
-  QImage modifiedImage() const;
+  QImage image();
+  QImage modifiedImage();
+  QImage selectedSubImage();
 
   void zoomIn();
   void zoomOut();
 
-  void fitByType(QSize size);
+  void fitByType();
   void undoAllChanges();
 
 signals:
@@ -72,6 +75,7 @@ protected:
     FIT_BEST,
     FIT_WIDTH,
     FIT_HEIGHT,
+    ZOOM,
     NO_FIT,
   };
 
@@ -79,7 +83,7 @@ protected:
   State m_state;
   FitType m_fit_type;
   QImage m_image; // original unmodified image.
-  QImage m_scaled_image;
+  //  QImage m_scaled_image;
   QImage m_modified_image;
   QRect m_rubber_band;
   QRect m_stretched_band;
@@ -105,7 +109,7 @@ protected:
   void wheelEvent(QWheelEvent* event) override;
   //  void resizeEvent(QResizeEvent* event) override;
 
-  void scaleImage(qreal factor, const QImage& image);
+  void scaleImage(const QImage& image);
   void updateImage(const QImage& image);
   void rotateUsingEdge();
   void paintRubberBand(QPainter* painter);
@@ -120,7 +124,6 @@ protected:
   static const QBrush RUBBERBAND_BRUSH;
   static const qreal ZOOM_IN_FACTOR;
   static const qreal ZOOM_OUT_FACTOR;
-
 };
 
 #endif // BASESCANIMAGE_H

@@ -4,6 +4,7 @@
 #include <QImage>
 #include <QObject>
 #include <QSharedPointer>
+#include <QStringList>
 
 #include <opencv2/opencv.hpp>
 
@@ -13,14 +14,17 @@ public:
   explicit ScanPage();
 
   QString imagePath() const;
-  void setImage(const QString& imagePath);
+  void setImagePath(const QString& imagePath);
 
-  QString text() const;
+  QStringList text() const;
+  QString text(int index) const;
   void setText(const QString& text);
+  void setText(int row, const QString& text);
+  void setTextList(const QStringList& text);
 
 protected:
   QString m_image_path;
-  QString m_text;
+  QStringList m_text;
 };
 using Page = QSharedPointer<ScanPage>;
 using PageList = QList<Page>;

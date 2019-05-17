@@ -62,8 +62,8 @@ TessTools::TessTools(const QString& datapath, const QString& lang, QObject* pare
 
   setlocale(LC_ALL, "C");
   auto* api = new tesseract::TessBaseAPI();
+  m_api = api;
 
-  init(datapath_, api_lang_, api);
 }
 
 TessTools::TessTools(const TessTools& other)
@@ -74,7 +74,6 @@ TessTools::TessTools(const TessTools& other)
 
 TessTools::~TessTools()
 {
-  m_api->End();
   delete m_api;
 }
 
@@ -108,11 +107,14 @@ TessTools& TessTools::operator =(const TessTools& other)
   return *this;
 }
 
-void TessTools::init(const char* datapath, const char* lang, tesseract::TessBaseAPI* api)
+void TessTools::init(const char* datapath, const char* lang, tesseract::TessBaseAPI* api = nullptr)
 {
   m_datapath = datapath;
   m_api_lang = lang;
-  m_api = api;
+
+  if (api) {
+    m_api = api;
+  }
 
   if (!api->Init(m_datapath, m_api_lang, tesseract::OEM_LSTM_ONLY)) {
     emit log(LogLevel::INFO, tr("Could not initialize tesseract."));
@@ -120,8 +122,10 @@ void TessTools::init(const char* datapath, const char* lang, tesseract::TessBase
 }
 
 
-void TessTools::getStringFromPage(Page page)
+void TessTools::getStringFromPage(const Page& page)
 {
+  init(m_datapath, m_api_lang, m_api);
+
   cv::Mat mat_image = cv::imread(page->imagePath().toStdString(), cv::IMREAD_COLOR);
   QString out_text;
   //  monitor = new ETEXT_DESC();
@@ -138,10 +142,14 @@ void TessTools::getStringFromPage(Page page)
   page->setText(out_text);
 
   QApplication::restoreOverrideCursor();
+
+  m_api->End();
 }
 
 QString TessTools::getStringFromImage(const QImage& image)
 {
+  init(m_datapath, m_api_lang, m_api);
+
   cv::Mat mat_image = ImageConverter::imageToMat(image);
   QString out_text;
   //  monitor = new ETEXT_DESC();
@@ -157,6 +165,8 @@ QString TessTools::getStringFromImage(const QImage& image)
   out_text = QString::fromUtf8(m_api->GetUTF8Text());
 
   QApplication::restoreOverrideCursor();
+
+  m_api->End();
 
   return out_text;
 }

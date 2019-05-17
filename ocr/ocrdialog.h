@@ -5,6 +5,7 @@
 #include <QDialogButtonBox>
 #include <QFrame>
 #include <QLabel>
+#include <QFont>
 #include <QGridLayout>
 #include <QVBoxLayout>
 #include <QStackedLayout>
@@ -19,6 +20,7 @@
 #include "scanpage.h"
 
 class OcrImage;
+class ScanEdit;
 
 class OcrDialog : public QDialog
 {
@@ -31,7 +33,7 @@ public:
   void setData(int index, const QImage& image, const Page&  page);
   void setOcrImage(int index, const QImage& image);
   void setOcrText(int page_no, const QString& text);
-  QString text();
+  QStringList text();
 
   bool imageChanged() const;
   QSize sizeHint() const override;
@@ -39,15 +41,17 @@ public:
 signals:
   void sendOcrRequest(int, const QImage&);
   void saveModifiedImage(int index, const QImage& image);
-  void saveModifiedText(int index, const QString& text);
+  void saveModifiedText(int index, const QStringList& text);
 
 protected:
-  QTextEdit* m_text_edit;
+  ScanEdit* m_text_edit;
   OcrImage* m_image_display;
   int m_page_no{};
   Page m_page;
   bool m_image_changed;
   QPushButton* m_crop_btn{};
+  QPushButton* m_cut_btn{};
+  QPushButton* m_binarise_btn{}, *m_ocr_btn{}, *m_ocr_sel_btn{};
   QLabel* threshold_lbl;
   QStackedLayout* m_ctl_stack{};
   int m_btn_stack{}, m_threshold_stack{};
@@ -56,6 +60,7 @@ protected:
 
   void initGui();
   void requestOcr();
+  void requestOcrOnSelection();
   void help();
   void setSelected();
   void setUnselected();
@@ -73,6 +78,13 @@ protected:
 
   void setThreshold(int threshold);
   void thresholdAccepted();
+
+  void disableBinarise() {
+    m_binarise_btn->setEnabled(false);
+  }
+  void enableBinarise() {
+    m_binarise_btn->setEnabled(true);
+  }
 };
 
 #endif // OCRDIALOG_H

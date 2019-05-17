@@ -7,8 +7,9 @@
 class Block
 {
 public:
-  explicit Block(QObject* parent = nullptr);
+  explicit Block();
 
+  virtual void toHtml() = 0;
 signals:
 
 public slots:

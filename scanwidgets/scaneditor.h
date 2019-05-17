@@ -147,7 +147,7 @@ protected:
   void receiveOcrPageResult(const Page& page_no);
   void receiveOcrImageResult(int page_no, const QString& text);
   void saveText(int index, const Page& page_no);
-  void saveModifiedText(int index, const QString& text);
+  void saveModifiedText(int index, const QStringList& text);
   void clearSaveAllTextsFlag();
   QImage thumbnail(const QImage& image) const;
 

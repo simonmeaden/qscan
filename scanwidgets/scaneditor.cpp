@@ -74,18 +74,22 @@ void ScanEditor::initGui()
   auto* layout = new QGridLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
   setLayout(layout);
+
   m_scroller = new QScrollArea(this);
   m_scroller->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   m_scroller->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   m_scroller->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
   m_scroller->setContentsMargins(0, 0, 0, 0);
+
   m_scan_display = new ScanImage(m_data_dir, this);
   m_scan_display->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
   m_scan_display->setScaledContents(true);
   m_scroller->setWidget(m_scan_display);
   layout->addWidget(m_scroller, 0, 0);
+
   m_page_view = new PageView(this);
   m_page_view->setContentsMargins(0, 0, 0, 0);
+
   layout->addWidget(m_page_view, 0, 1);
   layout->setColumnStretch(0, 30);
   layout->setColumnStretch(1, 10);
@@ -118,7 +122,7 @@ void ScanEditor::receiveImage(const QImage& image)
   int index = m_pages.size() + 1;
   m_page_view->append(thumbnail(image));
   QString path = saveImage(index, image);
-  page->setImage(path);
+  page->setImagePath(path);
   m_pages.insert(index, page);
 }
 
@@ -133,14 +137,14 @@ void ScanEditor::receiveImages(const QImage& left, const QImage& right)
   m_pages.insert(index, left_page);
   m_page_view->append(thumbnail(left));
   QString path = saveImage(index, left);
-  left_page->setImage(path);
+  left_page->setImagePath(path);
 
   Page right_page(new ScanPage());
   index++;
   m_pages.insert(index, right_page);
   m_page_view->append(thumbnail(right));
   path = saveImage(index, right);
-  right_page->setImage(path);
+  right_page->setImagePath(path);
 }
 
 void ScanEditor::receiveString(int page, const QString& str)
@@ -210,7 +214,7 @@ void ScanEditor::saveAsCover(const QImage& image)
       return;
     }
 
-    m_cover->setImage(path);
+    m_cover->setImagePath(path);
   }
 }
 
@@ -259,30 +263,39 @@ void ScanEditor::receiveOcrImageRequest(int page_no, const QImage& image)
 
 void ScanEditor::saveText(int index, const Page& page)
 {
-  QString filename = m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator() +
-                     QString("text%1.txt").arg(index);
+  QString filename = m_data_dir + m_current_doc_name + QDir::separator() +
+                     QString("text%1.yaml").arg(index);
   QFile file(filename);
 
   if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+    YAML::Emitter emitter;
+    emitter << YAML::Key << "text";
+    emitter << page->text();
+
     QTextStream stream(&file);
-    stream << page->text();
+    stream << emitter.c_str();
     file.close();
+
     m_page_view->setHasText(index, true);
   }
 }
 
-void ScanEditor::saveModifiedText(int index, const QString& text)
+void ScanEditor::saveModifiedText(int index, const QStringList& text)
 {
   Page page = m_pages.value(index);
-  page->setText(text);
+  page->setTextList(text);
 
-  QString filename = m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator() +
-                     QString("text%1.txt").arg(index);
+  QString filename = m_data_dir + m_current_doc_name + QDir::separator() +
+                     QString("text%1.yaml").arg(index);
   QFile file(filename);
 
   if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+    YAML::Emitter emitter;
+    emitter << YAML::Key << "text";
+    emitter << text;
+
     QTextStream stream(&file);
-    stream << page->text();
+    stream << emitter.c_str();
     file.close();
     m_page_view->setHasText(index, true);
   }
@@ -302,7 +315,7 @@ void ScanEditor::receiveOcrPageResult(const Page& page)
   int result = dlg->exec();
 
   if (result == QDialog::Accepted) {
-    page->setText(dlg->text());
+    page->setTextList(dlg->text());
     int index = m_pages.key(page);
 
     if (m_save_all_texts) {
@@ -420,7 +433,7 @@ void ScanEditor::loadExistingFiles()
       if (ok) { // is an int value
         image = QImage(filename, "PNG");
         page = Page(new ScanPage());
-        page->setImage(filename);
+        page->setImagePath(filename);
         m_pages.insert(index, page);
         m_page_view->insert(index, thumbnail(image), false);
         m_logger->info(tr("Image file %1 loaded)").arg(fname));
@@ -429,10 +442,7 @@ void ScanEditor::loadExistingFiles()
   } // end image file list
 
   filter.clear();
-  filter << "page*.txt";
-
-  filename = current_path + QString("page%1.txt").arg(index);
-  file.setFileName(filename);
+  filter << "page*.yaml";
 
   for (const QString& fname : dir.entryList(filter, QDir::Files)) {
     filename = current_path + fname;
@@ -452,9 +462,14 @@ void ScanEditor::loadExistingFiles()
         }
 
         if (file.open(QFile::ReadOnly)) {
-          QTextStream stream(&file);
-          QString text = stream.readAll();
-          page->setText(text);
+          YAML::Node yaml = YAML::LoadFile(file);
+
+          QStringList list;
+          YAML::Node text = yaml["text"];
+          list = text.as<QList<QString>>();
+          //          QTextStream stream(&file);
+          //          QString text = stream.readAll();
+          page->setTextList(list);
           m_page_view->setHasText(index, true);
           m_logger->info(tr("Text file %1 loaded)").arg(fname));
         }
@@ -563,7 +578,7 @@ void ScanEditor::loadCover(const QString& filename)
 {
   QImage image = QImage(filename, "PNG");
   Page page(new ScanPage());
-  page->setImage(filename);
+  page->setImagePath(filename);
   m_cover = page;
   m_page_view->setCover(thumbnail(image));
 }

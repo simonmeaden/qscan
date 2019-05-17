@@ -150,6 +150,7 @@ void MainWindow::initGui()
   setCentralWidget(main_frame);
   m_main_layout = new QGridLayout;
   main_frame->setLayout(m_main_layout);
+
   m_image_editor = new ScanEditor(m_scan_lib, m_config_dir, m_data_dir, this);
   m_image_editor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   m_image_editor->setTesseractLanguage(m_lang);

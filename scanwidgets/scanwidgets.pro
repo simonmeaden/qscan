@@ -28,6 +28,7 @@ SOURCES += \
         basescanimage.cpp \
         imageconverter.cpp \
         pageview.cpp \
+        scanedit.cpp \
         scaneditor.cpp \
         scanimage.cpp \
         scanpage.cpp
@@ -36,6 +37,7 @@ HEADERS += \
         basescanimage.h \
         imageconverter.h \
         pageview.h \
+        scanedit.h \
         scaneditor.h \
         scanimage.h \
         scanpage.h \

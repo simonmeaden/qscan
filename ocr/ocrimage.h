@@ -10,13 +10,14 @@ class OcrImage: public BaseScanImage
 {
   Q_OBJECT
 
-  enum Operations
-  {
-    BINARISE,
-    CROP,
-    DENOISE,
-    INVERT,
-  };
+  //  enum Operations
+  //  {
+  //    BINARISE,
+  //    CUT,
+  //    CROP,
+  //    DENOISE,
+  //    INVERT,
+  //  };
 
 public:
   explicit OcrImage(QWidget* parent = nullptr);
@@ -27,6 +28,7 @@ public:
   void undoAllChanges();
   void undoLastChange();
 
+  void cutSelection();
   void cropToSelection();
 
   void binarise();
@@ -41,12 +43,14 @@ public:
 
 signals:
   void thresholdAccepted();
+  void disableBinarise();
+  void enableBinarise();
 
 protected:
-  Mat m_mat_image, *m_modifiable{};
+  Mat m_mat_image, *m_modifiable_mat{};
   int m_modifiable_int;
-  QList<Operations> m_operations;
-  QList<QVariant> m_op_data;
+  //  QList<Operations> m_operations;
+  //  QList<QVariant> m_op_data;
   QList<QImage> m_op_images;
 
 

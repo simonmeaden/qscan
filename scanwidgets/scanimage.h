@@ -34,7 +34,6 @@ public:
   void rotateByEdge();
   void scaleBy();
   void save();
-  //  void save(const QString& doc_name = QString());
   void saveAs();
   void saveAsCover();
   void rescan();

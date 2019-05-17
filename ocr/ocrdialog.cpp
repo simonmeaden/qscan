@@ -1,6 +1,7 @@
 #include "ocrdialog.h"
 
 #include "ocrimage.h"
+#include "scanedit.h"
 
 OcrDialog::OcrDialog(QWidget* parent)
   : QDialog(parent)
@@ -46,9 +47,9 @@ void OcrDialog::setOcrText(int page_no, const QString& text)
   }
 }
 
-QString OcrDialog::text()
+QStringList OcrDialog::text()
 {
-  return m_text_edit->toPlainText();
+  return m_text_edit->text();
 }
 
 bool OcrDialog::imageChanged() const
@@ -71,7 +72,7 @@ void OcrDialog::initGui()
   auto* layout = new QGridLayout;
   setLayout(layout);
 
-  m_text_edit = new QTextEdit(this);
+  m_text_edit = new ScanEdit(this);
   layout->addWidget(m_text_edit, 0, 0);
 
   auto* stacked_frame = new QFrame(this);
@@ -101,21 +102,25 @@ void OcrDialog::initGui()
     connect(threshold_slider, &QSlider::valueChanged, this, &OcrDialog::setThreshold);
     threshold_layout->addWidget(threshold_slider, 0, 0, Qt::AlignHCenter);
 
-    threshold_lbl = new QLabel("0", this);
-    threshold_lbl->setAlignment(Qt::AlignHCenter);
-    threshold_layout->addWidget(threshold_lbl, 0, 0);
+    threshold_lbl = new QLabel("200", this);
+    QFont font;
+    font.setWeight(QFont::Bold);
+    font.setPixelSize(40);
+    threshold_lbl->setFont(font);
+    threshold_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignCenter);
+    threshold_layout->addWidget(threshold_lbl, 0, 1);
 
     auto* apply_thresh_btn = new QPushButton(tr("Apply Threshold"), this);
     connect(apply_thresh_btn, &QPushButton::clicked, m_image_display, &OcrImage::applyThreshold);
-    threshold_layout->addWidget(apply_thresh_btn, 2, 0);
+    threshold_layout->addWidget(apply_thresh_btn, 2, 0, 1, 2);
 
     auto* accept_thresh_btn = new QPushButton(tr("Accept"), this);
     connect(accept_thresh_btn, &QPushButton::clicked, m_image_display, &OcrImage::acceptThreshold);
-    threshold_layout->addWidget(accept_thresh_btn, 3, 0);
+    threshold_layout->addWidget(accept_thresh_btn, 3, 0, 1, 2);
 
     auto* cancel_thresh_btn = new QPushButton(tr("Cancel"), this);
     connect(cancel_thresh_btn, &QPushButton::clicked, m_image_display, &OcrImage::cancelThreshold);
-    threshold_layout->addWidget(cancel_thresh_btn, 4, 0);
+    threshold_layout->addWidget(cancel_thresh_btn, 4, 0, 1, 2);
   }
 
   auto* btn_box = new QFrame(this);
@@ -124,12 +129,23 @@ void OcrDialog::initGui()
   m_btn_stack = m_ctl_stack->addWidget(btn_box);
   {
     // initialise button box
-    auto* ocr_btn = new QPushButton(tr("Run OCR"), this);
-    ocr_btn->setToolTip(tr("Re run the OCR on tweaked image."));
-    connect(ocr_btn, &QPushButton::clicked, this, &OcrDialog::requestOcr);
-    btn_layout->addWidget(ocr_btn);
+    m_ocr_btn = new QPushButton(tr("Run OCR"), this);
+    m_ocr_btn->setToolTip(tr("Re run the OCR on tweaked image."));
+    connect(m_ocr_btn, &QPushButton::clicked, this, &OcrDialog::requestOcr);
+    btn_layout->addWidget(m_ocr_btn);
+
+    m_ocr_sel_btn = new QPushButton(tr("Run OCR on Selection"), this);
+    m_ocr_sel_btn->setToolTip(tr("Re run the OCR on part of the tweaked image."));
+    connect(m_ocr_sel_btn, &QPushButton::clicked, this, &OcrDialog::requestOcrOnSelection);
+    btn_layout->addWidget(m_ocr_sel_btn);
 
     btn_layout->addStretch(1);
+
+    m_cut_btn = new QPushButton(tr("Cut"), this);
+    m_cut_btn->setToolTip(tr("Remove section from the image image."));
+    m_cut_btn->setEnabled(false);
+    connect(m_cut_btn, &QPushButton::clicked, m_image_display, &OcrImage::cutSelection);
+    btn_layout->addWidget(m_cut_btn);
 
     m_crop_btn = new QPushButton(tr("Crop"), this);
     m_crop_btn->setToolTip(tr("Crop the image to remove excess image."));
@@ -137,11 +153,13 @@ void OcrDialog::initGui()
     connect(m_crop_btn, &QPushButton::clicked, m_image_display, &OcrImage::cropToSelection);
     btn_layout->addWidget(m_crop_btn);
 
-    auto* binarise_btn = new QPushButton(tr("Binarise"), this);
-    binarise_btn->setToolTip(tr("Binarisation turns the image to blackl and white.\n"
-                                "OCR text is generally better on black and white images."));
-    connect(binarise_btn, &QPushButton::clicked, this, &OcrDialog::binarise);
-    btn_layout->addWidget(binarise_btn);
+    m_binarise_btn = new QPushButton(tr("Binarise"), this);
+    m_binarise_btn->setToolTip(tr("Binarisation turns the image to blackl and white.\n"
+                                  "OCR text is generally better on black and white images."));
+    connect(m_binarise_btn, &QPushButton::clicked, this, &OcrDialog::binarise);
+    connect(m_image_display, &OcrImage::enableBinarise, this, &OcrDialog::enableBinarise);
+    connect(m_image_display, &OcrImage::disableBinarise, this, &OcrDialog::disableBinarise);
+    btn_layout->addWidget(m_binarise_btn);
 
     auto* invert_btn = new QPushButton(tr("Invert Image"), this);
     invert_btn->setToolTip(tr("Converts from black text on white to white on black and back."));
@@ -216,6 +234,15 @@ void OcrDialog::requestOcr()
   emit sendOcrRequest(m_page_no, m_image_display->modifiedImage());
 }
 
+void OcrDialog::requestOcrOnSelection()
+{
+  QImage copy = m_image_display->selectedSubImage();
+
+  if (!copy.isNull()) {
+    emit sendOcrRequest(m_page_no, copy) ;
+  }
+}
+
 void OcrDialog::help()
 {
   // TODO help
@@ -224,11 +251,13 @@ void OcrDialog::help()
 void OcrDialog::setSelected()
 {
   m_crop_btn->setEnabled(true);
+  m_cut_btn->setEnabled(true);
 }
 
 void OcrDialog::setUnselected()
 {
   m_crop_btn->setEnabled(false);
+  m_cut_btn->setEnabled(false);
 }
 
 void OcrDialog::binarise()
@@ -264,7 +293,7 @@ void OcrDialog::rescale()
 
 void OcrDialog::saveText()
 {
-  emit saveModifiedText(m_page_no, m_text_edit->toPlainText());
+  emit saveModifiedText(m_page_no, m_text_edit->text());
 }
 
 void OcrDialog::saveImage()
