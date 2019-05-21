@@ -49,6 +49,8 @@ void BaseScanImage::updateImage(const QImage& image)
     m_rubber_band = m_default_crop_size;
     m_state = RUBBERBAND_COMPLETE;
   }
+
+  update();
 }
 
 QImage BaseScanImage::image()

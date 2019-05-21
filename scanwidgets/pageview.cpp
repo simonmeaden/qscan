@@ -26,6 +26,7 @@ PageView::PageView(QWidget* parent)
   connect(m_move_page_down_act, &QAction::triggered, this, &PageView::moveDown);
   //  connect(m_do_ocr_act, &QAction::triggered, this, &PageView::doOcr);
   //  connect(m_do_all_ocr_act, &QAction::triggered, this, &PageView::doAllOcr);
+  connect(m_work_with_act, &QAction::triggered, this, &PageView::workOnImage);
   connect(
     m_load_text_act, &QAction::triggered, this, &PageView::loadTextIntoEditor);
   layout->addWidget(m_image_list);
@@ -75,7 +76,9 @@ void PageView::contextMenuEvent(QContextMenuEvent* event)
   context_menu->addAction(m_move_page_down_act);
 
   // index 0 is always the cover.
-  if (m_image_list->indexAt(event->pos()).row() > 0) {
+  m_current_row = m_image_list->indexAt(event->pos()).row();
+
+  if (m_current_row > 0) {
     context_menu->addSeparator();
     context_menu->addAction(m_work_with_act);
     //    context_menu->addSeparator();
@@ -135,7 +138,7 @@ void PageView::moveDown()
 
 void PageView::workOnImage()
 {
-  emit workOn(m_image_list->currentIndex().row());
+  emit workOn(m_current_row);
 }
 
 void PageView::loadTextIntoEditor()

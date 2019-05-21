@@ -232,16 +232,18 @@ void ScanEditor::receiveWorkOnRequest(int page_no)
 {
   Page page = m_pages.value(page_no);
 
-  m_ocr_dlg = new OcrDialog(this);
-  connect(m_ocr_dlg, &OcrDialog::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
-  connect(m_ocr_dlg, &OcrDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
-  connect(m_ocr_dlg, &OcrDialog::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
+  if (!page.isNull()) {
+    m_ocr_dlg = new OcrDialog(this);
+    connect(m_ocr_dlg, &OcrDialog::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
+    connect(m_ocr_dlg, &OcrDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
+    connect(m_ocr_dlg, &OcrDialog::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
 
-  QImage image(page->imagePath(), "PNG");
-  m_ocr_dlg->setData(page_no, image, page);
-  connect(m_ocr_dlg, &QDialog::finished, this, &ScanEditor::receiveOcrDialogFinished);
+    QImage image(page->imagePath(), "PNG");
+    m_ocr_dlg->setData(page_no, image, page);
+    connect(m_ocr_dlg, &QDialog::finished, this, &ScanEditor::receiveOcrDialogFinished);
 
-  m_ocr_dlg->open();
+    m_ocr_dlg->open();
+  }
 }
 
 void ScanEditor::receiveOcrPageRequest(int page_no)

@@ -13,7 +13,7 @@ ImageView::ImageView(QWidget* parent)
   setDragDropOverwriteMode(false);
   setDragDropMode(QListView::InternalMove);
   setDefaultDropAction(Qt::MoveAction);
-  //  setItemDelegate(new ImageDelegate(this));
+  setItemDelegate(new ImageDelegate(this));
 }
 
 void ImageView::setCover(const QImage& image)
@@ -221,7 +221,7 @@ QVariant ImageListModel::data(const QModelIndex& index, int role) const
     if (role == Qt::DecorationRole) {
       switch (index.column()) {
       case 0:
-        return QIcon(QPixmap::fromImage(m_images.at(index.row())));
+        return m_images.at(index.row());
 
       case 1:
         return m_has_text.at(index.row());
@@ -261,36 +261,59 @@ void ImageDelegate::paint(QPainter* painter,
                           const QStyleOptionViewItem& option,
                           const QModelIndex& index) const
 {
-  if (index.data().canConvert<QImage>()) {
-    QImage image = qvariant_cast<QImage>(index.data());
+  QVariant v = index.data(Qt::DecorationRole);
+
+  if (v.canConvert<QImage>()) {
+    painter->save();
+    auto image = v.value<QImage>();
     QModelIndex i = index.model()->index(index.row(), 1, index);
-    bool has_text = index.model()->data(i, Qt::DisplayRole).toBool();
+    bool has_text = index.model()->data(i, Qt::DecorationRole).toBool();
 
     if (option.state & QStyle::State_Selected) {
       painter->fillRect(option.rect, option.palette.highlight());
     }
 
-    QRect rect = option.rect;
+
+    QRect image_rect;
+    QRect border_rect;
+
+    border_rect.setX(option.rect.x());
+    border_rect.setY(option.rect.y());
+    border_rect.setWidth(image.rect().width() + 10);
+    border_rect.setHeight(image.rect().height() + 6);
+
+    image_rect.setX(option.rect.x() + 5);
+    image_rect.setY(option.rect.y() + 5);
+    image_rect.setWidth(image.rect().width());
+    image_rect.setHeight(image.rect().height());
+
     QPen pen;
-    QBrush brush;
 
     if (has_text) {
       pen.setColor(QColor("green"));
-      brush.setColor(QColor("green"));
 
     } else {
       pen.setColor(QColor("red"));
-      brush.setColor(QColor("red"));
     }
 
     pen.setWidth(4);
     pen.setJoinStyle(Qt::MiterJoin);
     painter->setPen(pen);
-    painter->setBrush(brush);
-    painter->drawRect(rect);
-    painter->drawImage(rect, image);
+    painter->drawImage(image_rect, image);
+    painter->drawRect(border_rect);
+    painter->restore();
 
   } else {
     QStyledItemDelegate::paint(painter, option, index);
   }
+}
+
+QSize ImageDelegate::sizeHint(const QStyleOptionViewItem& /*option*/,
+                              const QModelIndex& index) const
+{
+  QVariant v = index.data(Qt::DecorationRole);
+  auto image = v.value<QImage>();
+  auto size = image.size();
+  size += QSize(10, 20);
+  return size;
 }
