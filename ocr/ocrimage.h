@@ -23,7 +23,7 @@ public:
   explicit OcrImage(QWidget* parent = nullptr);
   ~OcrImage() = default;
 
-  void setImage(const QImage& image);
+  //  void setImage(const QImage& image);
 
   void undoAllChanges();
   void undoLastChange();
@@ -47,8 +47,9 @@ signals:
   void enableBinarise();
 
 protected:
-  Mat m_mat_image, *m_modifiable_mat{};
-  int m_modifiable_int;
+  Mat m_mat_image;
+  Mat* m_modifiable_mat{};
+  int m_modifiable_int{};
   //  QList<Operations> m_operations;
   //  QList<QVariant> m_op_data;
   QList<QImage> m_op_images;

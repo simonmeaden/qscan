@@ -7,7 +7,6 @@
 DEFINES += LOGGER_ENABLE
 
 QT       += widgets svg xml multimedia
-
 greaterThan(QT_MAJOR_VERSION, 4): QT += printsupport
 
 TARGET = qscan
@@ -30,7 +29,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     qscan.cpp \
-    texteditiodevice.cpp \
     version.cpp  \
     scaninterface.cpp \
     scanoptions.cpp
@@ -38,7 +36,6 @@ SOURCES += \
 HEADERS += \
     qscan.h \
     qscan_global.h \
-    texteditiodevice.h \
     version.h \
     scaninterface.h  \
     scanoptions.h

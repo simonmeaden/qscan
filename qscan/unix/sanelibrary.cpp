@@ -153,7 +153,7 @@ bool SaneLibrary::detectAvailableOptions(QString device_name)
 
   if (sane_status == SANE_STATUS_GOOD) {
     ScanDevice* device = m_scanners.value(device_name);
-    //    device->sane_handle = sane_handle;
+
     m_logger->debug(
       tr("sane_open status: %1").arg(sane_strstatus(sane_status)));
 
@@ -223,7 +223,7 @@ void SaneLibrary::exit()
 
 void SaneLibrary::getAvailableScannerOptions(QString device_name)
 {
-  ScanDevice* device = m_scanners.value(device_name);
+  auto* device = m_scanners.value(device_name);
 
   emit getAvailableOptions(device);
 }

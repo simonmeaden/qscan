@@ -9,14 +9,14 @@ using namespace cv;
 
 OcrImage::OcrImage(QWidget* parent)
   : BaseScanImage(parent)
-{}
-
-void OcrImage::setImage(const QImage& image)
 {
-  BaseScanImage::setImage(image);
-  m_modified_image = image;
-  //  m_mat_image = ImageConverter::imageToMat(m_image);
+  setStyleSheet("border: 2px solid red;");
 }
+
+//void OcrImage::setImage(const QImage& image)
+//{
+//  BaseScanImage::setImage(image);
+//}
 
 void OcrImage::undoAllChanges()
 {
@@ -64,7 +64,7 @@ void OcrImage::acceptThreshold()
 void OcrImage::applyThreshold()
 {
   Mat modified;
-  threshold(*m_modifiable_mat, modified, m_modifiable_int, 200, THRESH_BINARY);
+  threshold(*m_modifiable_mat, modified, m_modifiable_int, 255, THRESH_BINARY);
   updateImage(ImageConverter::matToImage(modified));
 }
 

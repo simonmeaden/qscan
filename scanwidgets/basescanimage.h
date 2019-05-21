@@ -85,6 +85,7 @@ protected:
   QImage m_image; // original unmodified image.
   //  QImage m_scaled_image;
   QImage m_modified_image;
+  QImage m_scaled_image;
   QRect m_rubber_band;
   QRect m_stretched_band;
   //  QRect m_contents_rect;

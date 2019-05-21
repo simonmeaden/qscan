@@ -35,9 +35,8 @@ bool BaseScanImage::hasSelection()
 void BaseScanImage::setImage(const QImage& image)
 {
   m_image = image;
-  m_modified_image = image;
-  fitByType();
   updateImage(m_image);
+  fitByType();
 }
 
 void BaseScanImage::updateImage(const QImage& image)
@@ -95,7 +94,7 @@ void BaseScanImage::cutSelection()
     painter.end();
 
     updateImage(m_modified_image);
-    scaleImage(/*m_scale_by,*/ m_modified_image);
+    scaleImage(m_modified_image);
     clearSelection();
   }
 }
@@ -112,7 +111,7 @@ void BaseScanImage::cropToSelection()
     QImage cropped = m_modified_image.copy(scaled_rect);
 
     updateImage(cropped);
-    scaleImage(/*m_scale_by,*/ m_modified_image);
+    scaleImage(m_modified_image);
     clearSelection();
   }
 }
@@ -121,8 +120,8 @@ void BaseScanImage::scaleImage(/*qreal factor,*/ const QImage& image)
 {
   int w = int(image.width() * m_scale_by);
   int h = int(image.height() * m_scale_by);
-  auto scaled_image = image.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-  setPixmap(QPixmap::fromImage(scaled_image));
+  m_scaled_image = image.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  //  setPixmap(QPixmap::fromImage(scaled_image));
   update();
 }
 
@@ -162,7 +161,7 @@ void BaseScanImage::fitWidth()
   fitByType();
 }
 
-void BaseScanImage::fitByType(/*QSize size*/)
+void BaseScanImage::fitByType()
 {
   QSize size = frameSize();
 
@@ -193,7 +192,7 @@ void BaseScanImage::fitByType(/*QSize size*/)
       break;
     }
 
-    scaleImage(/*m_scale_by,*/ m_modified_image);
+    scaleImage(m_modified_image);
   }
 }
 
@@ -562,10 +561,9 @@ void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
 void BaseScanImage::paintEvent(QPaintEvent* event)
 {
   if (!m_modified_image.isNull()) {
-    //    m_contents_rect = contentsRect();
-    //    fitByType(frameSize());
     QLabel::paintEvent(event);
     QPainter painter(this);
+    painter.drawImage(m_scaled_image.rect().topLeft(), m_scaled_image);
     paintRubberBand(&painter);
     painter.end();
   }

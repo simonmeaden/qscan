@@ -67,6 +67,17 @@ QSize OcrDialog::sizeHint() const
   return { size };
 }
 
+Page OcrDialog::page() const
+{
+  return m_page;
+}
+
+void OcrDialog::open()
+{
+  QDialog::open();
+  m_image_display->fitByType();
+}
+
 void OcrDialog::initGui()
 {
   auto* layout = new QGridLayout;
@@ -338,7 +349,7 @@ void OcrDialog::close()
 {
   saveImage();
   saveText();
-  accept();
+  QDialog::close();
 }
 
 void OcrDialog::setThreshold(int threshold)

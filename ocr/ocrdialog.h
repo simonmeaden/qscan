@@ -38,6 +38,10 @@ public:
   bool imageChanged() const;
   QSize sizeHint() const override;
 
+  Page page() const;
+
+  void open();
+
 signals:
   void sendOcrRequest(int, const QImage&);
   void saveModifiedImage(int index, const QImage& image);
@@ -55,6 +59,7 @@ protected:
   QLabel* threshold_lbl;
   QStackedLayout* m_ctl_stack{};
   int m_btn_stack{}, m_threshold_stack{};
+
 
   void resizeEvent(QResizeEvent* event) override;
 

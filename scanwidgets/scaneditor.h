@@ -124,7 +124,7 @@ protected:
   QString m_config_dir{};
   QString m_data_dir{};
   QString m_lang{};
-  OcrDialog* dlg;
+  OcrDialog* m_ocr_dlg;
 
   QMap<int, Page> m_pages;
   Page m_cover;
@@ -142,10 +142,12 @@ protected:
   void saveModifiedImage(int index, const QImage& image);
   void saveAsCover(const QImage& image);
   void receiveLoadText(int page_no);
+  void receiveWorkOnRequest(int page_no);
   void receiveOcrPageRequest(int page_no);
   void receiveOcrImageRequest(int page_no, const QImage& image);
   void receiveOcrPageResult(const Page& page_no);
   void receiveOcrImageResult(int page_no, const QString& text);
+  void receiveOcrDialogFinished(int result);
   void saveText(int index, const Page& page_no);
   void saveModifiedText(int index, const QStringList& text);
   void clearSaveAllTextsFlag();

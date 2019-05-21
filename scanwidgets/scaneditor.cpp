@@ -104,6 +104,7 @@ void ScanEditor::makeConnections()
   connect(m_scan_display, &ScanImage::adjustScrollbar, this, &ScanEditor::adjustScrollbar);
   connect(m_scan_display, &ScanImage::sendImage, this, &ScanEditor::receiveImage);
   connect(m_scan_display, &ScanImage::sendImages, this, &ScanEditor::receiveImages);
+  connect(m_page_view, &PageView::workOn, this, &ScanEditor::receiveWorkOnRequest);
   connect(m_page_view, &PageView::sendOcrPage, this, &ScanEditor::receiveOcrPageRequest);
   connect(m_page_view, &PageView::clearSaveAllFlag, this, &ScanEditor::clearSaveAllTextsFlag);
   connect(m_page_view, &PageView::loadText, this, &ScanEditor::receiveLoadText);
@@ -227,6 +228,22 @@ void ScanEditor::receiveLoadText(int page_no)
   }
 }
 
+void ScanEditor::receiveWorkOnRequest(int page_no)
+{
+  Page page = m_pages.value(page_no);
+
+  m_ocr_dlg = new OcrDialog(this);
+  connect(m_ocr_dlg, &OcrDialog::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
+  connect(m_ocr_dlg, &OcrDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
+  connect(m_ocr_dlg, &OcrDialog::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
+
+  QImage image(page->imagePath(), "PNG");
+  m_ocr_dlg->setData(page_no, image, page);
+  connect(m_ocr_dlg, &QDialog::finished, this, &ScanEditor::receiveOcrDialogFinished);
+
+  m_ocr_dlg->open();
+}
+
 void ScanEditor::receiveOcrPageRequest(int page_no)
 {
   if (page_no > 0) { //
@@ -303,59 +320,62 @@ void ScanEditor::saveModifiedText(int index, const QStringList& text)
 
 void ScanEditor::receiveOcrPageResult(const Page& page)
 {
-  dlg = new OcrDialog(this);
-  connect(dlg, &OcrDialog::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
-  connect(dlg, &OcrDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
-  connect(dlg, &OcrDialog::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
+  m_ocr_dlg = new OcrDialog(this);
+  connect(m_ocr_dlg, &OcrDialog::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
+  connect(m_ocr_dlg, &OcrDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
+  connect(m_ocr_dlg, &OcrDialog::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
 
   int index = m_pages.key(page);
   QImage image(page->imagePath(), "PNG");
-  dlg->setData(index, image, page);
+  m_ocr_dlg->setData(index, image, page);
+  connect(m_ocr_dlg, &QDialog::finished, this, &ScanEditor::receiveOcrDialogFinished);
 
-  int result = dlg->exec();
+  m_ocr_dlg->open();
+
+}
+
+void ScanEditor::receiveOcrDialogFinished(int result)
+{
+  Page page = m_ocr_dlg->page();
 
   if (result == QDialog::Accepted) {
-    page->setTextList(dlg->text());
+    page->setTextList(m_ocr_dlg->text());
     int index = m_pages.key(page);
 
     if (m_save_all_texts) {
       saveText(index, page);
 
     } else {
-      result = QMessageBox::question(this,
-                                     tr("Image text exists."),
-                                     tr("The image %1 already has text.\n"
-                                        "Do you want to overwrite this text?")
-                                     .arg(index),
-                                     QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll,
-                                     QMessageBox::No);
+      int answer = QMessageBox::question(this,
+                                         tr("Image text exists."),
+                                         tr("The image %1 already has text.\n"
+                                            "Do you want to overwrite this text?")
+                                         .arg(index),
+                                         QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll,
+                                         QMessageBox::No);
 
-      if (result == QMessageBox::Yes) {
+      if (answer == QMessageBox::Yes) {
         saveText(index, page);
 
-      } else if (result == QMessageBox::YesToAll) {
+      } else if (answer == QMessageBox::YesToAll) {
         m_save_all_texts = true;
         saveText(index, page);
       }
     }
 
-    if (dlg->imageChanged()) {
+    if (m_ocr_dlg->imageChanged()) {
       // TODO maybe save tweaked image. maybe only supply list of tweaks?
     }
-  } else if (result == QMessageBox::Help) {
-    // TODO
-  } else if (result == QMessageBox::Save) {
-    // TODO
   }
 
-  dlg->deleteLater();
-  dlg == nullptr;
+  m_ocr_dlg->deleteLater();
+  m_ocr_dlg == nullptr;
 }
 
 void ScanEditor::receiveOcrImageResult(int page_no, const QString& text)
 {
-  if (dlg) {
-    dlg->setOcrText(page_no, text);
+  if (m_ocr_dlg) {
+    m_ocr_dlg->setOcrText(page_no, text);
   }
 }
 

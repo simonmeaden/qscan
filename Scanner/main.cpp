@@ -24,12 +24,12 @@
 #include <QTextStream>
 
 #if defined(LOGGER_ENABLE)
-  #include "texteditiodevice.h"
+  //  #include "texteditiodevice.h"
   #include <log4qt/consoleappender.h>
   #include <log4qt/logger.h>
   #include <log4qt/logmanager.h>
   #include <log4qt/ttcclayout.h>
-  #include <log4qt/writerappender.h>
+  //  #include <log4qt/writerappender.h>
 #endif
 
 #include "scanoptions.h"
@@ -61,15 +61,15 @@ int main(int argc, char* argv[])
   p_appender->setName(QStringLiteral("Console"));
   p_appender->activateOptions();
   //
-  auto* text_edit = new QPlainTextEdit();
-  auto* log_io_device = new TextEditIoDevice(text_edit);
-  auto* stream = new QTextStream(log_io_device);
-  WriterAppender* p_writer = new WriterAppender(p_layout, stream);
-  p_writer->setName("StreamWriter");
-  p_writer->activateOptions();
+  //  auto* text_edit = new QPlainTextEdit();
+  //  auto* log_io_device = new TextEditIoDevice(text_edit);
+  //  auto* stream = new QTextStream(log_io_device);
+  //  WriterAppender* p_writer = new WriterAppender(p_layout, stream);
+  //  p_writer->setName("StreamWriter");
+  //  p_writer->activateOptions();
   // Set appender on root logger
   Logger::rootLogger()->addAppender(p_appender);
-  Logger::rootLogger()->addAppender(p_writer);
+  //  Logger::rootLogger()->addAppender(p_writer);
   Logger::rootLogger()->setLevel(Level::DEBUG_INT);
   //  auto* object = new LoggerObject(&a);
   QLoggingCategory::setFilterRules("*.debug=false\n"
@@ -79,18 +79,18 @@ int main(int argc, char* argv[])
 
   MainWindow w;
 
-#if defined(LOGGER_ENABLE)
-  w.setLogTextEdit(text_edit);
-#endif
+  //#if defined(LOGGER_ENABLE)
+  //  w.setLogTextEdit(text_edit);
+  //#endif
 
   w.show();
   int res = QApplication::exec();
 
-#if defined(LOGGER_ENABLE)
-  Logger::rootLogger()->removeAppender(p_writer);
-  delete log_io_device;
-  delete stream;
-  delete text_edit;
-#endif
+  //#if defined(LOGGER_ENABLE)
+  //  Logger::rootLogger()->removeAppender(p_writer);
+  //  delete log_io_device;
+  //  delete stream;
+  //  delete text_edit;
+  //#endif
   return res;
 }

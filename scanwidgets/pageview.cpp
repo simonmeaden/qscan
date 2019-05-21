@@ -8,90 +8,53 @@ PageView::PageView(QWidget* parent)
 {
   auto* layout = new QHBoxLayout;
   setLayout(layout);
-  m_image_list = new QListWidget(this);
+  m_image_list = new ImageView(this);
   m_image_list->setSelectionMode(QAbstractItemView::SingleSelection);
-  m_image_list->setViewMode(QListWidget::IconMode);
-  m_image_list->setIconSize(QSize(200, 200));
-  m_image_list->setResizeMode(QListWidget::Adjust);
   m_image_list->setDragDropMode(QAbstractItemView::InternalMove);
   // insert an empty image at zero position. This will be the cover.
-  QListWidgetItem* item = new QListWidgetItem(QIcon(), "No Cover Set", m_image_list);
-  m_image_list->addItem(item);
   connect(m_image_list->model(), &QAbstractItemModel::rowsMoved, this, &PageView::rowsMoved);
   m_remove_page_act = new QAction(tr("Remove the selected page"), this);
   m_move_page_up_act = new QAction(tr("Move page up"), this);
   m_move_page_down_act = new QAction(tr("Move page down"), this);
   m_load_text_act = new QAction(tr("Load text."), this);
-  m_do_ocr_act = new QAction(tr("Run OCR on selected image."), this);
-  m_do_all_ocr_act = new QAction(tr("Run OCR on all text-free images."), this);
+  m_work_with_act = new QAction(tr("Work with selected image."), this);
+  //  m_do_ocr_act = new QAction(tr("Run OCR on selected image."), this);
+  //  m_do_all_ocr_act = new QAction(tr("Run OCR on all text-free images."),
+  //  this);
   connect(m_remove_page_act, &QAction::triggered, this, &PageView::remove);
   connect(m_move_page_up_act, &QAction::triggered, this, &PageView::moveUp);
   connect(m_move_page_down_act, &QAction::triggered, this, &PageView::moveDown);
-  connect(m_do_ocr_act, &QAction::triggered, this, &PageView::doOcr);
-  connect(m_do_all_ocr_act, &QAction::triggered, this, &PageView::doAllOcr);
-  connect(m_load_text_act, &QAction::triggered, this, &PageView::loadTextIntoEditor);
+  //  connect(m_do_ocr_act, &QAction::triggered, this, &PageView::doOcr);
+  //  connect(m_do_all_ocr_act, &QAction::triggered, this, &PageView::doAllOcr);
+  connect(
+    m_load_text_act, &QAction::triggered, this, &PageView::loadTextIntoEditor);
   layout->addWidget(m_image_list);
 }
 
 void PageView::append(const QImage& thumbnail)
 {
   // this list will always start at position 1.
-  QLabel* lbl = new QLabel(this);
-  lbl->setPixmap(QPixmap::fromImage(thumbnail));
-  lbl->setStyleSheet(HASNOTEXT);
-  auto* item = new QListWidgetItem(m_image_list);
-  item->setSizeHint(QSize(thumbnail.width(), thumbnail.height()));
-  m_image_list->addItem(item);
-  m_image_list->setItemWidget(item, lbl);
+  m_image_list->addThumbnail(thumbnail, false);
 }
 
 void PageView::remove(int index)
 {
-  QListWidgetItem* item = m_image_list->takeItem(index);
-  delete item;
+  m_image_list->removeThumbnail(index);
 }
 
 void PageView::insert(int row, const QImage& thumbnail, bool has_text)
 {
-  QLabel* lbl = new QLabel(this);
-  lbl->setPixmap(QPixmap::fromImage(thumbnail));
-
-  if (has_text) {
-    lbl->setStyleSheet(HASTEXT);
-
-  } else {
-    lbl->setStyleSheet(HASNOTEXT);
-  }
-
-  auto* item = new QListWidgetItem(m_image_list);
-  item->setSizeHint(QSize(thumbnail.width(), thumbnail.height()));
-  m_image_list->insertItem(row, item);
-  m_image_list->setItemWidget(item, lbl);
+  m_image_list->insertThumbnail(row, thumbnail, has_text);
 }
 
 void PageView::setCover(const QImage& cover)
 {
-  QLabel* lbl = new QLabel(this);
-  lbl->setPixmap(QPixmap::fromImage(cover));
-  lbl->setStyleSheet(HASTEXT);
-  auto* item = m_image_list->item(0);
-  item->setText(QString());
-  item->setSizeHint(QSize(cover.width(), cover.height()));
-  m_image_list->setItemWidget(item, lbl);
+  m_image_list->setCover(cover);
 }
 
 void PageView::setHasText(int index, bool has_text)
 {
-  auto* item = m_image_list->item(index);
-  auto* lbl = m_image_list->itemWidget(item);
-  m_has_text.insert(index, has_text);
-
-  if (has_text) {
-    lbl->setStyleSheet(HASTEXT);
-
-  } else {
-    lbl->setStyleSheet(HASNOTEXT);
-  }
+  m_image_list->setHasText(index, has_text);
 }
 
 bool PageView::hasText(int page_no)
@@ -114,8 +77,10 @@ void PageView::contextMenuEvent(QContextMenuEvent* event)
   // index 0 is always the cover.
   if (m_image_list->indexAt(event->pos()).row() > 0) {
     context_menu->addSeparator();
-    context_menu->addAction(m_do_ocr_act);
-    context_menu->addAction(m_do_all_ocr_act);
+    context_menu->addAction(m_work_with_act);
+    //    context_menu->addSeparator();
+    //    context_menu->addAction(m_do_ocr_act);
+    //    context_menu->addAction(m_do_all_ocr_act);
     context_menu->addSeparator();
     context_menu->addAction(m_load_text_act);
   }
@@ -152,20 +117,25 @@ void PageView::moveDown()
   // TODO move down
 }
 
-void PageView::doOcr()
+// void PageView::doOcr()
+//{
+//  emit sendOcrPage(m_image_list->currentIndex().row());
+//}
+
+// void PageView::doAllOcr()
+//{
+//  emit clearSaveAllFlag();
+
+//  for (int row = 1; m_image_list->count(); row++) {
+//    emit sendOcrPage(row); // cover page is not included
+//  }
+
+//  emit clearSaveAllFlag();
+//}
+
+void PageView::workOnImage()
 {
-  emit sendOcrPage(m_image_list->currentIndex().row());
-}
-
-void PageView::doAllOcr()
-{
-  emit clearSaveAllFlag();
-
-  for (int row = 1; m_image_list->count(); row++) {
-    emit sendOcrPage(row); // cover page is not included
-  }
-
-  emit clearSaveAllFlag();
+  emit workOn(m_image_list->currentIndex().row());
 }
 
 void PageView::loadTextIntoEditor()

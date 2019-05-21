@@ -100,7 +100,6 @@ void SaneWorker::scan(ScanDevice* device)
         break;
       }
 
-      //        m_logger->warn(tr("Sane frame RGB but depth 1"));
       emit scanFailed();
       return;
 
@@ -308,7 +307,10 @@ void SaneWorker::loadAvailableScannerOptions(ScanDevice* device)
   SANE_Int number_of_options = 0;
   SANE_Int option_id = 1;
   SANE_Int info;
-  QStringList list;
+
+  if (!device || device->name.isEmpty()) {
+    return;
+  }
 
   status = sane_open(device->name.toStdString().c_str(), &sane_handle);
   device->sane_handle = sane_handle;
@@ -343,34 +345,37 @@ void SaneWorker::loadAvailableScannerOptions(ScanDevice* device)
           setResolution(device, option, option_id);
 
         } else if (name == SANE_NAME_SCAN_SOURCE) {
+          QStringList list;
+
           switch (option->type) {
-          case SANE_TYPE_STRING: {
-            QString s;
+            case SANE_TYPE_STRING: {
+              QString s;
 
-            switch (option->constraint_type) {
-            case SANE_CONSTRAINT_STRING_LIST:
-              for (int i = 0; option->constraint.string_list[i] != nullptr; i++) {
-                s = QString(option->constraint.string_list[i]);
-                list.append(s);
+              switch (option->constraint_type) {
+                case SANE_CONSTRAINT_STRING_LIST:
+                  for (int i = 0; option->constraint.string_list[i] != nullptr;
+                       i++) {
+                    s = QString(option->constraint.string_list[i]);
+                    list.append(s);
+                  }
+
+                  break;
+
+                case SANE_CONSTRAINT_WORD_LIST:
+                  for (int i = 1; i <= option->constraint.word_list[0]; i++) {
+                    s = QString(option->constraint.word_list[i]);
+                    list.append(s);
+                  }
+
+                  break;
+
+                default:
+                  break;
               }
-
-              break;
-
-            case SANE_CONSTRAINT_WORD_LIST:
-              for (int i = 1; i <= option->constraint.word_list[0]; i++) {
-                s = QString(option->constraint.word_list[i]);
-                list.append(s);
-              }
-
-              break;
+            }
 
             default:
               break;
-            }
-          }
-
-          default:
-            break;
           }
 
           if (!list.isEmpty()) {
@@ -384,34 +389,37 @@ void SaneWorker::loadAvailableScannerOptions(ScanDevice* device)
           }
 
         } else if (name == SANE_NAME_SCAN_MODE) {
+          QStringList list;
+
           switch (option->type) {
-          case SANE_TYPE_STRING: {
-            QString s;
+            case SANE_TYPE_STRING: {
+              QString s;
 
-            switch (option->constraint_type) {
-            case SANE_CONSTRAINT_STRING_LIST:
-              for (int i = 0; option->constraint.string_list[i] != nullptr; i++) {
-                s = QString(option->constraint.string_list[i]);
-                list.append(s);
+              switch (option->constraint_type) {
+                case SANE_CONSTRAINT_STRING_LIST:
+                  for (int i = 0; option->constraint.string_list[i] != nullptr;
+                       i++) {
+                    s = QString(option->constraint.string_list[i]);
+                    list.append(s);
+                  }
+
+                  break;
+
+                case SANE_CONSTRAINT_WORD_LIST:
+                  for (int i = 1; i <= option->constraint.word_list[0]; i++) {
+                    s = QString(option->constraint.word_list[i]);
+                    list.append(s);
+                  }
+
+                  break;
+
+                default:
+                  break;
               }
-
-              break;
-
-            case SANE_CONSTRAINT_WORD_LIST:
-              for (int i = 1; i <= option->constraint.word_list[0]; i++) {
-                s = QString(option->constraint.word_list[i]);
-                list.append(s);
-              }
-
-              break;
+            }
 
             default:
               break;
-            }
-          }
-
-          default:
-            break;
           }
 
           if (!list.isEmpty()) {
@@ -711,27 +719,19 @@ QVariant SaneWorker::getOptionValue(ScanDevice* device, const QString& option_na
   if (status == SANE_STATUS_GOOD) {
     switch (option_type) {
     case SANE_TYPE_BOOL:
-      if (reinterpret_cast<SANE_Word*>(optval) == SANE_FALSE) {
-        v = false;
-
-      } else {
-        v = true;
-      }
-
+      v = *static_cast<SANE_Word*>(optval);
       break;
 
     case SANE_TYPE_INT:
-      v = *reinterpret_cast<SANE_Int*>(optval);
+      v = *static_cast<SANE_Int*>(optval);
       break;
 
-    case SANE_TYPE_FIXED: {
-      int i;
-      v = SANE_UNFIX(*reinterpret_cast<SANE_Word*>(optval));
-    }
-    break;
+    case SANE_TYPE_FIXED:
+      v = SANE_UNFIX(*static_cast<SANE_Word*>(optval));
+      break;
 
     case SANE_TYPE_STRING:
-      v = QString(reinterpret_cast<const char*>(optval));
+      v = QString(static_cast<const char*>(optval));
       break;
     }
 

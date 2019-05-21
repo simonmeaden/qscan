@@ -62,21 +62,31 @@ public:
   explicit MainWindow(QWidget* parent = nullptr);
   ~MainWindow() override;
 
-  void setLogTextEdit(QPlainTextEdit* log_edit);
+  //  void setLogTextEdit(QPlainTextEdit* log_edit);
 
   QToolBar* initRightToolbar();
-
   QToolBar* initModeToolbar();
 
 protected:
   Log4Qt::Logger* m_logger;
   QScan* m_scan_lib;
-  //  QFrame* m_main;
+
   QGridLayout* m_main_layout{};
   ScanEditor* m_image_editor{};
-  //  QTableWidget* m_scanners{};
-  QComboBox* m_mode_box{}, *m_source_box{};
-  //  QPushButton* m_close_btn;
+  QComboBox* m_mode_box{};
+  QComboBox* m_source_box{};
+  QLabel* m_min_res{};
+  QLabel* m_max_res{};
+  QLabel* m_curr_src{};
+  QLabel* m_curr_mode{};
+  QIntValidator* m_res_validator{};
+  QLineEdit* m_res_edit{};
+  QFrame* m_res_range{};
+  QFrame* m_res_list{};
+  QStackedLayout* m_res_layout{};
+  QComboBox* m_res_combo{};
+  QComboBox* m_scanner_box{};
+
   QString m_config_dir;
   QString m_data_dir;
   QString m_lang;
@@ -84,17 +94,8 @@ protected:
 
   QString m_selected_name;
   bool m_selected;
-  QTextStream* m_log_stream{};
-  QPlainTextEdit* m_empty_edit{};
-  QPlainTextEdit* m_log_edit{};
-  QLabel* m_min_res{}, *m_max_res{}, *m_curr_src{}, *m_curr_mode{};
-  QIntValidator* m_res_validator{};
-  QLineEdit* m_res_edit{};
-  QFrame* m_res_range{}, *m_res_list{};
-  QStackedLayout* m_res_layout{};
-  int m_stack_range{}, m_stack_list{};
-  QComboBox* m_res_combo{};
-  QComboBox* m_scanner_box{};
+  int m_stack_range{};
+  int m_stack_list{};
 
   QPixmapCache::Key help_key;
   QPixmapCache::Key scan_key;
@@ -140,7 +141,7 @@ protected:
   void initActions();
   void initToolbar();
   void initMenu();
-  void connectActions();
+  void makeConnections();
 
   void scannerSelectionChanged(int index);
   void startScanning();
@@ -156,7 +157,7 @@ protected:
 
   void scanHasFailed();
   void scanProgressed(const int&);
-  void geometry();
+  //  void geometry();
   void modifyingSelection();
   void editorHasSelection();
   void editorHasNoSelection();
@@ -180,7 +181,9 @@ protected:
   void loadExistingFiles();
   QToolBar* initMainToolbar();
   QToolBar* initSourceToolbar();
-  QToolBar* initResourceToolbar();
+  QToolBar* initResolutionToolbar();
+  void initPixmaps();
+  void makeDelayedConnections();
 };
 
 #endif // MAINWINDOW_H

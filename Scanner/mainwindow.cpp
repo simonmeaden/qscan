@@ -39,23 +39,7 @@ MainWindow::MainWindow(QWidget* parent)
   m_logger = Log4Qt::Logger::logger(tr("Scanner"));
   m_scan_lib = new QScan(this);
 
-  help_key = QPixmapCache::insert(QPixmap(":/icons/help-contents"));
-  scan_key = QPixmapCache::insert(QPixmap(":/icons/scan"));
-  rot_left_key = QPixmapCache::insert(QPixmap(":/icons/rotate-left"));
-  rot_right_key = QPixmapCache::insert(QPixmap(":/icons/rotate-right"));
-  rot_angle_key = QPixmapCache::insert(QPixmap(":/icons/rotate-angle"));
-  rot_edge_key = QPixmapCache::insert(QPixmap(":/icons/rotate-edge"));
-  copy_key = QPixmapCache::insert(QPixmap(":/icons/copy"));
-  scale_key = QPixmapCache::insert(QPixmap(":/icons/scale"));
-  crop_key = QPixmapCache::insert(QPixmap(":/icons/crop"));
-  save_key = QPixmapCache::insert(QPixmap(":/icons/save"));
-  save_as_key = QPixmapCache::insert(QPixmap(":/icons/save-as"));
-  close_key = QPixmapCache::insert(QPixmap(":/icons/close"));
-  zoom_in_key = QPixmapCache::insert(QPixmap(":/icons/zoom-in"));
-  zoom_out_key = QPixmapCache::insert(QPixmap(":/icons/zoom-out"));
-  fit_best_key = QPixmapCache::insert(QPixmap(":/icons/fit-best"));
-  fit_width_key = QPixmapCache::insert(QPixmap(":/icons/fit-width"));
-  fit_height_key = QPixmapCache::insert(QPixmap(":/icons/fit-height"));
+  initPixmaps();
 
   m_config_dir = "/home/simonmeaden/.config/Biblos";
   m_data_dir = "/home/simonmeaden/.local/share/Biblos/ocr";
@@ -64,30 +48,41 @@ MainWindow::MainWindow(QWidget* parent)
   initActions();
   initGui();
   initMenu();
-  connectActions();
+  makeConnections();
 
   loadOptions(); // must be called BEFORE   loadExistingFiles();
   loadExistingFiles();
 
-  connect(m_scan_lib, &QScan::scanCompleted, m_image_editor, &ScanEditor::setImage);
-  connect(m_scan_lib, &QScan::scanProgress, m_image_editor, &ScanEditor::setScanProgress);
-  connect(m_scan_lib, &QScan::scanFailed, this, &MainWindow::scanHasFailed);
-  connect(m_scan_lib, &QScan::optionsSet, this, &MainWindow::receiveOptionsSet);
-  connect(m_scan_lib, &QScan::modeChanged, this, &MainWindow::receiveModeChange);
-  connect(m_scan_lib, &QScan::sourceChanged, this, &MainWindow::receiveSourceChange);
-  connect(m_image_editor, &ScanEditor::selectionUnderway, this, &MainWindow::modifyingSelection);
-  connect(m_image_editor, &ScanEditor::selected, this, &MainWindow::editorHasSelection);
-  connect(m_image_editor, &ScanEditor::imageIsLoaded, this, &MainWindow::imageLoaded);
-  connect(m_image_editor, &ScanEditor::unselected, this, &MainWindow::editorHasNoSelection);
-
   m_scan_lib->init();
   QStringList scanners = m_scan_lib->devices();
 
-  for (int i = 0; i < scanners.size(); i++) {
-    ScanDevice* scanner = m_scan_lib->device(scanners.at(i));
-    QString s("%1 %2");
-    m_scanner_box->addItem(s.arg(scanner->model).arg(scanner->type), scanner->name);
+  if (scanners.isEmpty()) {
+    m_scanner_box->addItem(tr("No scanners available"));
+
+  } else {
+
+    for (int i = 0; i < scanners.size(); i++) {
+      ScanDevice* scanner = m_scan_lib->device(scanners.at(i));
+      QString s("%1 %2");
+      m_scanner_box->addItem(
+        s.arg(scanner->model, scanner->type, scanner->name));
+    }
+
+    m_selected_name = scanners.at(0);
+
+    if (!m_selected_name.isEmpty()) {
+      if (m_scan_lib->openDevice(m_selected_name)) {
+        ScanDevice* device = m_scan_lib->device(m_selected_name);
+        receiveOptionsSet(device);
+        m_scan_act->setEnabled(true);
+      }
+
+    } else {
+      m_logger->debug(tr("Unable to open %1").arg(m_selected_name));
+    }
   }
+
+  makeDelayedConnections();
 }
 
 MainWindow::~MainWindow()
@@ -110,12 +105,12 @@ void MainWindow::loadExistingFiles()
   m_image_editor->loadExistingFiles();
 }
 
-void MainWindow::setLogTextEdit(QPlainTextEdit* log_edit)
-{
-  m_log_edit = log_edit;
-  m_main_layout->replaceWidget(m_empty_edit, m_log_edit);
-  m_empty_edit->deleteLater();
-}
+// void MainWindow::setLogTextEdit(QPlainTextEdit* log_edit)
+//{
+//  m_log_edit = log_edit;
+//  m_main_layout->replaceWidget(m_empty_edit, m_log_edit);
+//  m_empty_edit->deleteLater();
+//}
 
 bool MainWindow::close()
 {
@@ -158,14 +153,16 @@ void MainWindow::initGui()
   connect(m_image_editor, &ScanEditor::scanCancelled, this, &MainWindow::cancelScanning);
   int row = 0;
 
-  // logger editor
-  m_empty_edit = new QPlainTextEdit(this);
-  m_empty_edit->setReadOnly(true);
-  m_empty_edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-  m_main_layout->addWidget(m_empty_edit, row, 1);
+  //  // logger editor
+  //  m_empty_edit = new QPlainTextEdit(this);
+  //  m_empty_edit->setReadOnly(true);
+  //  m_empty_edit->setSizePolicy(QSizePolicy::Expanding,
+  //  QSizePolicy::Expanding);
+
+  //  m_main_layout->addWidget(m_empty_edit, row, 1);
   m_main_layout->addWidget(m_image_editor, 0, 0, row + 1, 1);
   m_main_layout->setColumnStretch(0, 30);
-  m_main_layout->setColumnStretch(1, 10);
+  //  m_main_layout->setColumnStretch(1, 10);
   initToolbar();
 }
 
@@ -187,10 +184,6 @@ QToolBar* MainWindow::initMainToolbar()
   m_scanner_box = new QComboBox(this);
   m_scanner_box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   toolbar->addWidget(m_scanner_box);
-  connect(m_scanner_box,
-          qOverload<int>(&QComboBox::currentIndexChanged),
-          this,
-          &MainWindow::scannerSelectionChanged);
 
   QWidget* spacer_widget = new QWidget(this);
   spacer_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -258,22 +251,26 @@ QToolBar* MainWindow::initModeToolbar()
   QToolBar* toolbar = addToolBar("mode bar");
   QLabel* lbl = new QLabel(tr("Mode :"), this);
   lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_mode_box = new QComboBox(this);
-  m_mode_box->setSizeAdjustPolicy(QComboBox::AdjustToContents);
   toolbar->addWidget(lbl);
+
   m_mode_box = new QComboBox(this);
   m_mode_box->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+  m_mode_box->setSizeAdjustPolicy(QComboBox::AdjustToContents);
   toolbar->addWidget(m_mode_box);
+
   lbl = new QLabel(tr("Current Mode :"), this);
+  lbl->setContentsMargins(30, 0, 0, 0);
   lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   toolbar->addWidget(lbl);
   m_curr_mode = new QLabel(tr("No Mode"), this);
   m_curr_mode->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   toolbar->addWidget(m_curr_mode);
+
   return toolbar;
 }
 
-QToolBar* MainWindow::initResourceToolbar()
+QToolBar*
+MainWindow::initResolutionToolbar()
 {
   auto* toolbar = addToolBar("mode bar");
 
@@ -292,6 +289,8 @@ QToolBar* MainWindow::initResourceToolbar()
 
     QString s(tr("%1 %2"));
     m_min_res = new QLabel(s.arg(1).arg("dpi"), this);
+    m_min_res->setAlignment(Qt::AlignLeft);
+    m_min_res->setContentsMargins(0, 0, 0, 0);
     m_min_res->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     range_layout->addWidget(m_min_res, 0, 1);
     /*===*/
@@ -307,32 +306,37 @@ QToolBar* MainWindow::initResourceToolbar()
     m_res_edit->setValidator(m_res_validator);
     m_res_edit->setText("1");
     range_layout->addWidget(m_res_edit, 0, 3);
-
     lbl = new QLabel("dpi", this);
     lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     range_layout->addWidget(lbl, 0, 4);
+
     /*===*/
     lbl = new QLabel("Max Resolution :", this);
-    m_min_res->setContentsMargins(60, 0, 0, 0);
     lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     range_layout->addWidget(lbl, 0, 5);
 
     m_max_res = new QLabel(s.arg(1).arg("dpi"), this);
-    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    m_max_res->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    m_max_res->setAlignment(Qt::AlignLeft);
+    m_max_res->setContentsMargins(0, 0, 0, 0);
     range_layout->addWidget(m_max_res, 0, 6);
 
     m_stack_range = m_res_layout->addWidget(m_res_range);
   }
   {
     m_res_list = new QFrame(this);
+    m_res_list->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     auto* list_layout = new QGridLayout;
     m_res_list->setLayout(list_layout);
     m_res_list->setVisible(true);
 
     auto* lbl = new QLabel(tr("Resolution :"), this);
+    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     list_layout->addWidget(lbl, 0, 0);
 
     m_res_combo = new QComboBox(this);
+    m_res_combo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    m_res_combo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
     list_layout->addWidget(m_res_combo, 0, 1);
 
     auto* spacer_widget = new QWidget(this);
@@ -351,7 +355,7 @@ void MainWindow::initToolbar()
 
   auto* source_bar = initSourceToolbar();
   auto* mode_bar = initModeToolbar();
-  initResourceToolbar();
+  initResolutionToolbar();
 
   insertToolBarBreak(source_bar);
   insertToolBarBreak(mode_bar);
@@ -415,7 +419,30 @@ void MainWindow::initActions()
   disableNoSelectionActions();
 }
 
-void MainWindow::connectActions()
+void
+MainWindow::initPixmaps()
+{
+  help_key = QPixmapCache::insert(QPixmap(":/icons/help-contents"));
+  scan_key = QPixmapCache::insert(QPixmap(":/icons/scan"));
+  rot_left_key = QPixmapCache::insert(QPixmap(":/icons/rotate-left"));
+  rot_right_key = QPixmapCache::insert(QPixmap(":/icons/rotate-right"));
+  rot_angle_key = QPixmapCache::insert(QPixmap(":/icons/rotate-angle"));
+  rot_edge_key = QPixmapCache::insert(QPixmap(":/icons/rotate-edge"));
+  copy_key = QPixmapCache::insert(QPixmap(":/icons/copy"));
+  scale_key = QPixmapCache::insert(QPixmap(":/icons/scale"));
+  crop_key = QPixmapCache::insert(QPixmap(":/icons/crop"));
+  save_key = QPixmapCache::insert(QPixmap(":/icons/save"));
+  save_as_key = QPixmapCache::insert(QPixmap(":/icons/save-as"));
+  close_key = QPixmapCache::insert(QPixmap(":/icons/close"));
+  zoom_in_key = QPixmapCache::insert(QPixmap(":/icons/zoom-in"));
+  zoom_out_key = QPixmapCache::insert(QPixmap(":/icons/zoom-out"));
+  fit_best_key = QPixmapCache::insert(QPixmap(":/icons/fit-best"));
+  fit_width_key = QPixmapCache::insert(QPixmap(":/icons/fit-width"));
+  fit_height_key = QPixmapCache::insert(QPixmap(":/icons/fit-height"));
+}
+
+void
+MainWindow::makeConnections()
 {
   connect(m_close_act, &QAction::triggered, this, &MainWindow::close);
   connect(m_scan_act, &QAction::triggered, this, &MainWindow::startScanning);
@@ -435,18 +462,64 @@ void MainWindow::connectActions()
   connect(m_fit_height_act, &QAction::triggered, m_image_editor, &ScanEditor::fitHeight);
   connect(m_set_docname_act, &QAction::triggered, this, &MainWindow::createDocumentName);
   connect(m_doc_completed_act, &QAction::triggered, this, &MainWindow::completeDocument);
+
+  connect(m_scan_lib, &QScan::optionsSet, this, &MainWindow::receiveOptionsSet);
+  connect(
+    m_scan_lib, &QScan::modeChanged, this, &MainWindow::receiveModeChange);
+  connect(
+    m_scan_lib, &QScan::sourceChanged, this, &MainWindow::receiveSourceChange);
+}
+
+void
+MainWindow::makeDelayedConnections()
+{
+  // These have been delayed until scanners have been properly detected.
+  connect(m_scanner_box,
+          qOverload<int>(&QComboBox::currentIndexChanged),
+          this,
+          &MainWindow::scannerSelectionChanged);
+  connect(m_mode_box,
+          &QComboBox::currentTextChanged,
+          this,
+          &MainWindow::modeChangeSelected);
+  connect(
+    m_scan_lib, &QScan::scanCompleted, m_image_editor, &ScanEditor::setImage);
+  connect(m_scan_lib,
+          &QScan::scanProgress,
+          m_image_editor,
+          &ScanEditor::setScanProgress);
+  connect(m_scan_lib, &QScan::scanFailed, this, &MainWindow::scanHasFailed);
+
+  connect(m_image_editor,
+          &ScanEditor::selectionUnderway,
+          this,
+          &MainWindow::modifyingSelection);
+  connect(m_image_editor,
+          &ScanEditor::selected,
+          this,
+          &MainWindow::editorHasSelection);
+  connect(
+    m_image_editor, &ScanEditor::imageIsLoaded, this, &MainWindow::imageLoaded);
+  connect(m_image_editor,
+          &ScanEditor::unselected,
+          this,
+          &MainWindow::editorHasNoSelection);
 }
 
 void MainWindow::scannerSelectionChanged(int index)
 {
-  QString name = m_scanner_box->itemData(index).toString();
+  if (!m_scan_lib->devices().isEmpty()) {
+    QString name = m_scan_lib->devices().at(index);
 
-  if (m_scan_lib->openDevice(name)) {
-    m_selected_name = name;
-    m_scan_act->setEnabled(true);
+    if (!name.isEmpty()) {
+      if (m_scan_lib->openDevice(name)) {
+        m_selected_name = name;
+        m_scan_act->setEnabled(true);
 
-  } else {
-    m_logger->debug(tr("Unable to open %1").arg(m_selected_name));
+      } else {
+        m_logger->debug(tr("Unable to open %1").arg(m_selected_name));
+      }
+    }
   }
 }
 
@@ -471,8 +544,8 @@ void MainWindow::scanHasFailed()
 void MainWindow::scanProgressed(const int&)
 {}
 
-void MainWindow::geometry()
-{}
+// void MainWindow::geometry()
+//{}
 
 void MainWindow::receiveOptionsSet(ScanDevice* device)
 {
