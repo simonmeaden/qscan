@@ -10,6 +10,11 @@
 #include <QPen>
 #include <QBrush>
 #include <QPixmap>
+#include <QMimeData>
+#include <QDataStream>
+
+#include "scanwidgets_global.h"
+#include "logger.h"
 
 using ImageList = QList<QImage>;
 
@@ -24,7 +29,8 @@ public:
   void paint(QPainter* painter,
              const QStyleOptionViewItem& option,
              const QModelIndex& index) const override;
-  QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+  QSize sizeHint(const QStyleOptionViewItem& option,
+                 const QModelIndex& index) const override;
 };
 
 class ImageListModel : public QAbstractListModel
@@ -42,29 +48,64 @@ public:
   void setHasText(int index, bool has_text);
   bool hasText(int row);
 
+  QStringList mimeTypes() const override;
   int rowCount(const QModelIndex& parent = QModelIndex()) const override;
   int columnCount(const QModelIndex& parent = QModelIndex()) const override;
   QVariant data(const QModelIndex& index, int role) const override;
+  bool setData(const QModelIndex& index,
+               const QVariant& value,
+               int role) override;
   Qt::DropActions supportedDropActions() const override;
   Qt::DropActions supportedDragActions() const override;
+  QMimeData* mimeData(const QModelIndexList& indexes) const override;
+  bool dropMimeData(const QMimeData* data,
+                    Qt::DropAction action,
+                    int row,
+                    int /*column*/,
+                    const QModelIndex& parent) override;
+  bool canDropMimeData(const QMimeData* data,
+                       Qt::DropAction,
+                       int,
+                       int column,
+                       const QModelIndex& parent) const;
   Qt::ItemFlags flags(const QModelIndex& index) const override;
   bool removeRows(int row,
                   int count,
                   const QModelIndex& parent = QModelIndex()) override;
   bool moveRows(const QModelIndex&,
                 int sourceRow,
-                int count, const QModelIndex&,
+                int count,
+                const QModelIndex&,
                 int destinationChild) override;
-  bool insertRows(int row, int count, const QModelIndex& parent = QModelIndex()) override;
+  bool insertRows(int row,
+                  int count,
+                  const QModelIndex& parent = QModelIndex()) override;
 
 protected:
+  Log4Qt::Logger* m_logger;
   ImageList m_images;
   QList<bool> m_has_text;
   QStringList m_headers;
 
+  static const QString MIMETYPE;
+
+
+  // QAbstractItemModel interface
+public:
+
+  //  QMimeData* mimeData(const QModelIndexList& indexes) const override {
+  //    QMimeData* mimedata = new QMimeData();
+  //  }
+
+
+  // QAbstractItemModel interface
+public:
+
+  // QAbstractItemModel interface
+public:
 };
 
-class ImageView : public QListView
+class SCANWIDGETSSHARED_EXPORT ImageView : public QListView
 {
 public:
   explicit ImageView(QWidget* parent = nullptr);

@@ -3,17 +3,24 @@
 /* ImageView
   ===============================================================================*/
 
+const QString ImageListModel::MIMETYPE =
+  QStringLiteral("application/x-imagelistdata");
+
 ImageView::ImageView(QWidget* parent)
   : QListView(parent)
 {
   m_model = new ImageListModel(this);
   setModel(m_model);
   setFlow(QListView::TopToBottom);
+  setItemDelegate(new ImageDelegate(this));
+  setSelectionMode(QListView::SingleSelection);
+
   setDragEnabled(true);
+  setAcceptDrops(true);
+  setDropIndicatorShown(true);
   setDragDropOverwriteMode(false);
   setDragDropMode(QListView::InternalMove);
   setDefaultDropAction(Qt::MoveAction);
-  setItemDelegate(new ImageDelegate(this));
 }
 
 void ImageView::setCover(const QImage& image)
@@ -55,6 +62,7 @@ void ImageView::setHasText(int index, bool has_text)
 ImageListModel::ImageListModel(QObject* parent)
   : QAbstractListModel(parent)
 {
+  m_logger = Log4Qt::Logger::logger(tr("ImageListModel"));
   m_headers << tr("Pages");
   addThumbnail(QImage(), false); // this will be the cover
 }
@@ -117,6 +125,13 @@ bool ImageListModel::hasText(int row)
   return m_has_text.at(row);
 }
 
+QStringList ImageListModel::mimeTypes() const
+{
+  QStringList types;
+  types << "application/x-imagelistdata";
+  return types;
+}
+
 bool ImageListModel::moveThumbnail(int source, int destination)
 {
   if (source == 0 || destination == 0) {
@@ -161,23 +176,26 @@ bool ImageListModel::moveRows(const QModelIndex& /*sourceParent*/,
     return false;
   }
 
-  beginMoveRows(
-    QModelIndex(), source, source + count - 1, QModelIndex(), destination);
+  int dest_row = (source < destination ? destination + 1 : destination);
+  bool good_move = beginMoveRows(
+                     QModelIndex(), source, source + count - 1, QModelIndex(), dest_row);
 
-  if (source < destination) {
-    for (int s = 0; s < source + count - 1; s++) {
-      QImage src_image = m_images.takeAt(source);
-      bool src_has_text = m_has_text.takeAt(source);
-      m_images.insert(destination - 1, src_image);
-      m_has_text.insert(destination - 1, src_has_text);
-    }
+  if (good_move) {
+    if (source < destination) {
+      for (int s = 0; s < count; s++) {
+        QImage src_image = m_images.takeAt(source + s);
+        bool src_has_text = m_has_text.takeAt(source + s);
+        m_images.insert(destination, src_image);
+        m_has_text.insert(destination, src_has_text);
+      }
 
-  } else {
-    for (int s = 0; s < source + count - 1; s++) {
-      QImage src_image = m_images.takeAt(source + s);
-      bool src_has_text = m_has_text.takeAt(source + s);
-      m_images.insert(destination + s, src_image);
-      m_has_text.insert(destination + s, src_has_text);
+    } else {
+      for (int s = 0; s < count; s++) {
+        QImage src_image = m_images.takeAt(source + s);
+        bool src_has_text = m_has_text.takeAt(source + s);
+        m_images.insert(destination + s, src_image);
+        m_has_text.insert(destination + s, src_has_text);
+      }
     }
   }
 
@@ -232,6 +250,29 @@ QVariant ImageListModel::data(const QModelIndex& index, int role) const
   return QVariant();
 }
 
+bool ImageListModel::setData(const QModelIndex& index,
+                             const QVariant& value,
+                             int role)
+{
+  QImage img = value.value<QImage>();
+
+  if (index.isValid()) {
+    if (role == Qt::DecorationRole) {
+      switch (index.column()) {
+      case 0:
+        m_images.replace(index.row(), img);
+        return true;
+
+      case 1:
+        m_has_text.replace(index.row(), false);
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 Qt::DropActions ImageListModel::supportedDropActions() const
 {
   return Qt::MoveAction;
@@ -242,13 +283,88 @@ Qt::DropActions ImageListModel::supportedDragActions() const
   return Qt::MoveAction;
 }
 
+QMimeData* ImageListModel::mimeData(const QModelIndexList& indexes) const
+{
+  auto* mime_data = new QMimeData();
+  QByteArray encoded_data;
+
+  for (const QModelIndex& index : indexes) {
+    if (index.isValid()) {
+      int row = index.row();
+      QDataStream data_stream(&encoded_data, QIODevice::WriteOnly);
+      data_stream << m_images.at(row) << m_has_text.at(row);
+    }
+  }
+
+  mime_data->setData("application/x-imagelistdata", encoded_data);
+  return mime_data;
+}
+
+bool ImageListModel::dropMimeData(const QMimeData* data,
+                                  Qt::DropAction action,
+                                  int row,
+                                  int,
+                                  const QModelIndex& parent)
+{
+  // only move action is supported
+  if (data->hasFormat("application/x-dnditemdata") &&
+      action == Qt::MoveAction) {
+    QByteArray encoded_data = data->data("application/x-imagelistdata");
+    QDataStream data_stream(&encoded_data, QIODevice::ReadOnly);
+
+    QImage image;
+    bool has_text;
+
+    int r = row;
+
+    if (r == -1) {
+      r = parent.row();
+    }
+
+    while (!data_stream.atEnd()) {
+      data_stream >> image >> has_text;
+
+      insertRows(r, 0, parent);
+      m_images.replace(r, image);
+      m_has_text.replace(r, has_text);
+      r++;
+
+      endInsertRows();
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+bool ImageListModel::canDropMimeData(const QMimeData* data,
+                                     Qt::DropAction,
+                                     int row,
+                                     int column,
+                                     const QModelIndex& parent) const
+{
+  QStringList formats = data->formats();
+  QString format;
+
+  for (QString f : formats) {
+    format += f + ", ";
+  }
+
+  m_logger->debug(
+    tr("Row : %1, Col : %2 Formats : %3").arg(row, column).arg(format));
+
+  return (data->hasFormat(MIMETYPE) &&
+          (column == 0 || (column == -1 && parent.column() == 0)));
+}
+
 Qt::ItemFlags ImageListModel::flags(const QModelIndex& index) const
 {
   if (index.isValid() && index.model() == this && index.row() > 0) {
-    return Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
+    return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
   }
 
-  return Qt::NoItemFlags;
+  return QAbstractListModel::flags(index);;
 }
 
 /* ImageDelegate

@@ -112,12 +112,36 @@ void PageView::rowsMoved(const QModelIndex& /*parent*/,
 
 void PageView::moveUp()
 {
-  // TODO move up
+  QModelIndexList rows = m_image_list->selectionModel()->selectedRows();
+
+  if (rows.size() > 1) {
+    return;
+  }
+
+  int row = rows.at(0).row();
+
+  if (row == 0) { // already at top
+    return;
+  }
+
+  m_image_list->moveThumbnail(row, row - 1);
 }
 
 void PageView::moveDown()
 {
-  // TODO move down
+  QModelIndexList rows = m_image_list->selectionModel()->selectedRows();
+
+  if (rows.size() > 1) {
+    return;
+  }
+
+  int row = rows.at(0).row();
+
+  if (row == (m_image_list->model()->rowCount() - 1)) { // already at bottom
+    return;
+  }
+
+  m_image_list->moveThumbnail(row, row + 1);
 }
 
 // void PageView::doOcr()
