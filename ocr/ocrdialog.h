@@ -17,7 +17,8 @@
 #include <QMessageBox>
 #include <QSlider>
 
-#include "scanpage.h"
+//#include "scanpage.h"
+#include "documentdata.h"
 
 class OcrImage;
 class ScanEdit;

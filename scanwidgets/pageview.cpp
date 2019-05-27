@@ -14,6 +14,8 @@ PageView::PageView(QWidget* parent)
   // insert an empty image at zero position. This will be the cover.
   connect(m_image_list->model(), &QAbstractItemModel::rowsMoved, this, &PageView::rowsMoved);
   m_remove_page_act = new QAction(tr("Remove the selected page"), this);
+  m_save_as_image_act = new QAction(tr("Save the selected page as an internal image."), this);
+  m_save_as_image_act->setToolTip(tr("Stores image for non-OCR, internal use."));
   m_move_page_up_act = new QAction(tr("Move page up"), this);
   m_move_page_down_act = new QAction(tr("Move page down"), this);
   m_load_text_act = new QAction(tr("Load text."), this);
@@ -21,9 +23,10 @@ PageView::PageView(QWidget* parent)
   //  m_do_ocr_act = new QAction(tr("Run OCR on selected image."), this);
   //  m_do_all_ocr_act = new QAction(tr("Run OCR on all text-free images."),
   //  this);
-  connect(m_remove_page_act, &QAction::triggered, this, &PageView::remove);
+  connect(m_remove_page_act, &QAction::triggered, this, qOverload<>(&PageView::remove));
   connect(m_move_page_up_act, &QAction::triggered, this, &PageView::moveUp);
   connect(m_move_page_down_act, &QAction::triggered, this, &PageView::moveDown);
+  connect(m_save_as_image_act, &QAction::triggered, this, &PageView::nonOcrImage);
   //  connect(m_do_ocr_act, &QAction::triggered, this, &PageView::doOcr);
   //  connect(m_do_all_ocr_act, &QAction::triggered, this, &PageView::doAllOcr);
   connect(m_work_with_act, &QAction::triggered, this, &PageView::workOnImage);
@@ -32,20 +35,33 @@ PageView::PageView(QWidget* parent)
   layout->addWidget(m_image_list);
 }
 
-void PageView::append(const QImage& thumbnail)
+void PageView::appendThumbnail(const QImage& thumbnail)
 {
   // this list will always start at position 1.
   m_image_list->appendThumbnail(thumbnail, false);
 }
 
-void PageView::remove(int index)
+void PageView::remove()
+{
+  QModelIndexList rows = m_image_list->selectionModel()->selectedRows();
+
+  int row = rows.at(0).row();
+
+  if (row == 0) { // already at top
+    return;
+  }
+
+  m_image_list->removeThumbnail(row);
+}
+
+void PageView::removeThumbnail(int index)
 {
   m_image_list->removeThumbnail(index);
 }
 
-void PageView::insert(int row, const QImage& thumbnail, bool has_text)
+void PageView::insertThumbnail(int row, const QImage& thumbnail, bool has_text, bool is_internal_image)
 {
-  m_image_list->insertThumbnail(row, thumbnail, has_text);
+  m_image_list->insertThumbnail(row, thumbnail, has_text, is_internal_image);
 }
 
 void PageView::setCover(const QImage& cover)
@@ -113,10 +129,6 @@ void PageView::rowsMoved(const QModelIndex& /*parent*/,
 void PageView::moveUp()
 {
   QModelIndexList rows = m_image_list->selectionModel()->selectedRows();
-
-  if (rows.size() > 1) {
-    return;
-  }
 
   int row = rows.at(0).row();
 

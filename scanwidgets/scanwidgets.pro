@@ -26,6 +26,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         basescanimage.cpp \
+        documentdata.cpp \
         imageconverter.cpp \
         imageview.cpp \
         pageview.cpp \
@@ -36,6 +37,7 @@ SOURCES += \
 
 HEADERS += \
         basescanimage.h \
+        documentdata.h \
         imageconverter.h \
         imageview.h \
         pageview.h \

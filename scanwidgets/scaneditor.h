@@ -38,11 +38,13 @@
 #include "ocrtools.h"
 #include "pageview.h"
 #include "scanimage.h"
-#include "scanpage.h"
+//#include "scanpage.h"
+#include "documentdata.h"
 #include "scanwidgets_global.h"
 
 class QScan;
 class OcrDialog;
+class DocumentDataStore;
 
 class SCANWIDGETSSHARED_EXPORT ScanEditor : public QFrame
 {
@@ -95,7 +97,7 @@ public:
   void loadCover(const QString& filename);
 
   int pageCount();
-  Page page_no(int index);
+  DocumentData documentData(int index);
 
   QString optionsFile() const;
   void setOptionsFile(const QString& optionsFile);
@@ -109,12 +111,14 @@ signals:
   void unselected();
   void selectionUnderway();
   void imageIsLoaded();
-  void ocrImage(const Page& page_no);
+  void ocrImage(const DocumentData& documentData);
 
 protected:
   Log4Qt::Logger* m_logger;
   QString m_current_doc_name;
   QString m_options_file;
+  QString m_data_file;
+  DocumentDataStore* m_doc_data;
   ScanImage* m_scan_display{};
   QProgressDialog* m_prog_dlg{};
   QScan* m_scan_lib{};
@@ -126,9 +130,12 @@ protected:
   QString m_lang{};
   OcrDialog* m_ocr_dlg;
 
-  QMap<int, Page> m_pages;
-  Page m_cover;
+  //  QMap<int, Page> m_pages;
+  DocumentData m_cover;
   bool m_save_all_texts{};
+
+  void loadDocumentData();
+  void saveDocumentData();
 
   bool eventFilter(QObject* obj, QEvent* event) override;
 
@@ -137,19 +144,19 @@ protected:
   void makeConnections();
   void receiveImage(const QImage& img);
   void receiveImages(const QImage& left, const QImage& right);
-  void receiveString(int page_no, const QString& str);
+  void receiveString(int documentData, const QString& str);
   QString saveImage(int index, const QImage& image);
   void saveModifiedImage(int index, const QImage& image);
   void saveAsCover(const QImage& image);
-  void receiveLoadText(int page_no);
-  void receiveWorkOnRequest(int page_no);
-  void receiveOcrPageRequest(int page_no);
-  void receiveOcrImageRequest(int page_no, const QImage& image);
-  void receiveOcrPageResult(const Page& page_no);
-  void receiveOcrImageResult(int page_no, const QString& text);
+  void receiveLoadText(int index);
+  void receiveWorkOnRequest(int documentData);
+  void receiveOcrPageRequest(int documentData);
+  void receiveOcrImageRequest(int documentData, const QImage& image);
+  void receiveOcrPageResult(const DocumentData& documentData);
+  void receiveOcrImageResult(int documentData, const QString& text);
   void receiveOcrDialogFinished(int result);
-  void saveText(int index, const Page& page_no);
-  void saveModifiedText(int index, const QStringList& text);
+  void saveText(int page_no, const DocumentData& documentData);
+  void saveModifiedText(int page_no, const QStringList& text);
   void clearSaveAllTextsFlag();
   QImage thumbnail(const QImage& image) const;
 

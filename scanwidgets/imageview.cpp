@@ -3,8 +3,7 @@
 /* ImageView
   ===============================================================================*/
 
-const QString ImageListModel::MIMETYPE =
-  QStringLiteral("application/x-imagelistdata");
+const QString ImageListModel::MIMETYPE = QStringLiteral("application/x-imagelistdata");
 
 ImageView::ImageView(QWidget* parent)
   : QListView(parent)
@@ -32,11 +31,13 @@ void ImageView::setCover(const QImage& image)
 
 void ImageView::appendThumbnail(const QImage& image, bool has_text)
 {
+  // TODO
   m_model->appendThumbnail(image, has_text);
 }
 
 void ImageView::insertThumbnail(int row, const QImage& image, bool has_text)
 {
+  // TODO
   m_model->insertThumbnail(row, image, has_text);
 }
 
@@ -51,17 +52,24 @@ void ImageView::moveThumbnail(int source, int destination)
 }
 
 void ImageView::replaceThumbnail(int row, const QImage& image, bool has_text)
-{}
+{
+  // TODO
+}
 
 void ImageView::setHasText(int index, bool has_text)
 {
   m_model->setHasText(index, has_text);
 }
 
-//void ImageView::dropEvent(QDropEvent* event)
-//{
-//  QListView::dropEvent(event);
-//}
+void ImageView::dropEvent(QDropEvent* event)
+{
+  // This is needed because of a bug in QListView which removes the
+  // destination image when moved.
+  if (event->dropAction() == Qt::MoveAction) {
+    event->setDropAction(Qt::CopyAction);
+    QListView::dropEvent(event);
+  }
+}
 
 /* ImageListModel
   ===============================================================================*/
@@ -79,13 +87,14 @@ void ImageListModel::setCover(const QImage& image)
   m_images.replace(0, image);
 }
 
-bool ImageListModel::appendThumbnail(const QImage& image, bool has_text)
+bool ImageListModel::appendThumbnail(const QImage& image, bool has_text, bool  internal_image)
 {
   int row = rowCount();
 
   if (insertRows(row, 1)) {
     m_images.replace(row, image);
     m_has_text.replace(row, has_text);
+    m_intsernal_image.replace(row, internal_image);
     return true;
   }
 
@@ -141,16 +150,12 @@ QStringList ImageListModel::mimeTypes() const
 
 bool ImageListModel::moveThumbnail(int source, int destination)
 {
-  if (source == 0 || destination == 0) {
-    return false;
-  }
-
   return moveRows(index(source, 0), source, 1, index(destination, 0), destination);
 }
 
 bool ImageListModel::removeRows(int row, int count, const QModelIndex& parent)
 {
-  if (!parent.isValid() || row == 0) {
+  if (row == 0) {
     return false;
   }
 
@@ -183,6 +188,11 @@ bool ImageListModel::moveRows(const QModelIndex& sourceParent,
     destination = destinationParent.row();
   }
 
+  // 0 is the cover so this cannot be moved.
+  if (source == 0 || destination == 0) {
+    return false;
+  }
+
   if (source == destination) {
     return false;
   }
@@ -192,8 +202,8 @@ bool ImageListModel::moveRows(const QModelIndex& sourceParent,
   }
 
   int dest_row = (source < destination ? destination + 1 : destination);
-  bool good_move = beginMoveRows(
-                     sourceParent, source, source + count - 1, destinationParent, dest_row);
+  bool good_move =
+    beginMoveRows(sourceParent, source, source + count - 1, destinationParent, dest_row);
 
   if (good_move) {
     if (source < destination) {
@@ -269,9 +279,7 @@ QVariant ImageListModel::data(const QModelIndex& index, int role) const
   return QVariant();
 }
 
-bool ImageListModel::setData(const QModelIndex& index,
-                             const QVariant& value,
-                             int role)
+bool ImageListModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
   QImage img = value.value<QImage>();
 
@@ -326,8 +334,8 @@ bool ImageListModel::dropMimeData(const QMimeData* data,
                                   const QModelIndex& parent)
 {
   // only move action is supported
-  if (data->hasFormat(MIMETYPE) &&
-      action == Qt::MoveAction) {
+  if (data->hasFormat(MIMETYPE) && action == Qt::MoveAction) {
+    action = Qt::CopyAction;
     QByteArray encoded_data = data->data(MIMETYPE);
     QDataStream data_stream(&encoded_data, QIODevice::ReadOnly);
 
@@ -374,11 +382,9 @@ bool ImageListModel::canDropMimeData(const QMimeData* data,
     format += f + ", ";
   }
 
-  m_logger->debug(
-    tr("Row : %1, Col : %2 Formats : %3").arg(row, column).arg(format));
+  m_logger->debug(tr("Row : %1, Col : %2 Formats : %3").arg(row, column).arg(format));
 
-  return (data->hasFormat(MIMETYPE) &&
-          (column == 0 || (column == -1 && parent.column() == 0)));
+  return (data->hasFormat(MIMETYPE) && (column == 0 || (column == -1 && parent.column() == 0)));
 }
 
 Qt::ItemFlags ImageListModel::flags(const QModelIndex& index) const
@@ -387,7 +393,8 @@ Qt::ItemFlags ImageListModel::flags(const QModelIndex& index) const
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
   }
 
-  return QAbstractListModel::flags(index);;
+  return QAbstractListModel::flags(index);
+  ;
 }
 
 /* ImageDelegate
@@ -411,7 +418,6 @@ void ImageDelegate::paint(QPainter* painter,
     if (option.state & QStyle::State_Selected) {
       painter->fillRect(option.rect, option.palette.highlight());
     }
-
 
     QRect image_rect;
     QRect border_rect;
@@ -447,8 +453,7 @@ void ImageDelegate::paint(QPainter* painter,
   }
 }
 
-QSize ImageDelegate::sizeHint(const QStyleOptionViewItem& /*option*/,
-                              const QModelIndex& index) const
+QSize ImageDelegate::sizeHint(const QStyleOptionViewItem& /*option*/, const QModelIndex& index) const
 {
   QVariant v = index.data(Qt::DecorationRole);
   auto image = v.value<QImage>();
@@ -459,8 +464,10 @@ QSize ImageDelegate::sizeHint(const QStyleOptionViewItem& /*option*/,
 
 /* DropIndicatorProxyStyle
   ===============================================================================*/
-void DropIndicatorProxyStyle::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* option,
-    QPainter* painter, const QWidget* widget) const
+void DropIndicatorProxyStyle::drawPrimitive(QStyle::PrimitiveElement element,
+    const QStyleOption* option,
+    QPainter* painter,
+    const QWidget* widget) const
 {
   if (element == QStyle::PE_IndicatorItemViewItemDrop) {
     painter->setRenderHint(QPainter::Antialiasing, true);

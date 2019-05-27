@@ -17,9 +17,9 @@ class PageView : public QWidget
 public:
   explicit PageView(QWidget* parent = nullptr);
 
-  void append(const QImage& thumbnail);
-  void remove(int index);
-  void insert(int index, const QImage& thumbnail, bool has_text = false);
+  void appendThumbnail(const QImage& thumbnail);
+  void removeThumbnail(int index);
+  void insertThumbnail(int index, const QImage& thumbnail, bool has_text = false, bool is_internal_image = false);
   void setCover(const QImage& cover);
   void setHasText(int index, bool has_text);
   bool hasText(int page_no);
@@ -47,6 +47,7 @@ protected:
   QAction* m_move_page_down_act{};
   QAction* m_load_text_act{};
   QAction* m_work_with_act{};
+  QAction* m_save_as_image_act{};
   //  QAction* m_do_ocr_act{};
   //  QAction* m_do_all_ocr_act{};
 
@@ -55,8 +56,10 @@ protected:
                  int,
                  const QModelIndex&,
                  int row);
+  void remove();
   void moveUp();
   void moveDown();
+  void nonOcrImage();
   //  void doOcr();
   //  void doAllOcr();
   void workOnImage();

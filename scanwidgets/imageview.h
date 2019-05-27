@@ -48,7 +48,7 @@ public:
   explicit ImageListModel(QObject* parent = nullptr);
 
   void setCover(const QImage& image);
-  bool appendThumbnail(const QImage& image, bool has_text);
+  bool appendThumbnail(const QImage& image, bool has_text, bool internal_image = false);
   bool insertThumbnail(int row, const QImage& image, bool has_text);
   bool removeThumbnail(int row);
   bool moveThumbnail(int source, int destination);
@@ -75,7 +75,7 @@ public:
                        Qt::DropAction,
                        int,
                        int column,
-                       const QModelIndex& parent) const;
+                       const QModelIndex& parent) const override;
   Qt::ItemFlags flags(const QModelIndex& index) const override;
   bool removeRows(int row,
                   int count,
@@ -92,25 +92,13 @@ public:
 protected:
   Log4Qt::Logger* m_logger;
   ImageList m_images;
+  ImageList m_extra_images; // used to store internal images.
   QList<bool> m_has_text;
+  QList<bool> m_intsernal_image;
   QStringList m_headers;
 
   static const QString MIMETYPE;
 
-
-  // QAbstractItemModel interface
-public:
-
-  //  QMimeData* mimeData(const QModelIndexList& indexes) const override {
-  //    QMimeData* mimedata = new QMimeData();
-  //  }
-
-
-  // QAbstractItemModel interface
-public:
-
-  // QAbstractItemModel interface
-public:
 };
 
 class SCANWIDGETSSHARED_EXPORT ImageView : public QListView
@@ -129,7 +117,7 @@ public:
 protected:
   ImageListModel* m_model;
 
-  //  void dropEvent(QDropEvent* event) override;
+  void dropEvent(QDropEvent* event) override;
 };
 
 #endif // IMAGEVIEW_H
