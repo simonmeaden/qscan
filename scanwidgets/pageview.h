@@ -36,7 +36,7 @@ protected:
   QMap<int, bool> m_has_text;
   ImageView* m_image_list;
   QImage m_cover;
-  int m_current_row;
+  int m_current_row{};
 
   void contextMenuEvent(QContextMenuEvent* event) override;
   QSize minimumSizeHint() const override;

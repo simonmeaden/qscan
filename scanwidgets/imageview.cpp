@@ -17,10 +17,12 @@ ImageView::ImageView(QWidget* parent)
 
   setDragEnabled(true);
   setAcceptDrops(true);
+  setDragDropMode(QListView::InternalMove);
   setDropIndicatorShown(true);
   setDragDropOverwriteMode(false);
-  setDragDropMode(QListView::InternalMove);
   setDefaultDropAction(Qt::MoveAction);
+
+  //  setStyle(new DropIndicatorProxyStyle);
 }
 
 void ImageView::setCover(const QImage& image)
@@ -28,9 +30,9 @@ void ImageView::setCover(const QImage& image)
   m_model->setCover(image);
 }
 
-void ImageView::addThumbnail(const QImage& image, bool has_text)
+void ImageView::appendThumbnail(const QImage& image, bool has_text)
 {
-  m_model->addThumbnail(image, has_text);
+  m_model->appendThumbnail(image, has_text);
 }
 
 void ImageView::insertThumbnail(int row, const QImage& image, bool has_text)
@@ -56,6 +58,11 @@ void ImageView::setHasText(int index, bool has_text)
   m_model->setHasText(index, has_text);
 }
 
+//void ImageView::dropEvent(QDropEvent* event)
+//{
+//  QListView::dropEvent(event);
+//}
+
 /* ImageListModel
   ===============================================================================*/
 
@@ -64,7 +71,7 @@ ImageListModel::ImageListModel(QObject* parent)
 {
   m_logger = Log4Qt::Logger::logger(tr("ImageListModel"));
   m_headers << tr("Pages");
-  addThumbnail(QImage(), false); // this will be the cover
+  appendThumbnail(QImage(), false); // this will be the cover
 }
 
 void ImageListModel::setCover(const QImage& image)
@@ -72,7 +79,7 @@ void ImageListModel::setCover(const QImage& image)
   m_images.replace(0, image);
 }
 
-bool ImageListModel::addThumbnail(const QImage& image, bool has_text)
+bool ImageListModel::appendThumbnail(const QImage& image, bool has_text)
 {
   int row = rowCount();
 
@@ -128,7 +135,7 @@ bool ImageListModel::hasText(int row)
 QStringList ImageListModel::mimeTypes() const
 {
   QStringList types;
-  types << "application/x-imagelistdata";
+  types << MIMETYPE;
   return types;
 }
 
@@ -138,12 +145,12 @@ bool ImageListModel::moveThumbnail(int source, int destination)
     return false;
   }
 
-  return moveRows(QModelIndex(), source, 1, QModelIndex(), destination);
+  return moveRows(index(source, 0), source, 1, index(destination, 0), destination);
 }
 
 bool ImageListModel::removeRows(int row, int count, const QModelIndex& parent)
 {
-  if (parent.isValid() || row == 0) {
+  if (!parent.isValid() || row == 0) {
     return false;
   }
 
@@ -162,12 +169,20 @@ bool ImageListModel::removeRows(int row, int count, const QModelIndex& parent)
   return true;
 }
 
-bool ImageListModel::moveRows(const QModelIndex& /*sourceParent*/,
+bool ImageListModel::moveRows(const QModelIndex& sourceParent,
                               int source,
                               int count,
-                              const QModelIndex& /*destinationParent*/,
+                              const QModelIndex& destinationParent,
                               int destination)
 {
+  if (source == -1) {
+    source = sourceParent.row();
+  }
+
+  if (destination == -1) {
+    destination = destinationParent.row();
+  }
+
   if (source == destination) {
     return false;
   }
@@ -178,7 +193,7 @@ bool ImageListModel::moveRows(const QModelIndex& /*sourceParent*/,
 
   int dest_row = (source < destination ? destination + 1 : destination);
   bool good_move = beginMoveRows(
-                     QModelIndex(), source, source + count - 1, QModelIndex(), dest_row);
+                     sourceParent, source, source + count - 1, destinationParent, dest_row);
 
   if (good_move) {
     if (source < destination) {
@@ -197,9 +212,13 @@ bool ImageListModel::moveRows(const QModelIndex& /*sourceParent*/,
         m_has_text.insert(destination + s, src_has_text);
       }
     }
+
+  } else {
+    return false;
   }
 
   endMoveRows();
+  return true;
 }
 
 bool ImageListModel::insertRows(int row, int count, const QModelIndex& parent)
@@ -292,11 +311,11 @@ QMimeData* ImageListModel::mimeData(const QModelIndexList& indexes) const
     if (index.isValid()) {
       int row = index.row();
       QDataStream data_stream(&encoded_data, QIODevice::WriteOnly);
-      data_stream << m_images.at(row) << m_has_text.at(row);
+      data_stream << row << m_images.at(row) << m_has_text.at(row);
     }
   }
 
-  mime_data->setData("application/x-imagelistdata", encoded_data);
+  mime_data->setData(MIMETYPE, encoded_data);
   return mime_data;
 }
 
@@ -307,29 +326,33 @@ bool ImageListModel::dropMimeData(const QMimeData* data,
                                   const QModelIndex& parent)
 {
   // only move action is supported
-  if (data->hasFormat("application/x-dnditemdata") &&
+  if (data->hasFormat(MIMETYPE) &&
       action == Qt::MoveAction) {
-    QByteArray encoded_data = data->data("application/x-imagelistdata");
+    QByteArray encoded_data = data->data(MIMETYPE);
     QDataStream data_stream(&encoded_data, QIODevice::ReadOnly);
 
     QImage image;
     bool has_text;
+    int source = 0, destination = 0;
 
-    int r = row;
+    if (row == -1) {
+      destination = parent.row();
 
-    if (r == -1) {
-      r = parent.row();
+    } else {
+      destination = row;
     }
 
     while (!data_stream.atEnd()) {
-      data_stream >> image >> has_text;
+      data_stream >> source >> image >> has_text;
 
-      insertRows(r, 0, parent);
-      m_images.replace(r, image);
-      m_has_text.replace(r, has_text);
-      r++;
+      auto success = moveRows(parent, source, 1, parent, row);
 
-      endInsertRows();
+      //      bool good_insert = insertRows(source, 0, parent);
+      //      m_images.replace(source, image);
+      //      m_has_text.replace(source, has_text);
+      //            source++;
+
+      //      endInsertRows();
     }
 
     return true;
@@ -361,7 +384,7 @@ bool ImageListModel::canDropMimeData(const QMimeData* data,
 Qt::ItemFlags ImageListModel::flags(const QModelIndex& index) const
 {
   if (index.isValid() && index.model() == this && index.row() > 0) {
-    return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
+    return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
   }
 
   return QAbstractListModel::flags(index);;
@@ -393,13 +416,13 @@ void ImageDelegate::paint(QPainter* painter,
     QRect image_rect;
     QRect border_rect;
 
-    border_rect.setX(option.rect.x());
-    border_rect.setY(option.rect.y());
+    border_rect.setX(option.rect.x() + 5);
+    border_rect.setY(option.rect.y() + 5);
     border_rect.setWidth(image.rect().width() + 10);
     border_rect.setHeight(image.rect().height() + 6);
 
-    image_rect.setX(option.rect.x() + 5);
-    image_rect.setY(option.rect.y() + 5);
+    image_rect.setX(option.rect.x() + 10);
+    image_rect.setY(option.rect.y() + 10);
     image_rect.setWidth(image.rect().width());
     image_rect.setHeight(image.rect().height());
 
@@ -432,4 +455,24 @@ QSize ImageDelegate::sizeHint(const QStyleOptionViewItem& /*option*/,
   auto size = image.size();
   size += QSize(10, 20);
   return size;
+}
+
+/* DropIndicatorProxyStyle
+  ===============================================================================*/
+void DropIndicatorProxyStyle::drawPrimitive(QStyle::PrimitiveElement element, const QStyleOption* option,
+    QPainter* painter, const QWidget* widget) const
+{
+  if (element == QStyle::PE_IndicatorItemViewItemDrop) {
+    painter->setRenderHint(QPainter::Antialiasing, true);
+
+    QColor c("blue");
+    QPen pen(c);
+    pen.setWidth(3);
+
+    painter->setPen(pen);
+    painter->drawRect(option->rect);
+
+  } else {
+    QProxyStyle::drawPrimitive(element, option, painter, widget);
+  }
 }

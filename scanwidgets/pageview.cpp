@@ -35,7 +35,7 @@ PageView::PageView(QWidget* parent)
 void PageView::append(const QImage& thumbnail)
 {
   // this list will always start at position 1.
-  m_image_list->addThumbnail(thumbnail, false);
+  m_image_list->appendThumbnail(thumbnail, false);
 }
 
 void PageView::remove(int index)

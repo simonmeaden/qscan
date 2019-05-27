@@ -12,11 +12,19 @@
 #include <QPixmap>
 #include <QMimeData>
 #include <QDataStream>
+#include <QProxyStyle>
 
 #include "scanwidgets_global.h"
 #include "logger.h"
 
 using ImageList = QList<QImage>;
+
+class DropIndicatorProxyStyle : public QProxyStyle
+{
+public:
+  void drawPrimitive(PrimitiveElement element, const QStyleOption* option, QPainter* painter,
+                     const QWidget* widget) const override;
+};
 
 class ImageDelegate : public QStyledItemDelegate
 {
@@ -40,7 +48,7 @@ public:
   explicit ImageListModel(QObject* parent = nullptr);
 
   void setCover(const QImage& image);
-  bool addThumbnail(const QImage& image, bool has_text);
+  bool appendThumbnail(const QImage& image, bool has_text);
   bool insertThumbnail(int row, const QImage& image, bool has_text);
   bool removeThumbnail(int row);
   bool moveThumbnail(int source, int destination);
@@ -72,10 +80,10 @@ public:
   bool removeRows(int row,
                   int count,
                   const QModelIndex& parent = QModelIndex()) override;
-  bool moveRows(const QModelIndex&,
+  bool moveRows(const QModelIndex& sourceParent,
                 int sourceRow,
                 int count,
-                const QModelIndex&,
+                const QModelIndex& destinationParent,
                 int destinationChild) override;
   bool insertRows(int row,
                   int count,
@@ -111,7 +119,7 @@ public:
   explicit ImageView(QWidget* parent = nullptr);
 
   void setCover(const QImage& image);
-  void addThumbnail(const QImage& image, bool has_text = false);
+  void appendThumbnail(const QImage& image, bool has_text = false);
   void insertThumbnail(int row, const QImage& image, bool has_text = false);
   void removeThumbnail(int row);
   void moveThumbnail(int source, int destination);
@@ -120,6 +128,8 @@ public:
 
 protected:
   ImageListModel* m_model;
+
+  //  void dropEvent(QDropEvent* event) override;
 };
 
 #endif // IMAGEVIEW_H
