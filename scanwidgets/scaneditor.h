@@ -97,7 +97,7 @@ public:
   void loadCover(const QString& filename);
 
   int pageCount();
-  DocumentData documentData(int index);
+  DocumentData documentData(int page_no);
 
   QString optionsFile() const;
   void setOptionsFile(const QString& optionsFile);
@@ -130,19 +130,16 @@ protected:
   QString m_lang{};
   OcrDialog* m_ocr_dlg{};
 
-  //  QMap<int, Page> m_pages;
   DocumentData m_cover;
   bool m_save_all_texts{};
 
-  //  void loadDocumentData();
-  //  void saveDocumentData();
 
   bool eventFilter(QObject* obj, QEvent* event) override;
 
   void adjustScrollbar(qreal factor);
   void initGui();
   void makeConnections();
-  void receiveImage(const QImage& img);
+  void receiveImage(const QImage& image);
   void receiveImages(const QImage& left, const QImage& right);
   void receiveString(int documentData, const QString& str);
   QString saveImage(int index, const QImage& image);
@@ -155,7 +152,8 @@ protected:
   void receiveOcrPageResult(const DocumentData& documentData);
   void receiveOcrImageResult(int documentData, const QString& text);
   void receiveOcrDialogFinished(int result);
-  //  void saveText(int page_no, const DocumentData& documentData);
+  void removeImage(int page_no);
+  void removeText(int page_no);
   void saveModifiedText(int page_no, const QStringList& text);
   void clearSaveAllTextsFlag();
   QImage thumbnail(const QImage& image) const;

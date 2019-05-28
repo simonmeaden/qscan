@@ -119,7 +119,7 @@ void ScanImage::setDefaultPageCropSize()
 
 QPair<QImage, QImage> ScanImage::splitPages()
 {
-  int w = m_image.width();
+  int w = m_modified_image.width();
   int w2 = int(w / 2.0);
 
   m_logger->info(tr("Copying to clipboard"));
@@ -129,12 +129,12 @@ QPair<QImage, QImage> ScanImage::splitPages()
   part_rect.setWidth(w2);
   part_rect.setHeight(m_image.height());
 
-  QImage left = m_image.copy(part_rect);
+  QImage left = m_modified_image.copy(part_rect);
 
   part_rect.setX(w2 + 1);
   part_rect.setWidth(w - w2);
 
-  QImage right = m_image.copy(part_rect);
+  QImage right = m_modified_image.copy(part_rect);
 
   emit sendImages(left, right);
 
@@ -143,16 +143,16 @@ QPair<QImage, QImage> ScanImage::splitPages()
 
 QImage ScanImage::splitLeftPage()
 {
-  int w2 = int(m_image.width() / 2.0);
+  int w2 = int(m_modified_image.width() / 2.0);
 
   m_logger->info(tr("Copying to clipboard"));
   QRect part_rect;
   part_rect.setX(0);
   part_rect.setY(0);
   part_rect.setWidth(w2);
-  part_rect.setHeight(m_image.height());
+  part_rect.setHeight(m_modified_image.height());
 
-  QImage left = m_image.copy(part_rect);
+  QImage left = m_modified_image.copy(part_rect);
 
   emit sendImage(left);
 
@@ -161,7 +161,7 @@ QImage ScanImage::splitLeftPage()
 
 QImage ScanImage::splitRightPage()
 {
-  int w = m_image.width();
+  int w = m_modified_image.width();
   int w2 = int(w / 2.0);
 
   m_logger->info(tr("Copying to clipboard"));
@@ -169,9 +169,9 @@ QImage ScanImage::splitRightPage()
   part_rect.setX(w2 + 1);
   part_rect.setY(0);
   part_rect.setWidth(w - w2);
-  part_rect.setHeight(m_image.height());
+  part_rect.setHeight(m_modified_image.height());
 
-  QImage right = m_image.copy(part_rect);
+  QImage right = m_modified_image.copy(part_rect);
 
   emit sendImage(right);
 
@@ -180,8 +180,8 @@ QImage ScanImage::splitRightPage()
 
 QImage ScanImage::makePage()
 {
-  emit sendImage(m_image);
-  return m_image;
+  emit sendImage(m_modified_image);
+  return m_modified_image;
 }
 
 void ScanImage::contextMenuEvent(QContextMenuEvent* event)

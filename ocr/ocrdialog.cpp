@@ -333,7 +333,7 @@ void OcrDialog::undoChanges()
 {
   int result = QMessageBox::warning(
                  this,
-                 tr("Discaring Changes"),
+                 tr("Discarding Changes"),
                  tr("You are about to discard any changes you have made\n"
                     "This cannot be undone\n"
                     "Are you sure?"),
@@ -347,9 +347,21 @@ void OcrDialog::undoChanges()
 
 void OcrDialog::close()
 {
-  saveImage();
-  saveText();
-  QDialog::close();
+  int result = QMessageBox::warning(
+                 this,
+                 tr("Save and Update"),
+                 tr("You are about to save any changes you have made\n"
+                    "including modified images and text."
+                    "This cannot be undone\n"
+                    "Are you sure?"),
+                 QMessageBox::Yes | QMessageBox::No,
+                 QMessageBox::No);
+
+  if (result == QMessageBox::Yes) {
+    saveImage();
+    saveText();
+    QDialog::close();
+  }
 }
 
 void OcrDialog::setThreshold(int threshold)

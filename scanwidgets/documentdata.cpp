@@ -1,7 +1,9 @@
+#include <utility>
+
 #include "documentdata.h"
 
-#include<yaml-cpp/yaml.h>
 #include <qyaml-cpp/QYamlCpp>
+#include <yaml-cpp/yaml.h>
 
 /* DocumentDataStore
    ============================================================================*/
@@ -97,7 +99,13 @@ void DocumentDataStore::save(const QString& filename)
         // document data section
         emitter << YAML::BeginMap; // begin of document data map
         emitter << YAML::Key << FILENAME;
-        emitter << YAML::Value << data->filename();
+
+        if (data->removeImageLater()) {
+          emitter << YAML::Value << QString();
+
+        } else {
+          emitter << YAML::Value << data->filename();
+        }
 
         bool internal_image = data->isInternalImage();
         emitter << YAML::Key << INTERNAL_IMAGE;
@@ -107,19 +115,25 @@ void DocumentDataStore::save(const QString& filename)
            not ocr-able images.*/
         if (!internal_image) {
           emitter << YAML::Key << TEXT_LIST;
-          emitter << YAML::Value;
-          emitter << YAML::BeginSeq; // begin of text sequance
 
-          for (QString text : data->textList()) {
-            emitter << YAML::Value << text;
+          if (data->removeTextLater()) {
+            emitter << YAML::Value << QString();
+
+          } else {
+            emitter << YAML::Value;
+            emitter << YAML::BeginSeq; // begin of text sequance
+
+            for (QString text : data->textList()) {
+              emitter << YAML::Value << text;
+            }
+
+            emitter << YAML::EndSeq; // end of text sequance
           }
-
-          emitter << YAML::EndSeq; // end of text sequance
         }
 
         emitter << YAML::EndMap; // end of document data map
-      } // end of document data section
-      emitter << YAML::EndMap; // end of document map
+      }                          // end of document data section
+      emitter << YAML::EndMap;   // end of document map
     }
 
     QTextStream out(&file);
@@ -137,11 +151,12 @@ int DocumentDataStore::size()
    ============================================================================*/
 DocData::DocData() = default;
 
-DocData::DocData(const QString& filename, const QString& text, bool is_internal)
-  : m_filename(filename)
+DocData::DocData(QString  filename, const QString& text, bool is_internal)
+  : m_filename(std::move(filename))
   , m_is_internal_image(is_internal)
   , m_text_initialised(false)
   , m_text_has_changed(false)
+  , m_remove_image_later(false)
 {
   m_text_list.append(text);
 }
@@ -260,6 +275,26 @@ void DocData::setPageNumber(int page_no)
   m_page_no = page_no;
 }
 
+bool DocData::removeImageLater() const
+{
+  return m_remove_image_later;
+}
+
+void DocData::setRemoveImageLater(bool remove_later)
+{
+  m_remove_image_later = remove_later;
+}
+
+bool DocData::removeTextLater() const
+{
+  return m_remove_text_later;
+}
+
+void DocData::setRemoveTextLater(bool remove_text_later)
+{
+  m_remove_text_later = remove_text_later;
+}
+
 /*!
   \brief Text was initialised using setText().
 
@@ -270,7 +305,7 @@ bool DocData::textWasInitialised() const
   return m_text_initialised;
 }
 
-//void DocData::setTextWasInitialised(bool text_initialised)
+// void DocData::setTextWasInitialised(bool text_initialised)
 //{
 //  m_text_initialised = text_initialised;
 //}

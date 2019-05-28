@@ -10,7 +10,7 @@ class DocData
 {
 public:
   DocData();
-  DocData(const QString& filename,
+  DocData(QString  filename,
           const QString& text = QString(),
           bool is_internal = false);
   DocData(const QString& filename,
@@ -41,6 +41,11 @@ public:
   int pageNumber() const;
   void setPageNumber(int pageNumber);
 
+  bool removeImageLater() const;
+  void setRemoveImageLater(bool removeImageLater);
+
+  bool removeTextLater() const;
+  void setRemoveTextLater(bool removeTextLater);
 
 protected:
   int m_page_no{};
@@ -49,6 +54,8 @@ protected:
   bool m_is_internal_image{};
   bool m_text_has_changed;
   bool m_text_initialised;
+  bool m_remove_image_later;
+  bool m_remove_text_later;
 };
 using DocumentData = QSharedPointer<DocData>;
 

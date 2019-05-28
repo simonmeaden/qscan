@@ -7,6 +7,7 @@
 #include <QImage>
 #include <QMenu>
 #include <QWidget>
+#include <QMessageBox>
 
 #include "imageview.h"
 #include "documentdata.h"
@@ -24,8 +25,9 @@ public:
                        bool has_text = false,
                        bool is_internal_image = false);
   void setCover(const QImage& cover);
-  void setHasText(int index, bool has_text);
   bool hasText(int page_no);
+  void setHasText(int index, bool has_text);
+  bool isInternalImage(int page_no);
   void setIsInternal(int index, bool is_internal_image);
 
   QMap<int, bool> has_text() const;
@@ -37,9 +39,11 @@ signals:
   void workOn(int);
   void clearSaveAllFlag();
   void loadText(int);
+  void removeCurrentImage(int);
+  void removeCurrentText(int);
 
 protected:
-  ImageList m_pages;
+  ImageList m_images;
   QMap<int, bool> m_has_text;
   QMap<int, bool> m_is_internal_image;
   ImageView* m_image_list;
@@ -51,6 +55,8 @@ protected:
   QSize sizeHint() const override;
 
   QAction* m_remove_page_act{};
+  QAction* m_remove_image_act{};
+  QAction* m_remove_text_act{};
   QAction* m_move_page_up_act{};
   QAction* m_move_page_down_act{};
   QAction* m_load_text_act{};
@@ -60,7 +66,9 @@ protected:
   //  QAction* m_do_all_ocr_act{};
 
   void rowsMoved(const QModelIndex&, int start, int, const QModelIndex&, int row);
-  void remove();
+  void removePage();
+  void removeImage();
+  void removeText();
   void moveUp();
   void moveDown();
   void nonOcrImage();

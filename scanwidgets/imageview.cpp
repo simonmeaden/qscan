@@ -13,6 +13,7 @@ ImageView::ImageView(QWidget* parent)
   setFlow(QListView::TopToBottom);
   setItemDelegate(new ImageDelegate(this));
   setSelectionMode(QListView::SingleSelection);
+  setMouseTracking(true);
 
   setDragEnabled(true);
   setAcceptDrops(true);
@@ -76,6 +77,37 @@ void ImageView::dropEvent(QDropEvent* event)
   }
 }
 
+bool ImageView::isIndexHidden(const QModelIndex& index) const
+{
+  int column = index.column();
+
+  if (column > 0) {
+    return true;
+  }
+
+  return QListView::isIndexHidden(index);
+}
+
+bool ImageView::event(QEvent* event)
+{
+  if (event->type() == QEvent::ToolTip) {
+    auto* helpEvent = static_cast<QHelpEvent*>(event);
+    QModelIndex index = indexAt(helpEvent->pos());
+
+    if (index.isValid()) {
+      QToolTip::showText(helpEvent->globalPos(), m_model->tooltip(index.row()));
+
+    } else {
+      QToolTip::hideText();
+      event->ignore();
+    }
+
+    return true;
+  }
+
+  return QListView::event(event);
+}
+
 /* ImageListModel
   ===============================================================================*/
 
@@ -90,6 +122,8 @@ ImageListModel::ImageListModel(QObject* parent)
 void ImageListModel::setCover(const QImage& image)
 {
   m_images.replace(0, image);
+  m_has_text.replace(0, false);
+  m_internal_image.replace(0, true);
 }
 
 bool ImageListModel::appendThumbnail(const QImage& image, bool has_text, bool  internal_image)
@@ -145,9 +179,14 @@ void ImageListModel::setHasText(int row, bool has_text)
   }
 }
 
-bool ImageListModel::isEmpty(int row)
+bool ImageListModel::hasText(int row)
 {
   return m_has_text.at(row);
+}
+
+bool ImageListModel::isEmpty(int row)
+{
+  return m_images.isEmpty();
 }
 
 bool ImageListModel::isInternalImage(int row)
@@ -160,6 +199,26 @@ void ImageListModel::setInternalImage(int row, bool value)
   if (row >= 0 && row < m_internal_image.size()) {
     m_internal_image.replace(row, value);
   }
+}
+
+QString ImageListModel::tooltip(int row)
+{
+  QString text;
+
+  if (row == 0) {
+    text = tr("Cover image");
+
+  } else if (isInternalImage(row)) {
+    text = tr("Internal non-OCR image");
+
+  } else if (hasText(row)) {
+    text = tr("Text exists for this image");
+
+  } else {
+    text = tr("No text exists for this image");
+  }
+
+  return text;
 }
 
 QStringList ImageListModel::mimeTypes() const
@@ -186,7 +245,7 @@ bool ImageListModel::removeRows(int row, int count, const QModelIndex& parent)
 
   beginRemoveRows(parent, row, row + count - 1);
 
-  for (int r = 0; r < count; r++) {
+  for (int r = row; r < row + count; r++) {
     m_images.removeAt(r);
     m_has_text.removeAt(r);
     m_internal_image.removeAt(r);
@@ -268,6 +327,7 @@ bool ImageListModel::insertRows(int row, int count, const QModelIndex& parent)
   for (int index = row, end = row + count; index < end; ++index) {
     m_images.insert(index, QImage());
     m_has_text.insert(index, false);
+    m_internal_image.insert(index, false);
   }
 
   endInsertRows();
@@ -281,7 +341,7 @@ int ImageListModel::rowCount(const QModelIndex& /*parent*/) const
 
 int ImageListModel::columnCount(const QModelIndex& /*parent*/) const
 {
-  return 1; // the second column doesn't display.
+  return 3; // the second column doesn't display.
 }
 
 QVariant ImageListModel::data(const QModelIndex& index, int role) const

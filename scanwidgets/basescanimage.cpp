@@ -711,13 +711,13 @@ void BaseScanImage::zoomOut()
 void BaseScanImage::rotateBy(qreal angle)
 {
   m_logger->info(tr("Rotating by %1°").arg(angle));
-  QImage rotated = m_image.transformed([&angle](QPoint center) {
+  QImage rotated = m_modified_image.transformed([&angle](QPoint center) {
     QMatrix matrix;
     matrix.translate(center.x(), center.y());
     matrix.rotate(angle);
     return matrix;
   }
-  (m_image.rect().center()));
+  (m_modified_image.rect().center()));
   setImage(rotated);
   fitBest();
   update();

@@ -11,9 +11,10 @@ PageView::PageView(QWidget* parent)
   m_image_list = new ImageView(this);
   m_image_list->setSelectionMode(QAbstractItemView::SingleSelection);
   m_image_list->setDragDropMode(QAbstractItemView::InternalMove);
-  // insert an empty image at zero position. This will be the cover.
   connect(m_image_list->model(), &QAbstractItemModel::rowsMoved, this, &PageView::rowsMoved);
-  m_remove_page_act = new QAction(tr("Remove the selected page"), this);
+  m_remove_page_act = new QAction(tr("Remove the selected image and text"), this);
+  m_remove_image_act = new QAction(tr("Remove the selected image"), this);
+  m_remove_text_act = new QAction(tr("Remove the selected text"), this);
   m_save_as_image_act = new QAction(tr("Save the selected page as an internal image."), this);
   m_save_as_image_act->setToolTip(tr("Stores image for non-OCR, internal use."));
   m_move_page_up_act = new QAction(tr("Move page up"), this);
@@ -23,7 +24,9 @@ PageView::PageView(QWidget* parent)
   //  m_do_ocr_act = new QAction(tr("Run OCR on selected image."), this);
   //  m_do_all_ocr_act = new QAction(tr("Run OCR on all text-free images."),
   //  this);
-  connect(m_remove_page_act, &QAction::triggered, this, qOverload<>(&PageView::remove));
+  connect(m_remove_page_act, &QAction::triggered, this, &PageView::removePage);
+  connect(m_remove_image_act, &QAction::triggered, this, &PageView::removeImage);
+  connect(m_remove_text_act, &QAction::triggered, this, &PageView::removeText);
   connect(m_move_page_up_act, &QAction::triggered, this, &PageView::moveUp);
   connect(m_move_page_down_act, &QAction::triggered, this, &PageView::moveDown);
   connect(m_save_as_image_act, &QAction::triggered, this, &PageView::nonOcrImage);
@@ -41,17 +44,58 @@ void PageView::appendThumbnail(const QImage& thumbnail)
   m_image_list->appendThumbnail(thumbnail, false);
 }
 
-void PageView::remove()
+void PageView::removeImage()
 {
-  QModelIndexList rows = m_image_list->selectionModel()->selectedRows();
+  if (m_current_row == 0) {
+    int answer =
+      QMessageBox::warning(this,
+                           tr("Remove Cover Image"),
+                           tr("You are about to remove the Cover image\n"
+                              "This cannot be undone.\n"
+                              "Are you sure?"),
+                           QMessageBox::Yes | QMessageBox::No,
+                           QMessageBox::No);
 
-  int row = rows.at(0).row();
+    if (answer == QMessageBox::Yes) {
+      m_image_list->setCover(QImage());
+      emit removeCurrentImage(0);
 
-  if (row == 0) { // already at top
-    return;
+    }
+
+  } else {
+    int answer = QMessageBox::warning(this,
+                                      (isInternalImage(m_current_row)
+                                       ? tr("Remove Internal Image")
+                                       : tr("Remove OCR Image")),
+                                      tr("You are about to remove the image\n"
+                                         "This cannot be undone.\n"
+                                         "Are you sure?"),
+                                      QMessageBox::Yes | QMessageBox::No,
+                                      QMessageBox::No);
+
+    if (answer == QMessageBox::Yes) {
+      m_image_list->removeThumbnail(m_current_row);
+      emit removeCurrentImage(m_current_row);
+    }
   }
+}
 
-  m_image_list->removeThumbnail(row);
+void PageView::removeText()
+{
+  if (m_current_row > 0) {
+    int answer = QMessageBox::warning(this,
+                                      tr("Remove Text"),
+                                      tr("You are about to remove the text\n"
+                                         "for this OCR image.\n"
+                                         "This cannot be undone.\n"
+                                         "Are you sure?"),
+                                      QMessageBox::Yes | QMessageBox::No,
+                                      QMessageBox::No);
+
+    if (answer == QMessageBox::Yes) {
+      emit removeCurrentText(m_current_row);
+    }
+  }
 }
 
 void PageView::removeThumbnail(int index)
@@ -83,6 +127,15 @@ bool PageView::hasText(int page_no)
   return false;
 }
 
+bool PageView::isInternalImage(int page_no)
+{
+  if (m_is_internal_image.contains(page_no)) {
+    return m_is_internal_image.value(page_no);
+  }
+
+  return false;
+}
+
 void PageView::setIsInternal(int index, bool is_internal_image)
 {
   m_image_list->setInternalImage(index, is_internal_image);
@@ -102,6 +155,8 @@ void PageView::contextMenuEvent(QContextMenuEvent* event)
 {
   auto* context_menu = new QMenu();
   context_menu->addAction(m_remove_page_act);
+  context_menu->addAction(m_remove_image_act);
+  context_menu->addAction(m_remove_text_act);
   context_menu->addSeparator();
   context_menu->addAction(m_move_page_up_act);
   context_menu->addAction(m_move_page_down_act);
@@ -139,6 +194,12 @@ void PageView::rowsMoved(const QModelIndex& /*parent*/,
                          int row)
 {
   emit pageMoved(start, row);
+}
+
+void PageView::removePage()
+{
+  removeImage();
+  removeText();
 }
 
 void PageView::moveUp()

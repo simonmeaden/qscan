@@ -13,6 +13,7 @@
 #include <QMimeData>
 #include <QDataStream>
 #include <QProxyStyle>
+#include <QToolTip>
 
 #include "scanwidgets_global.h"
 #include "logger.h"
@@ -52,11 +53,16 @@ public:
   bool insertThumbnail(int row, const QImage& image, bool has_text, bool is_internal_image);
   bool removeThumbnail(int row);
   bool moveThumbnail(int source, int destination);
-  void replaceThumbnail(int row, const QImage& image, bool has_text, bool is_internal_image);
+  void replaceThumbnail(int row,
+                        const QImage& image,
+                        bool has_text,
+                        bool is_internal_image);
   void setHasText(int row, bool has_text);
+  bool hasText(int row);
   bool isEmpty(int row);
   bool isInternalImage(int row);
   void setInternalImage(int row, bool value);
+  QString tooltip(int row);
 
   QStringList mimeTypes() const override;
   int rowCount(const QModelIndex& parent = QModelIndex()) const override;
@@ -108,6 +114,8 @@ class SCANWIDGETSSHARED_EXPORT ImageView : public QListView
 public:
   explicit ImageView(QWidget* parent = nullptr);
 
+  bool event(QEvent* event) override;
+
   void setCover(const QImage& image);
   void appendThumbnail(const QImage& image, bool has_text = false);
   void insertThumbnail(int row, const QImage& image, bool has_text = false, bool is_internal_image = false);
@@ -121,6 +129,8 @@ protected:
   ImageListModel* m_model;
 
   void dropEvent(QDropEvent* event) override;
+  bool isIndexHidden(const QModelIndex& index) const override;
+
 };
 
 #endif // IMAGEVIEW_H
