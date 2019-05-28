@@ -35,10 +35,10 @@ void ImageView::appendThumbnail(const QImage& image, bool has_text)
   m_model->appendThumbnail(image, has_text);
 }
 
-void ImageView::insertThumbnail(int row, const QImage& image, bool has_text)
+void ImageView::insertThumbnail(int row, const QImage& image, bool has_text, bool is_internal_image)
 {
   // TODO
-  m_model->insertThumbnail(row, image, has_text);
+  m_model->insertThumbnail(row, image, has_text, is_internal_image);
 }
 
 void ImageView::removeThumbnail(int row)
@@ -59,6 +59,11 @@ void ImageView::replaceThumbnail(int row, const QImage& image, bool has_text)
 void ImageView::setHasText(int index, bool has_text)
 {
   m_model->setHasText(index, has_text);
+}
+
+void ImageView::setInternalImage(int index, bool internal_image)
+{
+  m_model->setInternalImage(index, internal_image);
 }
 
 void ImageView::dropEvent(QDropEvent* event)
@@ -94,19 +99,20 @@ bool ImageListModel::appendThumbnail(const QImage& image, bool has_text, bool  i
   if (insertRows(row, 1)) {
     m_images.replace(row, image);
     m_has_text.replace(row, has_text);
-    m_intsernal_image.replace(row, internal_image);
+    m_internal_image.replace(row, internal_image);
     return true;
   }
 
   return false;
 }
 
-bool ImageListModel::insertThumbnail(int row, const QImage& image, bool has_text)
+bool ImageListModel::insertThumbnail(int row, const QImage& image, bool has_text, bool is_internal_image)
 {
   if (row > 0) {
     if (insertRows(row, 1)) {
       m_images.replace(row, image);
       m_has_text.replace(row, has_text);
+      m_internal_image.replace(row, is_internal_image);
       return true;
     }
   }
@@ -123,22 +129,37 @@ bool ImageListModel::removeThumbnail(int row)
   return false;
 }
 
-void ImageListModel::replaceThumbnail(int row, const QImage& image, bool has_text)
+void ImageListModel::replaceThumbnail(int row, const QImage& image, bool has_text, bool is_internal_image)
 {
   if (row > 0) {
     m_images.replace(row, image);
     m_has_text.replace(row, has_text);
+    m_internal_image.replace(row, is_internal_image);
   }
 }
 
-void ImageListModel::setHasText(int index, bool has_text)
+void ImageListModel::setHasText(int row, bool has_text)
 {
-  m_has_text.replace(index, has_text);
+  if (row >= 0 && row < m_has_text.size()) {
+    m_has_text.replace(row, has_text);
+  }
 }
 
-bool ImageListModel::hasText(int row)
+bool ImageListModel::isEmpty(int row)
 {
   return m_has_text.at(row);
+}
+
+bool ImageListModel::isInternalImage(int row)
+{
+  return m_internal_image.at(row);
+}
+
+void ImageListModel::setInternalImage(int row, bool value)
+{
+  if (row >= 0 && row < m_internal_image.size()) {
+    m_internal_image.replace(row, value);
+  }
 }
 
 QStringList ImageListModel::mimeTypes() const
@@ -168,6 +189,7 @@ bool ImageListModel::removeRows(int row, int count, const QModelIndex& parent)
   for (int r = 0; r < count; r++) {
     m_images.removeAt(r);
     m_has_text.removeAt(r);
+    m_internal_image.removeAt(r);
   }
 
   endRemoveRows();
@@ -272,6 +294,9 @@ QVariant ImageListModel::data(const QModelIndex& index, int role) const
 
       case 1:
         return m_has_text.at(index.row());
+
+      case 2:
+        return m_internal_image.at(index.row());
       }
     }
   }
@@ -414,6 +439,8 @@ void ImageDelegate::paint(QPainter* painter,
     auto image = v.value<QImage>();
     QModelIndex i = index.model()->index(index.row(), 1, index);
     bool has_text = index.model()->data(i, Qt::DecorationRole).toBool();
+    i = index.model()->index(index.row(), 2, index);
+    bool is_internal = index.model()->data(i, Qt::DecorationRole).toBool();
 
     if (option.state & QStyle::State_Selected) {
       painter->fillRect(option.rect, option.palette.highlight());
@@ -434,7 +461,10 @@ void ImageDelegate::paint(QPainter* painter,
 
     QPen pen;
 
-    if (has_text) {
+    if (is_internal) {
+      pen.setColor(QColor("yellow"));
+
+    } else if (has_text) {
       pen.setColor(QColor("green"));
 
     } else {

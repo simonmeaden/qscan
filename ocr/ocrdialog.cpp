@@ -25,13 +25,13 @@ QImage OcrDialog::image()
   return m_image_display->image();
 }
 
-void OcrDialog::setData(int index, const QImage& image, const Page&  page)
+void OcrDialog::setData(int index, const QImage& image, const DocumentData&  page)
 {
   m_page_no = index;
   m_page = page;
   m_page_no = index,
   m_image_display->setImage(image);
-  m_text_edit->setText(page->text());
+  m_text_edit->setText(page->textList());
 }
 
 void OcrDialog::setOcrImage(int index, const QImage& image)
@@ -67,7 +67,7 @@ QSize OcrDialog::sizeHint() const
   return { size };
 }
 
-Page OcrDialog::page() const
+DocumentData OcrDialog::page() const
 {
   return m_page;
 }
@@ -360,6 +360,16 @@ void OcrDialog::setThreshold(int threshold)
 void OcrDialog::thresholdAccepted()
 {
   m_ctl_stack->setCurrentIndex(m_btn_stack);
+}
+
+void OcrDialog::disableBinarise()
+{
+  m_binarise_btn->setEnabled(false);
+}
+
+void OcrDialog::enableBinarise()
+{
+  m_binarise_btn->setEnabled(true);
 }
 
 void OcrDialog::resizeEvent(QResizeEvent* event)

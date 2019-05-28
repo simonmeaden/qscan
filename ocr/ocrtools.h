@@ -7,7 +7,8 @@
 #include "logger.h"
 
 #include "ocr_global.h"
-#include "scanpage.h"
+//#include "scanpage.h"
+#include "documentdata.h"
 #include "logger.h"
 
 class TessTools;
@@ -23,15 +24,14 @@ public:
   OcrTools& operator=(const OcrTools&) = delete;
   OcrTools(OcrTools&&) = delete;
   OcrTools& operator=(OcrTools&&) = delete;
-  void convertImageToText(const Page& page);
+  void convertImageToText(const DocumentData& page);
   void convertImageToText(int page_no, const QImage& image);
 
 signals:
   void finished();
   //  void startConverting(Page page);
-  void convertedPage(const Page& page);
+  void convertedPage(const DocumentData& page);
   void convertedImage(int page_no, const QString& text);
-
 
 public slots:
 
@@ -41,7 +41,6 @@ protected:
 
   void log(LogLevel, const QString&);
   //  void converted(const Page& page);
-
 };
 
 #endif // OCRTOOLS_H

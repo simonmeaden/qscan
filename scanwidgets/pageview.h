@@ -2,14 +2,14 @@
 #define PAGEVIEW_H
 
 #include <QAction>
+#include <QContextMenuEvent>
 #include <QHBoxLayout>
 #include <QImage>
 #include <QMenu>
 #include <QWidget>
-#include <QContextMenuEvent>
 
 #include "imageview.h"
-#include "scanpage.h"
+#include "documentdata.h"
 
 class PageView : public QWidget
 {
@@ -19,10 +19,17 @@ public:
 
   void appendThumbnail(const QImage& thumbnail);
   void removeThumbnail(int index);
-  void insertThumbnail(int index, const QImage& thumbnail, bool has_text = false, bool is_internal_image = false);
+  void insertThumbnail(int index,
+                       const QImage& thumbnail,
+                       bool has_text = false,
+                       bool is_internal_image = false);
   void setCover(const QImage& cover);
   void setHasText(int index, bool has_text);
   bool hasText(int page_no);
+  void setIsInternal(int index, bool is_internal_image);
+
+  QMap<int, bool> has_text() const;
+  void setHas_text(const QMap<int, bool>& has_text);
 
 signals:
   void pageMoved(int from, int to);
@@ -34,6 +41,7 @@ signals:
 protected:
   ImageList m_pages;
   QMap<int, bool> m_has_text;
+  QMap<int, bool> m_is_internal_image;
   ImageView* m_image_list;
   QImage m_cover;
   int m_current_row{};
@@ -51,11 +59,7 @@ protected:
   //  QAction* m_do_ocr_act{};
   //  QAction* m_do_all_ocr_act{};
 
-  void rowsMoved(const QModelIndex&,
-                 int start,
-                 int,
-                 const QModelIndex&,
-                 int row);
+  void rowsMoved(const QModelIndex&, int start, int, const QModelIndex&, int row);
   void remove();
   void moveUp();
   void moveDown();

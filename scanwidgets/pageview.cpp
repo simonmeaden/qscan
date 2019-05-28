@@ -83,6 +83,21 @@ bool PageView::hasText(int page_no)
   return false;
 }
 
+void PageView::setIsInternal(int index, bool is_internal_image)
+{
+  m_image_list->setInternalImage(index, is_internal_image);
+}
+
+QMap<int, bool> PageView::has_text() const
+{
+  return m_has_text;
+}
+
+void PageView::setHas_text(const QMap<int, bool>& has_text)
+{
+  m_has_text = has_text;
+}
+
 void PageView::contextMenuEvent(QContextMenuEvent* event)
 {
   auto* context_menu = new QMenu();
@@ -154,6 +169,11 @@ void PageView::moveDown()
   }
 
   m_image_list->moveThumbnail(row, row + 1);
+}
+
+void PageView::nonOcrImage()
+{
+
 }
 
 // void PageView::doOcr()

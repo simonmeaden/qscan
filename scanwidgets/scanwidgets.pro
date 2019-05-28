@@ -32,8 +32,7 @@ SOURCES += \
         pageview.cpp \
         scanedit.cpp \
         scaneditor.cpp \
-        scanimage.cpp \
-        scanpage.cpp
+        scanimage.cpp
 
 HEADERS += \
         basescanimage.h \
@@ -44,7 +43,6 @@ HEADERS += \
         scanedit.h \
         scaneditor.h \
         scanimage.h \
-        scanpage.h \
         scanwidgets_global.h 
 
 unix {

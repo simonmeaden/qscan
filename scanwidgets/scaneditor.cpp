@@ -22,9 +22,9 @@
 #include <qyaml-cpp/qyaml-cpp.h>
 #include <yaml-cpp/yaml.h>
 
+#include "documentdata.h"
 #include "qscan.h"
 #include "scaneditor.h"
-#include "documentdata.h"
 
 #include "ocrdialog.h"
 #include "ocrtools.h"
@@ -50,11 +50,14 @@ const QString ScanEditor::LANGUAGE = "language";
    \param lang - the tesseract language.
    \param parent - the parent QObject.
 */
-ScanEditor::ScanEditor(QScan* scan, QString& configdir, QString datadir, QWidget* parent)
+ScanEditor::ScanEditor(QScan* scan,
+                       const QString& configdir,
+                       const QString& datadir,
+                       QWidget* parent)
   : QFrame(parent)
   , m_scan_lib(scan)
-  , m_config_dir(std::move(configdir))
-  , m_data_dir(std::move(datadir))
+  , m_config_dir(configdir)
+  , m_data_dir(datadir)
   , m_cover(DocumentData(new DocData()))
   , m_lang("eng")
 {
@@ -136,7 +139,7 @@ void ScanEditor::receiveImage(const QImage& image)
 void ScanEditor::receiveImages(const QImage& left, const QImage& right)
 {
   DocumentData left_page(new DocData());
-  int index = m_doc_data.size() + 1;
+  int index = m_doc_data->size() + 1;
   left_page->setPageNumber(index);
   QString path = saveImage(index, left);
   left_page->setFilename(path);
@@ -196,7 +199,7 @@ QString ScanEditor::saveImage(int index, const QImage& image)
 
 void ScanEditor::saveModifiedImage(int index, const QImage& image)
 {
-  DocumentData page  = m_doc_data->documentData(index);
+  DocumentData page = m_doc_data->documentData(index);
   QString path = page->filename();
 
   if (!image.save(path, "PNG", 100)) {
@@ -223,10 +226,10 @@ void ScanEditor::saveAsCover(const QImage& image)
   }
 }
 
-void ScanEditor::receiveLoadText(int index)
+void ScanEditor::receiveLoadText(int page_no)
 {
   if (page_no > 0) { //
-    DocumentData page  = m_doc_data->documentData(index);
+    DocumentData page = m_doc_data->documentData(page_no);
 
     receiveOcrPageResult(page);
   }
@@ -234,7 +237,7 @@ void ScanEditor::receiveLoadText(int index)
 
 void ScanEditor::receiveWorkOnRequest(int page_no)
 {
-  DocumentData page  = m_doc_data->documentData(page_no);
+  DocumentData page = m_doc_data->documentData(page_no);
 
   if (!page.isNull()) {
     m_ocr_dlg = new OcrDialog(this);
@@ -242,7 +245,7 @@ void ScanEditor::receiveWorkOnRequest(int page_no)
     connect(m_ocr_dlg, &OcrDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
     connect(m_ocr_dlg, &OcrDialog::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
 
-    QImage image(page->imagePath(), "PNG");
+    QImage image(page->filename(), "PNG");
     m_ocr_dlg->setData(page_no, image, page);
     connect(m_ocr_dlg, &QDialog::finished, this, &ScanEditor::receiveOcrDialogFinished);
 
@@ -253,9 +256,9 @@ void ScanEditor::receiveWorkOnRequest(int page_no)
 void ScanEditor::receiveOcrPageRequest(int page_no)
 {
   if (page_no > 0) { //
-    DocumentData page  = m_doc_data->documentData(page_no);
+    DocumentData page = m_doc_data->documentData(page_no);
 
-    if (page->text().isEmpty()) {
+    if (page->isEmpty()) {
       m_ocr_tools->convertImageToText(page);
 
     } else {
@@ -284,44 +287,30 @@ void ScanEditor::receiveOcrImageRequest(int page_no, const QImage& image)
   }
 }
 
-void ScanEditor::saveText(int index, const Page& page)
-{
-  QString filename = m_data_dir + m_current_doc_name + QDir::separator() +
-                     QString("text%1.yaml").arg(index);
-  QFile file(filename);
+// void ScanEditor::saveText(int index, const Page& page)
+//{
+//  QString filename =
+//    m_data_dir + m_current_doc_name + QDir::separator() + QString("text%1.yaml").arg(index);
+//  QFile file(filename);
 
-  if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-    YAML::Emitter emitter;
-    emitter << YAML::Key << "text";
-    emitter << page->text();
+//  if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+//    YAML::Emitter emitter;
+//    emitter << YAML::Key << "text";
+//    emitter << page->text();
 
-    QTextStream stream(&file);
-    stream << emitter.c_str();
-    file.close();
+//    QTextStream stream(&file);
+//    stream << emitter.c_str();
+//    file.close();
 
-    m_page_view->setHasText(index, true);
-  }
-}
+//    m_page_view->setHasText(index, true);
+//  }
+//}
 
 void ScanEditor::saveModifiedText(int page_no, const QStringList& text)
 {
-  DocumentData page  = m_doc_data->documentData(page_no);
+  DocumentData page = m_doc_data->documentData(page_no);
   page->setText(text);
-
-  QString filename = m_data_dir + m_current_doc_name + QDir::separator() +
-                     QString("text%1.yaml").arg(page_no);
-  QFile file(filename);
-
-  if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-    YAML::Emitter emitter;
-    emitter << YAML::Key << "text";
-    emitter << text;
-
-    QTextStream stream(&file);
-    stream << emitter.c_str();
-    file.close();
-    m_page_view->setHasText(page_no, true);
-  }
+  m_doc_data->save(m_data_file);
 }
 
 void ScanEditor::receiveOcrPageResult(const DocumentData& page)
@@ -337,35 +326,34 @@ void ScanEditor::receiveOcrPageResult(const DocumentData& page)
   connect(m_ocr_dlg, &QDialog::finished, this, &ScanEditor::receiveOcrDialogFinished);
 
   m_ocr_dlg->open();
-
 }
 
 void ScanEditor::receiveOcrDialogFinished(int result)
 {
-  Page page = m_ocr_dlg->page();
+  DocumentData page = m_ocr_dlg->page();
 
   if (result == QDialog::Accepted) {
-    page->setTextList(m_ocr_dlg->text());
-    int index = m_pages.key(page);
+    page->setText(m_ocr_dlg->text());
+    int index = page->pageNumber();
 
-    if (m_save_all_texts) {
-      saveText(index, page);
+    if (page->textWasInitialised()) {
+      if (page->textHasChanged()) {
+        int answer = QMessageBox::question(this,
+                                           tr("Image text exists."),
+                                           tr("The image %1 already has text.\n"
+                                              "Do you want to overwrite this text?")
+                                           .arg(index),
+                                           QMessageBox::Yes | QMessageBox::No,
+                                           QMessageBox::No);
+
+        if (answer == QMessageBox::Yes) {
+          m_doc_data->save(m_data_file);
+        }
+      }
 
     } else {
-      int answer = QMessageBox::question(this,
-                                         tr("Image text exists."),
-                                         tr("The image %1 already has text.\n"
-                                            "Do you want to overwrite this text?")
-                                         .arg(index),
-                                         QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll,
-                                         QMessageBox::No);
-
-      if (answer == QMessageBox::Yes) {
-        saveText(index, page);
-
-      } else if (answer == QMessageBox::YesToAll) {
-        m_save_all_texts = true;
-        saveText(index, page);
+      if (page->textHasChanged()) {
+        m_doc_data->save(m_data_file);
       }
     }
 
@@ -377,6 +365,11 @@ void ScanEditor::receiveOcrDialogFinished(int result)
   m_ocr_dlg->deleteLater();
   m_ocr_dlg == nullptr;
 }
+
+// void ScanEditor::saveText(int page_no, const DocumentData& documentData)
+//{
+//  // TODO
+//}
 
 void ScanEditor::receiveOcrImageResult(int page_no, const QString& text)
 {
@@ -423,75 +416,95 @@ void ScanEditor::makePage()
   receiveImage(image);
 }
 
-void ScanEditor::loadDocumentData()
-{
-  QFile file(m_data_file);
+// void ScanEditor::loadDocumentData()
+//{
+//  QFile file(m_data_file);
 
-  if (file.exists()) {
-    YAML::Node doc_data = YAML::LoadFile(m_data_file);
+//  if (file.exists()) {
+//    YAML::Node doc_data = YAML::LoadFile(m_data_file);
 
-    if (!doc_data.IsNull()) {
-      if (doc_data.IsMap()) {
-        for (YAML::const_iterator it = doc_data.begin(); it != doc_data.end();
-             ++it) {
-          QString filename = it->first.as<QString>();
-          YAML::Node item = it->second;
-          DocumentData data(new DocData());
-          bool internal_image = item["internal image"].as<bool>();
+//    if (!doc_data.IsNull()) {
+//      if (doc_data.IsMap()) {
+//        for (YAML::const_iterator it = doc_data.begin(); it != doc_data.end();
+//             ++it) {
+//          int page_number = it->first.as<int>();
+//          YAML::Node item = it->second;
+//          DocumentData data(new DocData());
 
-          data->setFilename(filename);
-          data->setIsInternalImage(internal_image);
-          YAML::Node text_list = item["text list"];
+//          data->setPageNumber(page_number);
 
-          if (text_list) {
-            for (auto&& text_node : text_list) {
-              QString text = text_node.as<QString>();
-              data->appendText(text);
-            }
-          }
-        }
-      }
-    }
-  }
-}
+//          if (item[FILENAME]) {
+//            data->setFilename(item[FILENAME].as<QString>());
+//          }
 
-void ScanEditor::saveDocumentData()
-{
-  QFile file(m_data_file);
+//          if (item[INTERNAL_IMAGE]) {
+//            data->setIsInternalImage(item[INTERNAL_IMAGE].as<bool>());
+//          }
 
-  if (file.open(QFile::WriteOnly | QFile::Truncate)) {
-    YAML::Emitter emitter;
+//          YAML::Node text_list = item[TEXT_LIST];
 
-    emitter << YAML::BeginMap;
+//          if (text_list) {
+//            QStringList texts;
 
-    for (const QString& key : m_doc_data->documentKeys()) {
-      DocumentData data = m_doc_data->documentData(key);
-      bool internal_image = data->isInternalImage();
-      emitter << YAML::Key << data->filename();
-      emitter << YAML::Value;
-      emitter << YAML::Key << "internal image";
-      emitter << YAML::Value << internal_image;
+//            for (auto&& text_node : text_list) {
+//              QString text = text_node.as<QString>();
+//              texts.append(text);
+//            }
 
-      if (!internal_image) {
-        emitter << YAML::Key << "text list";
-        emitter << YAML::Value;
-        emitter << YAML::BeginSeq;
+//            data->setText(texts);
+//          }
+//        }
+//      }
+//    }
+//  }
+//}
 
-        for (QString text : data->textList()) {
-          emitter << YAML::Value << text;
-        }
+// void ScanEditor::saveDocumentData()
+//{
+//  QFile file(m_data_file);
 
-        emitter << YAML::EndSeq;
-      }
-    }
+//  if (file.open(QFile::WriteOnly | QFile::Truncate)) {
+//    YAML::Emitter emitter;
 
-    emitter << YAML::EndMap;
+//    emitter << YAML::BeginMap; // begin of document map
 
-    QTextStream out(&file);
-    out << emitter.c_str();
-    file.close();
-  }
-}
+//    for (int key : m_doc_data->documentKeys()) {
+//      DocumentData data = m_doc_data->documentData(key);
+//      emitter << YAML::Key << key; // page number as documant key
+//      emitter << YAML::Value;
+//      { // document data section
+//        emitter << YAML::BeginMap; // begin of document data map
+//        emitter << YAML::Key << FILENAME;
+//        emitter << YAML::Value << data->filename();
+
+//        bool internal_image = data->isInternalImage();
+//        emitter << YAML::Key << INTERNAL_IMAGE;
+//        emitter << YAML::Value << internal_image;
+
+//        /* the internal images are used for in-document images
+//           not ocr-able images.*/
+//        if (!internal_image) {
+//          emitter << YAML::Key << TEXT_LIST;
+//          emitter << YAML::Value;
+//          emitter << YAML::BeginSeq; // begin of text sequance
+
+//          for (QString text : data->textList()) {
+//            emitter << YAML::Value << text;
+//          }
+
+//          emitter << YAML::EndSeq; // end of text sequance
+//        }
+
+//        emitter << YAML::EndMap; // end of document data map
+//      } // end of document data section
+//      emitter << YAML::EndMap; // end of document map
+//    }
+
+//    QTextStream out(&file);
+//    out << emitter.c_str();
+//    file.close();
+//  }
+//}
 
 /*!
    \brief Loads all existing images and text on the current document path.
@@ -506,12 +519,11 @@ void ScanEditor::loadExistingFiles()
   m_data_file = current_path + m_current_doc_name + ".yaml";
   QString filename = current_path + "cover.png";
   QImage image;
-  Page page;
   QStringList filter;
   filter << "image*.png";
 
   m_doc_data = new DocumentDataStore(this);
-  loadDocumentData();
+  m_doc_data->load(m_data_file);
 
   QFile file(filename);
 
@@ -521,7 +533,6 @@ void ScanEditor::loadExistingFiles()
   }
 
   QDir dir(current_path);
-  int index = 0;
   bool ok;
 
   for (const QString& fname : dir.entryList(filter, QDir::Files)) {
@@ -529,56 +540,19 @@ void ScanEditor::loadExistingFiles()
     file.setFileName(filename);
 
     if (file.exists()) {
-      index = fname.midRef(5, fname.length() - 9).toInt(&ok);
+      int index = fname.midRef(5, fname.length() - 9).toInt(&ok);
       DocumentData data(new DocData());
 
       if (ok) { // is an int value
         image = QImage(filename, "PNG");
-        page = Page(new ScanPage());
-        page->setImagePath(filename);
         data->setFilename(filename);
-        m_pages.insert(index, page);
-        m_page_view->insertThumbnail(index, thumbnail(image), false);
+        m_doc_data->insertData(index, data);
+        m_page_view->insertThumbnail(
+          index, thumbnail(image), data->hasText(), data->isInternalImage());
         m_logger->info(tr("Image file %1 loaded)").arg(fname));
       }
     }
   } // end image file list
-
-  filter.clear();
-  filter << "page*.yaml";
-
-  for (const QString& fname : dir.entryList(filter, QDir::Files)) {
-    filename = current_path + fname;
-    file.setFileName(filename);
-
-    if (file.exists()) {
-      index = fname.midRef(4, fname.length() - 8).toInt(&ok);
-
-      if (ok) { // is an int value
-        if (m_pages.contains(index)) {
-          page = m_pages.value(index);
-
-        } else {
-          // should only happen if an image has been removed.
-          page = Page(new ScanPage());
-          m_page_view->insertThumbnail(index, QImage(), false);
-        }
-
-        if (file.open(QFile::ReadOnly)) {
-          YAML::Node yaml = YAML::LoadFile(file);
-
-          QStringList list;
-          YAML::Node text = yaml["text"];
-          list = text.as<QList<QString>>();
-          //          QTextStream stream(&file);
-          //          QString text = stream.readAll();
-          page->setTextList(list);
-          m_page_view->setHasText(index, true);
-          m_logger->info(tr("Text file %1 loaded)").arg(fname));
-        }
-      }
-    }
-  } // end text file list
 }
 
 /*!
@@ -680,9 +654,9 @@ void ScanEditor::saveOptions(const QString& filename)
 void ScanEditor::loadCover(const QString& filename)
 {
   QImage image = QImage(filename, "PNG");
-  Page page(new ScanPage());
-  page->setImagePath(filename);
-  m_cover = page;
+  DocumentData data(new DocData());
+  data->setFilename(filename);
+  m_cover = data;
   m_page_view->setCover(thumbnail(image));
 }
 

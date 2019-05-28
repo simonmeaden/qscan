@@ -33,7 +33,8 @@
 #endif
 
 #include "scanoptions.h"
-#include "scanpage.h"
+//#include "scanpage.h"
+#include "documentdata.h"
 #include "logger.h"
 
 using Image = QSharedPointer<QImage>;
@@ -46,8 +47,8 @@ int main(int argc, char* argv[])
   QApplication a(argc, argv);
   qRegisterMetaType<Image>();
   qRegisterMetaType<ScanOptions>();
-  qRegisterMetaType<ScanPage>();
-  qRegisterMetaType<Page>();
+  qRegisterMetaType<DocData>();
+  qRegisterMetaType<DocumentData>();
   qRegisterMetaType<LogLevel>();
 
 #if defined(LOGGER_ENABLE)

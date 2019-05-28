@@ -27,6 +27,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "imageconverter.h"
+#include "documentdata.h"
 
 //using namespace cv;
 
@@ -122,11 +123,11 @@ void TessTools::init(const char* datapath, const char* lang, tesseract::TessBase
 }
 
 
-void TessTools::getStringFromPage(const Page& page)
+void TessTools::getStringFromPage(const DocumentData& page)
 {
   init(m_datapath, m_api_lang, m_api);
 
-  cv::Mat mat_image = cv::imread(page->imagePath().toStdString(), cv::IMREAD_COLOR);
+  cv::Mat mat_image = cv::imread(page->filename().toStdString(), cv::IMREAD_COLOR);
   QString out_text;
   //  monitor = new ETEXT_DESC();
 

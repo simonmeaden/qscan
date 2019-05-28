@@ -51,8 +51,8 @@ class SCANWIDGETSSHARED_EXPORT ScanEditor : public QFrame
   Q_OBJECT
 public:
   explicit ScanEditor(QScan* scan,
-                      QString& configdir,
-                      QString  datadir,
+                      const QString& configdir,
+                      const QString& datadir,
                       QWidget* parent = nullptr);
 
   void loadExistingFiles();
@@ -118,7 +118,7 @@ protected:
   QString m_current_doc_name;
   QString m_options_file;
   QString m_data_file;
-  DocumentDataStore* m_doc_data;
+  DocumentDataStore* m_doc_data{};
   ScanImage* m_scan_display{};
   QProgressDialog* m_prog_dlg{};
   QScan* m_scan_lib{};
@@ -128,14 +128,14 @@ protected:
   QString m_config_dir{};
   QString m_data_dir{};
   QString m_lang{};
-  OcrDialog* m_ocr_dlg;
+  OcrDialog* m_ocr_dlg{};
 
   //  QMap<int, Page> m_pages;
   DocumentData m_cover;
   bool m_save_all_texts{};
 
-  void loadDocumentData();
-  void saveDocumentData();
+  //  void loadDocumentData();
+  //  void saveDocumentData();
 
   bool eventFilter(QObject* obj, QEvent* event) override;
 
@@ -148,14 +148,14 @@ protected:
   QString saveImage(int index, const QImage& image);
   void saveModifiedImage(int index, const QImage& image);
   void saveAsCover(const QImage& image);
-  void receiveLoadText(int index);
+  void receiveLoadText(int page_no);
   void receiveWorkOnRequest(int documentData);
   void receiveOcrPageRequest(int documentData);
   void receiveOcrImageRequest(int documentData, const QImage& image);
   void receiveOcrPageResult(const DocumentData& documentData);
   void receiveOcrImageResult(int documentData, const QString& text);
   void receiveOcrDialogFinished(int result);
-  void saveText(int page_no, const DocumentData& documentData);
+  //  void saveText(int page_no, const DocumentData& documentData);
   void saveModifiedText(int page_no, const QStringList& text);
   void clearSaveAllTextsFlag();
   QImage thumbnail(const QImage& image) const;
@@ -164,6 +164,7 @@ protected:
   static const QString CURRENT_DOCUMENT;
   static const QString TESSERACT;
   static const QString LANGUAGE;
+
 };
 
 #endif // SCANEDITOR_H

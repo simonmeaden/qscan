@@ -31,7 +31,7 @@ public:
   ~OcrDialog() override = default;
 
   QImage image();
-  void setData(int index, const QImage& image, const Page&  page);
+  void setData(int index, const QImage& image, const DocumentData& page);
   void setOcrImage(int index, const QImage& image);
   void setOcrText(int page_no, const QString& text);
   QStringList text();
@@ -39,9 +39,9 @@ public:
   bool imageChanged() const;
   QSize sizeHint() const override;
 
-  Page page() const;
+  DocumentData page() const;
 
-  void open();
+  void open() override;
 
 signals:
   void sendOcrRequest(int, const QImage&);
@@ -52,12 +52,14 @@ protected:
   ScanEdit* m_text_edit;
   OcrImage* m_image_display;
   int m_page_no{};
-  Page m_page;
+  DocumentData m_page;
   bool m_image_changed;
   QPushButton* m_crop_btn{};
   QPushButton* m_cut_btn{};
-  QPushButton* m_binarise_btn{}, *m_ocr_btn{}, *m_ocr_sel_btn{};
-  QLabel* threshold_lbl;
+  QPushButton* m_binarise_btn{};
+  QPushButton* m_ocr_btn{};
+  QPushButton* m_ocr_sel_btn{};
+  QLabel* threshold_lbl{};
   QStackedLayout* m_ctl_stack{};
   int m_btn_stack{}, m_threshold_stack{};
 
@@ -85,12 +87,8 @@ protected:
   void setThreshold(int threshold);
   void thresholdAccepted();
 
-  void disableBinarise() {
-    m_binarise_btn->setEnabled(false);
-  }
-  void enableBinarise() {
-    m_binarise_btn->setEnabled(true);
-  }
+  void disableBinarise();
+  void enableBinarise();
 };
 
 #endif // OCRDIALOG_H

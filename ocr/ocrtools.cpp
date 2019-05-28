@@ -35,7 +35,7 @@ OcrTools::~OcrTools()
   m_ocr_worker->stopRunning();
 }
 
-void OcrTools::convertImageToText(const Page& page)
+void OcrTools::convertImageToText(const DocumentData& page)
 {
   m_ocr_worker->convertPage(page);
 }

@@ -15,7 +15,7 @@ OcrWorker::OcrWorker(QString datapath, QString lang)
 {
 }
 
-void OcrWorker::convertPage(const Page& page)
+void OcrWorker::convertPage(const DocumentData& page)
 {
   emit log(LogLevel::INFO, (tr("Converting page in OcrWorker.")));
   m_pages.append(page);
@@ -42,8 +42,7 @@ void OcrWorker::process()
       emit imageConverted(page_no, text);
 
     } else if (!m_pages.isEmpty()) {
-      Page page = m_pages.takeFirst();
-      QString image_path = page->imagePath();
+      DocumentData page = m_pages.takeFirst();
       m_api->getStringFromPage(page);
       emit pageConverted(page);
     }
