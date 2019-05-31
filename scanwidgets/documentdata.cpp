@@ -2,6 +2,8 @@
 
 #include "documentdata.h"
 
+#include <algorithm>
+
 #include <qyaml-cpp/QYamlCpp>
 #include <yaml-cpp/yaml.h>
 
@@ -100,7 +102,7 @@ void DocumentDataStore::save(const QString& filename)
         emitter << YAML::BeginMap; // begin of document data map
         emitter << YAML::Key << FILENAME;
 
-        if (data->removeImageLater()) {
+        if (data->isRemoveImageLater()) {
           emitter << YAML::Value << QString();
 
         } else {
@@ -116,7 +118,7 @@ void DocumentDataStore::save(const QString& filename)
         if (!internal_image) {
           emitter << YAML::Key << TEXT_LIST;
 
-          if (data->removeTextLater()) {
+          if (data->isRemoveTextLater()) {
             emitter << YAML::Value << QString();
 
           } else {
@@ -132,9 +134,10 @@ void DocumentDataStore::save(const QString& filename)
         }
 
         emitter << YAML::EndMap; // end of document data map
-      }                          // end of document data section
-      emitter << YAML::EndMap;   // end of document map
+      } // end of document data section
     }
+
+    emitter << YAML::EndMap; // end of document map
 
     QTextStream out(&file);
     out << emitter.c_str();
@@ -142,14 +145,77 @@ void DocumentDataStore::save(const QString& filename)
   }
 }
 
+void DocumentDataStore::remove(int index)
+{
+  m_data.remove(index);
+}
+
+void DocumentDataStore::remove(const QString& filename)
+{
+  QList<DocumentData> values = m_data.values();
+
+  QList<DocumentData>::iterator data_it =
+  std::find_if(values.begin(), values.end(), [filename](DocumentData data) {
+    return data->filename() == filename;
+  });
+
+  if (!data_it->isNull()) {
+    m_data.remove(m_data.key(*data_it));
+  }
+
+  //  for (const DocumentData& data : values) {
+  //    if (data->filename() == filename) {
+  //      remove(data);
+  //      break;
+  //    }
+  //  }
+}
+
+void DocumentDataStore::remove(const DocumentData& data)
+{
+  m_data.remove(m_data.key(data));
+}
+
 int DocumentDataStore::size()
 {
   return m_data.size();
 }
 
+void DocumentDataStore::cleanUpData()
+{
+  QList<int> keys = m_data.keys();
+
+  for (int page_no : keys) {
+    DocumentData data = m_data.value(page_no);
+
+    if (data->isRemoveImageLater() && data->isRemoveTextLater()) {
+      m_data.remove(page_no);
+
+    } else {
+      /*if (data->isRemoveImageLater()) {
+        data->setFilename(QString());
+
+        } else*/
+      if (data->isRemoveTextLater()) {
+        data->clearText();
+      }
+    }
+  }
+}
+
+bool DocumentDataStore::isEmpty()
+{
+  return m_data.isEmpty();
+}
+
 /* DocData
    ============================================================================*/
-DocData::DocData() = default;
+DocData::DocData()
+  : m_text_initialised(false)
+  , m_text_has_changed(false)
+  , m_remove_image_later(false)
+  , m_remove_text_later(false)
+{}
 
 DocData::DocData(QString  filename, const QString& text, bool is_internal)
   : m_filename(std::move(filename))
@@ -157,6 +223,7 @@ DocData::DocData(QString  filename, const QString& text, bool is_internal)
   , m_text_initialised(false)
   , m_text_has_changed(false)
   , m_remove_image_later(false)
+  , m_remove_text_later(false)
 {
   m_text_list.append(text);
 }
@@ -255,6 +322,11 @@ bool DocData::textHasChanged()
   return m_text_has_changed;
 }
 
+void DocData::clearText()
+{
+  m_text_list.clear();
+}
+
 bool DocData::isInternalImage() const
 {
   return m_is_internal_image;
@@ -275,7 +347,7 @@ void DocData::setPageNumber(int page_no)
   m_page_no = page_no;
 }
 
-bool DocData::removeImageLater() const
+bool DocData::isRemoveImageLater() const
 {
   return m_remove_image_later;
 }
@@ -285,7 +357,7 @@ void DocData::setRemoveImageLater(bool remove_later)
   m_remove_image_later = remove_later;
 }
 
-bool DocData::removeTextLater() const
+bool DocData::isRemoveTextLater() const
 {
   return m_remove_text_later;
 }

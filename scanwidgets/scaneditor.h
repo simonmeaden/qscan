@@ -32,6 +32,7 @@
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QMessageBox>
+#include <QPixmapCache>
 
 #include "logger.h"
 
@@ -54,6 +55,7 @@ public:
                       const QString& configdir,
                       const QString& datadir,
                       QWidget* parent = nullptr);
+  ~ScanEditor();
 
   void loadExistingFiles();
   void loadOptions(const QString& filename = QString());
@@ -105,6 +107,8 @@ public:
   QString tesseractLanguage() const;
   void setTesseractLanguage(const QString& tesseractLanguage);
 
+  void cleanupImages();
+
 signals:
   void scanCancelled();
   void selected();
@@ -132,6 +136,11 @@ protected:
 
   DocumentData m_cover;
   bool m_save_all_texts{};
+
+  QPixmapCache::Key left_key;
+  QPixmapCache::Key right_key;
+  QPixmapCache::Key single_key;
+  QPixmapCache::Key both_key;
 
 
   bool eventFilter(QObject* obj, QEvent* event) override;

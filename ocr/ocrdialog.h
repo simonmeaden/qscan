@@ -39,6 +39,9 @@ public:
   bool imageChanged() const;
   QSize sizeHint() const override;
 
+  QImage modifiedImage();
+  int pageNumber();
+
   DocumentData page() const;
 
   void open() override;

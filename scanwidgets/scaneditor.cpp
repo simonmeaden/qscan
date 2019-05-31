@@ -63,6 +63,11 @@ ScanEditor::ScanEditor(QScan* scan,
 {
   m_logger = Log4Qt::Logger::logger(tr("ScanEditor"));
 
+  left_key = QPixmapCache::insert(QPixmap(":/icons/left_page"));
+  right_key = QPixmapCache::insert(QPixmap(":/icons/right_page"));
+  single_key = QPixmapCache::insert(QPixmap(":/icons/single_page"));
+  both_key = QPixmapCache::insert(QPixmap(":/icons/two_pages"));
+
   m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
 
   QString datapath = configdir + QStringLiteral("/tesseract/tessdata");
@@ -73,8 +78,20 @@ ScanEditor::ScanEditor(QScan* scan,
   makeConnections();
 }
 
+ScanEditor::~ScanEditor()
+{
+  m_doc_data->save(m_data_file);
+  cleanupImages();
+}
+
 void ScanEditor::initGui()
 {
+  QPixmap left_icon, right_icon, single_icon, both_icon;
+  QPixmapCache::find(left_key, &left_icon);
+  QPixmapCache::find(right_key, &right_icon);
+  QPixmapCache::find(single_key, &single_icon);
+  QPixmapCache::find(both_key, &both_icon);
+
   auto* layout = new QGridLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
   setLayout(layout);
@@ -91,10 +108,32 @@ void ScanEditor::initGui()
   m_scroller->setWidget(m_scan_display);
   layout->addWidget(m_scroller, 0, 0);
 
+  QFrame* btn_frame = new QFrame(this);
+  QGridLayout* btn_layout = new QGridLayout;
+  btn_frame->setLayout(btn_layout);
+
+  QPushButton* left_btn = new QPushButton(QIcon(left_icon), "", this);
+  left_btn->setToolTip(tr("Move left image to page list"));
+  btn_layout->addWidget(left_btn, 0, 0);
+
+  QPushButton* right_btn = new QPushButton(QIcon(right_icon), "", this);
+  right_btn->setToolTip(tr("Move right image to page list"));
+  btn_layout->addWidget(right_btn, 1, 0);
+
+  QPushButton* single_btn = new QPushButton(QIcon(single_icon), "", this);
+  single_btn->setToolTip(tr("Move image as single page to list list"));
+  btn_layout->addWidget(single_btn, 2, 0);
+
+  QPushButton* both_btn = new QPushButton(QIcon(both_icon), "", this);
+  both_btn->setToolTip(tr("Move both images to page list"));
+  btn_layout->addWidget(both_btn, 3, 0);
+
+  layout->addWidget(btn_frame, 0, 1);
+
   m_page_view = new PageView(this);
   m_page_view->setContentsMargins(0, 0, 0, 0);
 
-  layout->addWidget(m_page_view, 0, 1);
+  layout->addWidget(m_page_view, 0, 2);
   layout->setColumnStretch(0, 30);
   layout->setColumnStretch(1, 10);
 }
@@ -125,8 +164,21 @@ void ScanEditor::makeConnections()
 */
 void ScanEditor::receiveImage(const QImage& image)
 {
+  int index = 1;
+  QString filename;
+
+  while (true) {
+    filename = m_data_dir + QString("image%1.png").arg(index);
+    QFile file(filename);
+
+    if (!file.exists()) {
+      break;
+    }
+
+    index++;
+  }
+
   DocumentData page(new DocData());
-  int index = m_doc_data->size() + 1;
   page->setPageNumber(index);
   m_page_view->appendThumbnail(thumbnail(image));
   QString path = saveImage(index, image);
@@ -140,21 +192,8 @@ void ScanEditor::receiveImage(const QImage& image)
 */
 void ScanEditor::receiveImages(const QImage& left, const QImage& right)
 {
-  DocumentData left_page(new DocData());
-  int index = m_doc_data->size() + 1;
-  left_page->setPageNumber(index);
-  QString path = saveImage(index, left);
-  left_page->setFilename(path);
-  m_doc_data->appendData(left_page);
-  m_page_view->appendThumbnail(thumbnail(left));
-  index++;
-
-  DocumentData right_page(new DocData());
-  right_page->setPageNumber(index);
-  path = saveImage(index, right);
-  right_page->setFilename(path);
-  m_doc_data->appendData(right_page);
-  m_page_view->appendThumbnail(thumbnail(right));
+  receiveImage(left);
+  receiveImage(right);
 }
 
 void ScanEditor::receiveString(int page, const QString& str)
@@ -188,8 +227,7 @@ QString ScanEditor::saveImage(int index, const QImage& image)
     }
 
   } else {
-    path = m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator() +
-           QString("image%1.png").arg(index);
+    path = m_data_dir + QString("image%1.png").arg(index);
 
     if (!image.save(path, "PNG", 100)) {
       m_logger->info(tr("Failed to save image %1").arg(path));
@@ -246,10 +284,10 @@ void ScanEditor::receiveWorkOnRequest(int page_no)
     connect(m_ocr_dlg, &OcrDialog::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
     connect(m_ocr_dlg, &OcrDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
     connect(m_ocr_dlg, &OcrDialog::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
+    connect(m_ocr_dlg, &QDialog::finished, this, &ScanEditor::receiveOcrDialogFinished);
 
     QImage image(page->filename(), "PNG");
     m_ocr_dlg->setData(page_no, image, page);
-    connect(m_ocr_dlg, &QDialog::finished, this, &ScanEditor::receiveOcrDialogFinished);
 
     m_ocr_dlg->open();
   }
@@ -302,11 +340,11 @@ void ScanEditor::receiveOcrPageResult(const DocumentData& page)
   connect(m_ocr_dlg, &OcrDialog::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
   connect(m_ocr_dlg, &OcrDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
   connect(m_ocr_dlg, &OcrDialog::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
+  connect(m_ocr_dlg, &QDialog::finished, this, &ScanEditor::receiveOcrDialogFinished);
 
   int page_no = page->pageNumber();
   QImage image(page->filename(), "PNG");
   m_ocr_dlg->setData(page_no, image, page);
-  connect(m_ocr_dlg, &QDialog::finished, this, &ScanEditor::receiveOcrDialogFinished);
 
   m_ocr_dlg->open();
 }
@@ -341,24 +379,26 @@ void ScanEditor::receiveOcrDialogFinished(int result)
     }
 
     if (m_ocr_dlg->imageChanged()) {
-      // TODO maybe save tweaked image. maybe only supply list of tweaks?
+      // this will only happen if not already saved
+      QImage image = m_ocr_dlg->modifiedImage();
+      int page_no = m_ocr_dlg->pageNumber();
+      saveModifiedImage(page_no, image);
     }
   }
 
   m_ocr_dlg->deleteLater();
-  m_ocr_dlg == nullptr;
 }
 
 void ScanEditor::removeImage(int page_no)
 {
   DocumentData data = m_doc_data->documentData(page_no);
-  data->removeImageLater();
+  data->setRemoveImageLater(true);
 }
 
 void ScanEditor::removeText(int page_no)
 {
   DocumentData data = m_doc_data->documentData(page_no);
-  data->removeTextLater();
+  data->setRemoveTextLater(true);
 }
 
 void ScanEditor::receiveOcrImageResult(int page_no, const QString& text)
@@ -427,32 +467,49 @@ void ScanEditor::loadExistingFiles()
 
   QFile file(filename);
 
-  if (file.exists()) {
-    loadCover(filename);
-    m_logger->info(tr("Cover file loaded)"));
+  QList<int> keys = m_doc_data->documentKeys();
+
+  for (int key : keys) {
+    DocumentData data = m_doc_data->documentData(key);
+
+    if (key == 0) {
+      loadCover(filename);
+      m_logger->info(tr("Cover file loaded)"));
+
+    } else {
+      image = QImage(data->filename(), "PNG");
+      m_page_view->insertThumbnail(
+        key, thumbnail(image), data->hasText(), data->isInternalImage());
+      m_logger->info(tr("Image file %1 loaded)").arg(data->filename()));
+    }
   }
 
-  QDir dir(current_path);
-  bool ok;
+  //  if (file.exists()) {
+  //    loadCover(filename);
+  //    m_logger->info(tr("Cover file loaded)"));
+  //  }
 
-  for (const QString& fname : dir.entryList(filter, QDir::Files)) {
-    filename = current_path + fname;
-    file.setFileName(filename);
+  //  QDir dir(current_path);
+  //  bool ok;
 
-    if (file.exists()) {
-      int index = fname.midRef(5, fname.length() - 9).toInt(&ok);
-      DocumentData data(new DocData());
+  //  for (const QString& fname : dir.entryList(filter, QDir::Files)) {
+  //    filename = current_path + fname;
+  //    file.setFileName(filename);
 
-      if (ok) { // is an int value
-        image = QImage(filename, "PNG");
-        data->setFilename(filename);
-        m_doc_data->insertData(index, data);
-        m_page_view->insertThumbnail(
-          index, thumbnail(image), data->hasText(), data->isInternalImage());
-        m_logger->info(tr("Image file %1 loaded)").arg(fname));
-      }
-    }
-  } // end image file list
+  //    if (file.exists()) {
+  //      int index = fname.midRef(5, fname.length() - 9).toInt(&ok);
+  //      DocumentData data(new DocData());
+
+  //      if (ok) { // is an int value
+  //        image = QImage(filename, "PNG");
+  //        data->setFilename(filename);
+  //        m_doc_data->insertData(index, data);
+  //        m_page_view->insertThumbnail(
+  //          index, thumbnail(image), data->hasText(), data->isInternalImage());
+  //        m_logger->info(tr("Image file %1 loaded)").arg(fname));
+  //      }
+  //    }
+  //  } // end image file list
 }
 
 /*!
@@ -823,6 +880,43 @@ QString ScanEditor::tesseractLanguage() const
 void ScanEditor::setTesseractLanguage(const QString& lang)
 {
   m_lang = lang;
+}
+
+void ScanEditor::cleanupImages()
+{
+  m_doc_data->cleanUpData();
+
+  QDir dir(m_data_dir);
+  QStringList filter;
+  filter << "image*.png";
+  QStringList files = dir.entryList(filter);
+
+  for (int index : m_doc_data->documentKeys()) {
+    DocumentData data = m_doc_data->documentData(index);
+    QFileInfo info(data->filename());
+
+    if (data->isRemoveImageLater() && files.contains(info.fileName())) {
+      dir.remove(data->filename());
+
+    } else {
+      // good modified images are already saved so nothing to do in that  case.
+      if (files.contains(info.fileName())) {
+        files.removeOne(info.fileName());
+      }
+    }
+
+    m_doc_data->remove(data);
+  }
+
+  if (!m_doc_data->isEmpty()) {
+    // TODO not certain what to do here
+  }
+
+  // remove files for which there is no data.
+  for (const QString& filename : files) {
+    dir.remove(filename);
+  }
+
 }
 
 void ScanEditor::clearSaveAllTextsFlag()

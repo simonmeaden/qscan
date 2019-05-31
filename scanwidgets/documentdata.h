@@ -34,6 +34,7 @@ public:
   bool textWasInitialised() const;
   //  void setTextWasInitialised(bool textWasInitialised);
   bool textHasChanged();
+  void clearText();
 
   bool isInternalImage() const;
   void setIsInternalImage(bool isInternalImage);
@@ -41,11 +42,12 @@ public:
   int pageNumber() const;
   void setPageNumber(int pageNumber);
 
-  bool removeImageLater() const;
-  void setRemoveImageLater(bool removeImageLater);
+  bool isRemoveImageLater() const;
+  void setRemoveImageLater(bool isRemoveImageLater);
 
-  bool removeTextLater() const;
-  void setRemoveTextLater(bool removeTextLater);
+  bool isRemoveTextLater() const;
+  void setRemoveTextLater(bool isRemoveTextLater);
+
 
 protected:
   int m_page_no{};
@@ -74,7 +76,15 @@ public:
   void load(const QString& filename);
   void save(const QString& filename);
 
+  void remove(int index);
+  void remove(const QString& filename);
+  void remove(const DocumentData& data);
+
   int size();
+
+  void cleanUpData();
+
+  bool isEmpty();
 
 protected:
   QMap<int, DocumentData> m_data;

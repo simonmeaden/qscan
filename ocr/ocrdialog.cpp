@@ -67,6 +67,16 @@ QSize OcrDialog::sizeHint() const
   return { size };
 }
 
+QImage OcrDialog::modifiedImage()
+{
+  return m_image_display->modifiedImage();
+}
+
+int OcrDialog::pageNumber()
+{
+  return m_page_no;
+}
+
 DocumentData OcrDialog::page() const
 {
   return m_page;
@@ -310,6 +320,7 @@ void OcrDialog::saveText()
 void OcrDialog::saveImage()
 {
   emit saveModifiedImage(m_page_no, m_image_display->modifiedImage());
+  m_image_changed = false;
 }
 
 void OcrDialog::discard()
@@ -347,20 +358,20 @@ void OcrDialog::undoChanges()
 
 void OcrDialog::close()
 {
-  int result = QMessageBox::warning(
-                 this,
-                 tr("Save and Update"),
-                 tr("You are about to save any changes you have made\n"
-                    "including modified images and text."
-                    "This cannot be undone\n"
-                    "Are you sure?"),
-                 QMessageBox::Yes | QMessageBox::No,
-                 QMessageBox::No);
+  int result =
+    QMessageBox::warning(this,
+                         tr("Save and Update"),
+                         tr("You are about to save any changes you have made\n"
+                            "including modified images and text."
+                            "This cannot be undone\n"
+                            "Are you sure?"),
+                         QMessageBox::Yes | QMessageBox::No,
+                         QMessageBox::No);
 
   if (result == QMessageBox::Yes) {
     saveImage();
     saveText();
-    QDialog::close();
+    QDialog::accept();
   }
 }
 

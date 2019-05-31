@@ -31,5 +31,9 @@
         <file alias="help-contents">help-contents.png</file>
         <file alias="help-context">help-contextual.png</file>
         <file alias="help-hint">help-hint.png</file>
+        <file alias="two_pages">both.png</file>
+        <file alias="left_page">left.png</file>
+        <file alias="right_page">right.png</file>
+        <file alias="single_page">single.png</file>
     </qresource>
 </RCC>

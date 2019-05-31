@@ -28,6 +28,8 @@ SOURCES += \
         basescanimage.cpp \
         documentdata.cpp \
         imageconverter.cpp \
+        imagedelegate.cpp \
+        imagelistmodel.cpp \
         imageview.cpp \
         pageview.cpp \
         scanedit.cpp \
@@ -38,6 +40,8 @@ HEADERS += \
         basescanimage.h \
         documentdata.h \
         imageconverter.h \
+        imagedelegate.h \
+        imagelistmodel.h \
         imageview.h \
         pageview.h \
         scanedit.h \
