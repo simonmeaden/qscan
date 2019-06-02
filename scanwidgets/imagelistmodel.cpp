@@ -17,18 +17,18 @@ void ImageListModel::setCover(const QImage& image)
   m_internal_image.replace(0, true);
 }
 
-bool ImageListModel::appendThumbnail(const QImage& image, bool has_text, bool  internal_image)
-{
+int ImageListModel::appendThumbnail(const QImage &image, bool has_text,
+                                    bool internal_image) {
   int row = rowCount();
 
   if (insertRows(row, 1)) {
     m_images.replace(row, image);
     m_has_text.replace(row, has_text);
     m_internal_image.replace(row, internal_image);
-    return true;
+    return row;
   }
 
-  return false;
+  return -1;
 }
 
 bool ImageListModel::insertThumbnail(int row, const QImage& image, bool has_text, bool is_internal_image)
@@ -97,16 +97,16 @@ QString ImageListModel::tooltip(int row)
   QString text;
 
   if (row == 0) {
-    text = tr("Cover image");
+    text = tr("Page 0 : Cover image");
 
   } else if (isInternalImage(row)) {
-    text = tr("Internal non-OCR image");
+    text = tr("Page %1 : Internal non-OCR image").arg(row);
 
   } else if (hasText(row)) {
-    text = tr("Text exists for this image");
+    text = tr("Page %1 : Text exists for this image").arg(row);
 
   } else {
-    text = tr("No text exists for this image");
+    text = tr("Page %1 : No text exists for this image").arg(row);
   }
 
   return text;

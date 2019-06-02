@@ -38,10 +38,10 @@ PageView::PageView(QWidget* parent)
   layout->addWidget(m_image_list);
 }
 
-void PageView::appendThumbnail(const QImage& thumbnail)
-{
+int PageView::appendThumbnail(const QImage &thumbnail, bool has_text,
+                              bool is_internal_image) {
   // this list will always start at position 1.
-  m_image_list->appendThumbnail(thumbnail, false);
+  return m_image_list->appendThumbnail(thumbnail, false);
 }
 
 void PageView::removeImage()

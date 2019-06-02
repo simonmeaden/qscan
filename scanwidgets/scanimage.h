@@ -35,7 +35,7 @@ public:
   void scaleBy();
   void save();
   void saveAs();
-  void saveAsCover();
+  QImage saveAsCover();
   void rescan();
   void scale();
 
@@ -50,12 +50,12 @@ public:
   QImage splitRightPage();
   QImage makePage();
 
-signals:
-  void sendImage(QImage);
-  void sendImages(QImage, QImage);
-  void sendCover(const QImage&);
+  signals:
+  //  void sendImage(QImage);
+  //  void sendImages(QImage, QImage);
+  //  void sendCover(const QImage&);
 
-protected:
+  protected:
   QString m_datadir;
   QMatrix m_matrix;
   qreal m_rotation;
@@ -89,12 +89,12 @@ protected:
   QAction* m_selectall_act{};
   QAction* m_save_act{};
   QAction* m_save_as_act{};
-  QAction* m_save_as_cover_act{};
+  //  QAction* m_save_as_cover_act{};
   QAction* m_set_def_crop_act{};
-  QAction* m_split_pages_act{};
-  QAction* m_split_right_act{};
-  QAction* m_split_left_act{};
-  QAction* m_make_page_act{};
+  //  QAction* m_split_pages_act{};
+  //  QAction* m_split_right_act{};
+  //  QAction* m_split_left_act{};
+  //  QAction* m_make_page_act{};
 
   void initActions();
 

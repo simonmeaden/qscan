@@ -47,7 +47,6 @@ signals:
   void enableBinarise();
 
 protected:
-  Mat m_mat_image;
   Mat* m_modifiable_mat{};
   int m_modifiable_int{};
   //  QList<Operations> m_operations;

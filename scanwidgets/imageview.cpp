@@ -28,10 +28,9 @@ void ImageView::setCover(const QImage& image)
   m_model->setCover(image);
 }
 
-void ImageView::appendThumbnail(const QImage& image, bool has_text)
-{
+int ImageView::appendThumbnail(const QImage &image, bool has_text) {
   // TODO
-  m_model->appendThumbnail(image, has_text);
+  return m_model->appendThumbnail(image, has_text);
 }
 
 void ImageView::insertThumbnail(int row, const QImage& image, bool has_text, bool is_internal_image)

@@ -16,7 +16,8 @@ public:
   explicit ImageListModel(QObject* parent = nullptr);
 
   void setCover(const QImage& image);
-  bool appendThumbnail(const QImage& image, bool has_text, bool internal_image = false);
+  int appendThumbnail(const QImage &image, bool has_text,
+                      bool internal_image = false);
   bool insertThumbnail(int row, const QImage& image, bool has_text, bool is_internal_image);
   bool removeThumbnail(int row);
   bool moveThumbnail(int source, int destination);

@@ -18,7 +18,8 @@ class PageView : public QWidget
 public:
   explicit PageView(QWidget* parent = nullptr);
 
-  void appendThumbnail(const QImage& thumbnail);
+  int appendThumbnail(const QImage &thumbnail, bool has_text = false,
+                      bool is_internal_image = false);
   void removeThumbnail(int index);
   void insertThumbnail(int index,
                        const QImage& thumbnail,

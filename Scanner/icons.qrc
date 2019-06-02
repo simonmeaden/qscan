@@ -31,9 +31,10 @@
         <file alias="help-contents">help-contents.png</file>
         <file alias="help-context">help-contextual.png</file>
         <file alias="help-hint">help-hint.png</file>
-        <file alias="two_pages">both.png</file>
-        <file alias="left_page">left.png</file>
-        <file alias="right_page">right.png</file>
-        <file alias="single_page">single.png</file>
+        <file alias="both64">both64.png</file>
+        <file alias="cover64">cover64.png</file>
+        <file alias="left64">left64.png</file>
+        <file alias="right64">right64.png</file>
+        <file alias="single64">single64.png</file>
     </qresource>
 </RCC>

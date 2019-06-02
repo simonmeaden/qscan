@@ -28,11 +28,11 @@
 #include <QList>
 #include <QMap>
 #include <QMenu>
+#include <QMessageBox>
+#include <QPixmapCache>
 #include <QProgressDialog>
 #include <QScrollArea>
 #include <QScrollBar>
-#include <QMessageBox>
-#include <QPixmapCache>
 
 #include "logger.h"
 
@@ -133,15 +133,20 @@ protected:
   QString m_data_dir{};
   QString m_lang{};
   OcrDialog* m_ocr_dlg{};
+  QPushButton *m_left_btn{};
+  QPushButton *m_cover_btn{};
+  QPushButton *m_right_btn{};
+  QPushButton *m_both_btn{};
+  QPushButton *m_single_btn{};
 
   DocumentData m_cover;
   bool m_save_all_texts{};
 
+  QPixmapCache::Key cover_key;
   QPixmapCache::Key left_key;
   QPixmapCache::Key right_key;
   QPixmapCache::Key single_key;
   QPixmapCache::Key both_key;
-
 
   bool eventFilter(QObject* obj, QEvent* event) override;
 
@@ -153,7 +158,7 @@ protected:
   void receiveString(int documentData, const QString& str);
   QString saveImage(int index, const QImage& image);
   void saveModifiedImage(int index, const QImage& image);
-  void saveAsCover(const QImage& image);
+  void makeCover();
   void receiveLoadText(int page_no);
   void receiveWorkOnRequest(int documentData);
   void receiveOcrPageRequest(int documentData);
@@ -167,11 +172,12 @@ protected:
   void clearSaveAllTextsFlag();
   QImage thumbnail(const QImage& image) const;
 
+  void enableBtns(bool enable);
+
   static const QString OPTIONS_FILE;
   static const QString CURRENT_DOCUMENT;
   static const QString TESSERACT;
   static const QString LANGUAGE;
-
 };
 
 #endif // SCANEDITOR_H

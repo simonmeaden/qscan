@@ -55,14 +55,12 @@ void ScanImage::saveAs()
   }
 }
 
-void ScanImage::saveAsCover()
-{
-  emit sendCover(m_image);
+QImage ScanImage::saveAsCover() {
+  //  emit sendCover(m_image);
+  return m_modified_image;
 }
 
-
-QRect ScanImage::selection()
-{
+QRect ScanImage::selection() {
   if (hasSelection()) {
     return m_rubber_band;
   }
@@ -127,7 +125,7 @@ QPair<QImage, QImage> ScanImage::splitPages()
   part_rect.setX(0);
   part_rect.setY(0);
   part_rect.setWidth(w2);
-  part_rect.setHeight(m_image.height());
+  part_rect.setHeight(m_modified_image.height());
 
   QImage left = m_modified_image.copy(part_rect);
 
@@ -135,8 +133,6 @@ QPair<QImage, QImage> ScanImage::splitPages()
   part_rect.setWidth(w - w2);
 
   QImage right = m_modified_image.copy(part_rect);
-
-  emit sendImages(left, right);
 
   return qMakePair<QImage, QImage>(left, right);
 }
@@ -153,8 +149,6 @@ QImage ScanImage::splitLeftPage()
   part_rect.setHeight(m_modified_image.height());
 
   QImage left = m_modified_image.copy(part_rect);
-
-  emit sendImage(left);
 
   return left;
 }
@@ -173,14 +167,11 @@ QImage ScanImage::splitRightPage()
 
   QImage right = m_modified_image.copy(part_rect);
 
-  emit sendImage(right);
-
   return right;
 }
 
 QImage ScanImage::makePage()
 {
-  emit sendImage(m_modified_image);
   return m_modified_image;
 }
 
@@ -203,7 +194,6 @@ void ScanImage::contextMenuEvent(QContextMenuEvent* event)
   } else {
     context_menu->addAction(m_save_act);
     context_menu->addAction(m_save_as_act);
-    context_menu->addAction(m_save_as_cover_act);
     context_menu->addSeparator();
     context_menu->addAction(m_selectall_act);
     context_menu->addSeparator();
@@ -218,11 +208,6 @@ void ScanImage::contextMenuEvent(QContextMenuEvent* event)
     context_menu->addAction(m_scale_act);
     context_menu->addSeparator();
     context_menu->addAction(m_rescan_act);
-    context_menu->addSeparator();
-    context_menu->addAction(m_split_pages_act);
-    context_menu->addAction(m_split_left_act);
-    context_menu->addAction(m_split_right_act);
-    context_menu->addAction(m_make_page_act);
   }
 
   context_menu->popup(event->globalPos());
@@ -245,14 +230,7 @@ void ScanImage::initActions()
   m_selectall_act = new QAction(tr("Select entire image"), this);
   m_save_act = new QAction(tr("Save image"), this);
   m_save_as_act = new QAction(tr("Save image as"), this);
-  m_save_as_cover_act = new QAction(tr("Save image as cover"), this);
   m_set_def_crop_act = new QAction(tr("Set default page crop size"), this);
-  //  m_select_all(false)
-  m_split_pages_act = new QAction(tr("Split image into two pages"), this);
-  m_split_right_act =
-    new QAction(tr("Make right half into a single page"), this);
-  m_split_left_act = new QAction(tr("Make left half into a single page"), this);
-  m_make_page_act = new QAction(tr("Make image into a single page"), this);
 
   m_copy_selection_act->setShortcut(QKeySequence::Copy);
   m_copy_selection_act->setToolTip(tr("Copies selection to clipboard."));
@@ -292,15 +270,6 @@ void ScanImage::initActions()
   connect(m_selectall_act, &QAction::triggered, this, &ScanImage::selectAll);
   connect(m_save_act, &QAction::triggered, this, &ScanImage::save);
   connect(m_save_as_act, &QAction::triggered, this, &ScanImage::saveAs);
-  connect(
-    m_save_as_cover_act, &QAction::triggered, this, &ScanImage::saveAsCover);
-
-  connect(m_split_pages_act, &QAction::triggered, this, &ScanImage::splitPages);
-  connect(
-    m_split_right_act, &QAction::triggered, this, &ScanImage::splitRightPage);
-  connect(
-    m_split_left_act, &QAction::triggered, this, &ScanImage::splitLeftPage);
-  connect(m_make_page_act, &QAction::triggered, this, &ScanImage::makePage);
 
   disableSetDefaultCropSize();
   enableSelectionActions();
