@@ -36,11 +36,14 @@ public:
   bool event(QEvent* event) override;
 
   void setCover(const QImage& image);
-  int appendThumbnail(const QImage &image, bool has_text = false);
-  void insertThumbnail(int row, const QImage& image, bool has_text = false, bool is_internal_image = false);
+  int appendThumbnail(const QImage &image, bool has_text,
+                      bool is_internal_image);
+  void insertThumbnail(int row, const QImage &image, bool has_text,
+                       bool is_internal_image);
   void removeThumbnail(int row);
   void moveThumbnail(int source, int destination);
-  void replaceThumbnail(int row, const QImage& image, bool has_text);
+  void replaceThumbnail(int row, const QImage &image, bool has_text,
+                        bool is_internal_image);
   void setHasText(int index, bool has_text);
   void setInternalImage(int index, bool internal);
 

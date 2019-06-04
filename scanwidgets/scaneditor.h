@@ -23,6 +23,7 @@
 #include <QAction>
 #include <QFrame>
 #include <QGridLayout>
+#include <QGroupBox>
 #include <QImage>
 #include <QInputDialog>
 #include <QList>
@@ -121,7 +122,7 @@ protected:
   Log4Qt::Logger* m_logger;
   QString m_current_doc_name;
   QString m_options_file;
-  QString m_data_file;
+  QString m_data_filename;
   DocumentDataStore* m_doc_data{};
   ScanImage* m_scan_display{};
   QProgressDialog* m_prog_dlg{};
@@ -133,15 +134,17 @@ protected:
   QString m_data_dir{};
   QString m_lang{};
   OcrDialog* m_ocr_dlg{};
-  QPushButton *m_left_btn{};
+  QPushButton *m_crop_btn{}, *m_left_btn{}, *m_move_up_btn{},
+      *m_move_down_btn{};
   QPushButton *m_cover_btn{};
   QPushButton *m_right_btn{};
   QPushButton *m_both_btn{};
   QPushButton *m_single_btn{};
+  QGroupBox *group1{}, *group2{}, *group3{};
 
   DocumentData m_cover;
-  bool m_save_all_texts{};
 
+  QPixmapCache::Key crop_key, move_up_key, move_down_key;
   QPixmapCache::Key cover_key;
   QPixmapCache::Key left_key;
   QPixmapCache::Key right_key;
@@ -169,10 +172,19 @@ protected:
   void removeImage(int page_no);
   void removeText(int page_no);
   void saveModifiedText(int page_no, const QStringList& text);
-  void clearSaveAllTextsFlag();
   QImage thumbnail(const QImage& image) const;
 
-  void enableBtns(bool enable);
+  void enableMoveBtns(bool enable);
+  void enableListBtns();
+  void disableListBtns();
+  void enableEditBtns();
+  void disableEditBtns();
+  //  void moveImage(const DocumentData& data);
+
+  static const QString OCR_IMAGE_NAME;
+  static const QString INTERNAL_IMAGE_NAME;
+  static const QString OCR_IMAGE_FILTER;
+  static const QString INTERNAL_IMAGE_FILTER;
 
   static const QString OPTIONS_FILE;
   static const QString CURRENT_DOCUMENT;

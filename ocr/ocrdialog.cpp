@@ -281,20 +281,28 @@ void OcrDialog::setUnselected()
   m_cut_btn->setEnabled(false);
 }
 
+void OcrDialog::crop() {
+  m_image_display->cropToSelection();
+  m_image_changed = true;
+}
+
 void OcrDialog::binarise()
 {
   m_ctl_stack->setCurrentIndex(m_threshold_stack);
   m_image_display->binarise();
+  m_image_changed = true;
 }
 
 void OcrDialog::invert()
 {
   m_image_display->invert();
+  m_image_changed = true;
 }
 
 void OcrDialog::denoise()
 {
   m_image_display->denoise();
+  m_image_changed = true;
 }
 
 void OcrDialog::dewarp()

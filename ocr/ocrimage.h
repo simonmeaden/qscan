@@ -10,20 +10,9 @@ class OcrImage: public BaseScanImage
 {
   Q_OBJECT
 
-  //  enum Operations
-  //  {
-  //    BINARISE,
-  //    CUT,
-  //    CROP,
-  //    DENOISE,
-  //    INVERT,
-  //  };
-
 public:
   explicit OcrImage(QWidget* parent = nullptr);
   ~OcrImage() = default;
-
-  //  void setImage(const QImage& image);
 
   void undoAllChanges();
   void undoLastChange();

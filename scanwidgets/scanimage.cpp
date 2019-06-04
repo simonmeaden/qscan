@@ -244,10 +244,8 @@ void ScanImage::initActions()
           this,
           &ScanImage::cropToSelection);
   m_clear_selection_act->setToolTip(tr("Removes selection rectangle."));
-  connect(m_clear_selection_act,
-          &QAction::triggered,
-          this,
-          &ScanImage::cropToSelection);
+  connect(m_clear_selection_act, &QAction::triggered, this,
+          &ScanImage::clearSelection);
   connect(m_crop_to_content_act,
           &QAction::triggered,
           this,

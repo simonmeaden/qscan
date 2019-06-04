@@ -36,9 +36,6 @@ public:
   bool textHasChanged();
   void clearText();
 
-  bool isInternalImage() const;
-  void setIsInternalImage(bool isInternalImage);
-
   int pageNumber() const;
   void setPageNumber(int pageNumber);
 
@@ -48,10 +45,15 @@ public:
   bool isRemoveTextLater() const;
   void setRemoveTextLater(bool isRemoveTextLater);
 
+  bool isInternalImage() const;
+  void setIsInternalImage(bool isInternalImage);
+  QString internalName() const;
+  void setInternalName(const QString &internalName);
 
-protected:
+  protected:
   int m_page_no{};
   QString m_filename;
+  QString m_internal_name;
   QStringList m_text_list;
   bool m_is_internal_image{};
   bool m_text_has_changed;
@@ -78,7 +80,9 @@ public:
 
   void remove(int index);
   void remove(const QString& filename);
-  void remove(const DocumentData& data);
+  void remove(const DocumentData &data);
+
+  void moveKey(int old_page, int new_page);
 
   int size();
 
@@ -86,14 +90,18 @@ public:
 
   bool isEmpty();
 
-protected:
+  static int nextPageNumber();
+
+  protected:
   QMap<int, DocumentData> m_data;
 
   static const QString FILENAME;
   static const QString PAGE_NUMBER;
   static const QString INTERNAL_IMAGE;
+  static const QString INTERNAL_IMAGE_NAME;
   static const QString TEXT_LIST;
 
+  static int m_highest_page;
 };
 
 Q_DECLARE_METATYPE(DocData)

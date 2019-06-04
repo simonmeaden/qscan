@@ -75,6 +75,7 @@ protected:
   void help();
   void setSelected();
   void setUnselected();
+  void crop();
   void binarise();
   void invert();
   void denoise();

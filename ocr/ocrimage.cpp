@@ -13,11 +13,6 @@ OcrImage::OcrImage(QWidget* parent)
   setStyleSheet("border: 2px solid red;");
 }
 
-//void OcrImage::setImage(const QImage& image)
-//{
-//  BaseScanImage::setImage(image);
-//}
-
 void OcrImage::undoAllChanges()
 {
   // TODO undo LAST change.
@@ -51,7 +46,10 @@ void OcrImage::binarise()
   m_modifiable_mat = new Mat(ImageConverter::imageToMat(m_modified_image));
   // convert to grayscale
   cvtColor(*m_modifiable_mat, *m_modifiable_mat, CV_BGR2GRAY);
-  updateImage(ImageConverter::matToImage(*m_modifiable_mat));
+  QImage image = ImageConverter::matToImage(*m_modifiable_mat);
+  m_modified_image = image;
+  //  updateImage();
+  scaleModifiedImage();
   emit disableBinarise();
 }
 
@@ -65,15 +63,19 @@ void OcrImage::applyThreshold()
 {
   Mat modified;
   threshold(*m_modifiable_mat, modified, m_modifiable_int, 255, THRESH_BINARY);
-  updateImage(ImageConverter::matToImage(modified));
+  QImage image = ImageConverter::matToImage(modified);
+  m_modified_image = image;
+  //  updateImage();
+  scaleModifiedImage();
 }
 
 void OcrImage::cancelThreshold()
 {
+  // update to the pre-biniarise image
   m_modified_image = m_op_images.takeLast();
   emit enableBinarise();
-  // update to the pre-biniarise image
-  updateImage(m_modified_image);
+  //  updateImage();
+  scaleModifiedImage();
   delete m_modifiable_mat;
 }
 
@@ -84,7 +86,10 @@ void OcrImage::invert()
   // create a modifiable image.
   Mat modified = ImageConverter::imageToMat(m_modified_image);
   bitwise_not(modified, modified);
-  updateImage(ImageConverter::matToImage(modified));
+  QImage image = ImageConverter::matToImage(modified);
+  m_modified_image = image;
+  //  updateImage();
+  scaleModifiedImage();
 }
 
 void OcrImage::setThreshold(int thresh_value)

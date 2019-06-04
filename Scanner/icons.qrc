@@ -36,5 +36,17 @@
         <file alias="left64">left64.png</file>
         <file alias="right64">right64.png</file>
         <file alias="single64">single64.png</file>
+        <file alias="bottom">go-bottom.png</file>
+        <file alias="down">go-down.png</file>
+        <file alias="first">go-first.png</file>
+        <file>go-first-view-page.png</file>
+        <file alias="last">go-last.png</file>
+        <file>go-last-view-page.png</file>
+        <file alias="right">go-next.png</file>
+        <file>go-next-view-page.png</file>
+        <file alias="left">go-previous.png</file>
+        <file>go-previous-view-page.png</file>
+        <file alias="top">go-top.png</file>
+        <file alias="up">go-up.png</file>
     </qresource>
 </RCC>

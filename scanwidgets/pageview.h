@@ -21,6 +21,8 @@ public:
   int appendThumbnail(const QImage &thumbnail, bool has_text = false,
                       bool is_internal_image = false);
   void removeThumbnail(int index);
+  void replaceThumbnail(int index, const QImage &image, bool has_text = false,
+                        bool is_internal_image = false);
   void insertThumbnail(int index,
                        const QImage& thumbnail,
                        bool has_text = false,
@@ -34,32 +36,40 @@ public:
   QMap<int, bool> has_text() const;
   void setHas_text(const QMap<int, bool>& has_text);
 
-signals:
+  void moveUp();
+  void moveDown();
+
+  signals:
   void pageMoved(int from, int to);
   void sendOcrPage(int);
   void workOn(int);
-  void clearSaveAllFlag();
   void loadText(int);
   void removeCurrentImage(int);
   void removeCurrentText(int);
+  void selected();
+  void unselected();
 
-protected:
+  protected:
   ImageList m_images;
   QMap<int, bool> m_has_text;
   QMap<int, bool> m_is_internal_image;
   ImageView* m_image_list;
   QImage m_cover;
   int m_current_row{};
+  int m_page_selected = -1;
 
   void contextMenuEvent(QContextMenuEvent* event) override;
   QSize minimumSizeHint() const override;
   QSize sizeHint() const override;
 
+  void selectionChanged(const QItemSelection &selected_items,
+                        const QItemSelection &);
+
   QAction* m_remove_page_act{};
   QAction* m_remove_image_act{};
   QAction* m_remove_text_act{};
-  QAction* m_move_page_up_act{};
-  QAction* m_move_page_down_act{};
+  //  QAction* m_move_page_up_act{};
+  //  QAction* m_move_page_down_act{};
   QAction* m_load_text_act{};
   QAction* m_work_with_act{};
   QAction* m_save_as_image_act{};
@@ -70,8 +80,6 @@ protected:
   void removePage();
   void removeImage();
   void removeText();
-  void moveUp();
-  void moveDown();
   void nonOcrImage();
   //  void doOcr();
   //  void doAllOcr();

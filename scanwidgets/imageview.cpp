@@ -28,14 +28,13 @@ void ImageView::setCover(const QImage& image)
   m_model->setCover(image);
 }
 
-int ImageView::appendThumbnail(const QImage &image, bool has_text) {
-  // TODO
-  return m_model->appendThumbnail(image, has_text);
+int ImageView::appendThumbnail(const QImage &image, bool has_text,
+                               bool is_internal_image) {
+  return m_model->appendThumbnail(image, has_text, is_internal_image);
 }
 
 void ImageView::insertThumbnail(int row, const QImage& image, bool has_text, bool is_internal_image)
 {
-  // TODO
   m_model->insertThumbnail(row, image, has_text, is_internal_image);
 }
 
@@ -49,9 +48,9 @@ void ImageView::moveThumbnail(int source, int destination)
   m_model->moveThumbnail(source, destination);
 }
 
-void ImageView::replaceThumbnail(int row, const QImage& image, bool has_text)
-{
-  // TODO
+void ImageView::replaceThumbnail(int row, const QImage &image, bool has_text,
+                                 bool is_internal_image) {
+  m_model->replaceThumbnail(row, image, has_text, is_internal_image);
 }
 
 void ImageView::setHasText(int index, bool has_text)

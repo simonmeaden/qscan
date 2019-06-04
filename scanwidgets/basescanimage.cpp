@@ -35,23 +35,22 @@ bool BaseScanImage::hasSelection()
 void BaseScanImage::setImage(const QImage& image)
 {
   m_image = image;
-  updateImage(m_image);
+  m_modified_image = image;
+  //  updateImage();
   fitByType();
 }
 
-void BaseScanImage::updateImage(const QImage& image)
-{
-  m_modified_image = image;
-  emit imageIsLoaded();
+// void BaseScanImage::updateImage(/*const QImage& image*/) {
+//  emit imageIsLoaded();
 
-  // allows multi use of the same crop size.
-  if (m_def_crop_set) {
-    m_rubber_band = m_default_crop_size;
-    m_state = RUBBERBAND_COMPLETE;
-  }
+//  // allows multi use of the same crop size.
+//  if (m_def_crop_set) {
+//    m_rubber_band = m_default_crop_size;
+//    m_state = RUBBERBAND_COMPLETE;
+//  }
 
-  update();
-}
+//  update();
+//}
 
 QImage BaseScanImage::image()
 {
@@ -95,8 +94,7 @@ void BaseScanImage::cutSelection()
     painter.drawImage(scaled_rect.topLeft(), white);
     painter.end();
 
-    updateImage(m_modified_image);
-    scaleImage(m_modified_image);
+    scaleModifiedImage();
     clearSelection();
   }
 }
@@ -112,18 +110,19 @@ void BaseScanImage::cropToSelection()
 
     QImage cropped = m_modified_image.copy(scaled_rect);
 
-    updateImage(cropped);
-    scaleImage(m_modified_image);
+    m_modified_image = cropped;
+    //    updateImage(/*cropped*/);
+    scaleModifiedImage();
     clearSelection();
   }
 }
 
-void BaseScanImage::scaleImage(/*qreal factor,*/ const QImage& image)
-{
-  int w = int(image.width() * m_scale_by);
-  int h = int(image.height() * m_scale_by);
-  m_scaled_image = image.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-  //  setPixmap(QPixmap::fromImage(scaled_image));
+void BaseScanImage::scaleModifiedImage(
+    /*qreal factor,*/ /*const QImage& image*/) {
+  int w = int(m_modified_image.width() * m_scale_by);
+  int h = int(m_modified_image.height() * m_scale_by);
+  m_scaled_image = m_modified_image.scaled(w, h, Qt::KeepAspectRatio,
+                                           Qt::SmoothTransformation);
   update();
 }
 
@@ -194,7 +193,7 @@ void BaseScanImage::fitByType()
       break;
     }
 
-    scaleImage(m_modified_image);
+    scaleModifiedImage();
   }
 }
 

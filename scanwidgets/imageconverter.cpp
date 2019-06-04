@@ -5,9 +5,10 @@ namespace ImageConverter {
 /*!
    \brief Converts a QImage to OpenCV Mat.
 
-  By default to image data is cloned to avoid any memory issues caused by deleting
-    the Mat image before finishing with the QImage. If you know that you will be
-      keeping the QImage until after finishing with the Mat then set this flag to false.
+  By default to image data is cloned to avoid any memory issues caused by
+  deleting the Mat image before finishing with the QImage. If you know that you
+  will be keeping the QImage until after finishing with the Mat then set this
+  flag to false.
 
    \param image - the QImage object to convert.
    \param clone_image_data - clone the image data (default true).
@@ -34,8 +35,9 @@ cv::Mat imageToMat(const QImage& image, bool clone_image_data)
   // 8-bit, 3 channel
   case QImage::Format_RGB32: {
     if (!clone_image_data) {
-      qWarning() << "ASM::QImageToCvMat() - Conversion requires cloning so we don't modify the "
-                 "original QImage data";
+      qWarning() << QString(
+          "ImageConverter::imageToMat() - Conversion requires cloning so we "
+          "don't modify the original QImage data");
     }
 
     cv::Mat mat(image.height(),
@@ -54,8 +56,9 @@ cv::Mat imageToMat(const QImage& image, bool clone_image_data)
   // 8-bit, 3 channel
   case QImage::Format_RGB888: {
     if (!clone_image_data) {
-      qWarning() << "ASM::QImageToCvMat() - Conversion requires cloning so we don't modify the "
-                 "original QImage data";
+      qWarning() << QString(
+          "ImageConverter::imageToMat() - Conversion requires cloning so we "
+          "don't modify the original QImage data");
     }
 
     QImage swapped = image.rgbSwapped();
@@ -80,7 +83,9 @@ cv::Mat imageToMat(const QImage& image, bool clone_image_data)
   }
 
   default:
-    qWarning() << "ASM::QImageToCvMat() - QImage format not handled in switch:" << image.format();
+    qWarning() << QString("ImageConverter::imageToMat() - QImage format not "
+                          "handled in switch : %1")
+                      .arg(image.format());
     break;
   }
 
@@ -159,7 +164,9 @@ QImage matToImage(cv::Mat mat)
   }
 
   default:
-    qWarning() << "ASM::cvMatToQImage() - cv::Mat image type not handled in switch:" << mat.type();
+    qWarning() << QString("ASM::cvMatToQImage() - cv::Mat image type not "
+                          "handled in switch: %1")
+                      .arg(mat.type());
     break;
   }
 

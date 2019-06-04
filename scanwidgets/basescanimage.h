@@ -110,8 +110,8 @@ protected:
   void wheelEvent(QWheelEvent* event) override;
   //  void resizeEvent(QResizeEvent* event) override;
 
-  void scaleImage(const QImage& image);
-  void updateImage(const QImage& image);
+  void scaleModifiedImage();
+  //  void updateImage();
   void rotateUsingEdge();
   void paintRubberBand(QPainter* painter);
 
