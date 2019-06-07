@@ -25,10 +25,6 @@ DocumentDataStore::DocumentDataStore(QObject* parent)
 
 int DocumentDataStore::nextPageNumber() { return ++m_highest_page; }
 
-bool DocumentDataStore::inverted() const { return m_inverted; }
-
-void DocumentDataStore::setInverted(bool inverted) { m_inverted = inverted; }
-
 void DocumentDataStore::appendData(DocumentData& data)
 {
   int page_no = data->pageNumber();
@@ -411,6 +407,10 @@ QString DocData::internalName() const { return m_internal_name; }
 void DocData::setInternalName(const QString &internal_name) {
   m_internal_name = internal_name;
 }
+
+bool DocData::inverted() const { return m_inverted; }
+
+void DocData::setInverted(bool inverted) { m_inverted = inverted; }
 
 /*!
   \brief Text was initialised using setText().

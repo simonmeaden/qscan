@@ -62,6 +62,7 @@ signals:
   QPushButton *m_binarise_btn{};
   QPushButton *m_ocr_btn{};
   QPushButton *m_ocr_sel_btn{};
+  QPushButton *denoise_btn{}, *dewarp_btn{}, *descew_btn{};
   QSlider *threshold_slider{};
   QLabel *threshold_lbl{};
   QStackedLayout *m_ctl_stack{};
@@ -94,6 +95,8 @@ signals:
 
   void disableBinarise();
   void enableBinarise();
+
+  void enableBtns(bool enable);
 };
 
 #endif // OCRDIALOG_H

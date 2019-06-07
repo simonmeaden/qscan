@@ -29,9 +29,9 @@ void OcrDialog::setData(int index, const QImage &image,
                         const DocumentData &doc_data) {
   m_page_no = index;
   m_page = doc_data;
-  m_page_no = index,
   m_image_display->setImage(image);
   m_image_display->setInverted(doc_data->inverted());
+  enableBtns(doc_data->inverted());
   m_text_edit->setText(doc_data->textList());
 }
 
@@ -200,17 +200,17 @@ void OcrDialog::initGui()
     connect(invert_btn, &QPushButton::clicked, this, &OcrDialog::invert);
     btn_layout->addWidget(invert_btn);
 
-    auto* denoise_btn = new QPushButton(tr("De-noise"), this);
+    denoise_btn = new QPushButton(tr("De-noise"), this);
     denoise_btn->setToolTip(tr("Noise removal attempts to clean up the image."));
     connect(denoise_btn, &QPushButton::clicked, this, &OcrDialog::denoise);
     btn_layout->addWidget(denoise_btn);
 
-    auto* dewarp_btn = new QPushButton(tr("De-warp"), this);
+    dewarp_btn = new QPushButton(tr("De-warp"), this);
     dewarp_btn->setToolTip(tr("Straigntens lines that are curved."));
     connect(dewarp_btn, &QPushButton::clicked, this, &OcrDialog::dewarp);
     btn_layout->addWidget(dewarp_btn);
 
-    auto* descew_btn = new QPushButton(tr("De-scew"), this);
+    descew_btn = new QPushButton(tr("De-scew"), this);
     descew_btn->setToolTip(tr("Rotates non-horizontal up lines."));
     connect(descew_btn, &QPushButton::clicked, this, &OcrDialog::descew);
     btn_layout->addWidget(descew_btn);
@@ -253,6 +253,8 @@ void OcrDialog::initGui()
     help_btn->setToolTip(tr("Help."));
     connect(help_btn, &QPushButton::clicked, this, &OcrDialog::help);
     btn_layout->addWidget(help_btn);
+
+    enableBtns(false);
   }
 
   m_ctl_stack->setCurrentIndex(m_btn_stack);
@@ -310,6 +312,7 @@ void OcrDialog::invert()
 {
   m_image_display->invert();
   m_image_changed = true;
+  enableBtns(true);
 }
 
 void OcrDialog::denoise()
@@ -414,6 +417,12 @@ void OcrDialog::applyThreshold() {
 void OcrDialog::disableBinarise() { m_binarise_btn->setEnabled(false); }
 
 void OcrDialog::enableBinarise() { m_binarise_btn->setEnabled(true); }
+
+void OcrDialog::enableBtns(bool enable) {
+  denoise_btn->setEnabled(enable);
+  dewarp_btn->setEnabled(enable);
+  descew_btn->setEnabled(enable);
+}
 
 void OcrDialog::resizeEvent(QResizeEvent* event)
 {

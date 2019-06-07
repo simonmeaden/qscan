@@ -8,7 +8,8 @@
 using namespace cv;
 
 OcrImage::OcrImage(QWidget *parent)
-    : BaseScanImage(parent), m_inverted(false), m_binarised(false) {
+    : BaseScanImage(parent), m_inverted(false) /*, m_binarised(false)*/
+{
   //  setStyleSheet("border: 2px solid red;");
 }
 
@@ -117,6 +118,22 @@ void OcrImage::descew() {
   // create a modifiable image.
   Mat mat = ImageConverter::imageToMat(m_modified_image);
 
+  std::vector<Vec4i> lines;
+  HoughLinesP(mat, lines, 1, CV_PI / 180, 100, width() / 2.0f, 20);
+
+  double angle = 0.;
+  unsigned nb_lines = lines.size();
+
+  for (unsigned i = 0; i < nb_lines; ++i) {
+    QLineF line(QPointF((double)lines[i][0], (double)lines[i][1]),
+                QPointF((double)lines[i][2], (double)lines[i][3]));
+    m_lines.append(line);
+    angle += atan2((double)lines[i][3] - lines[i][1],
+                   (double)lines[i][2] - lines[i][0]);
+  }
+
+  m_angle = angle / nb_lines; // mean angle, in radians.
+
   QImage image = ImageConverter::matToImage(mat);
   m_modified_image = image;
   scaleModifiedImage();
@@ -125,6 +142,18 @@ void OcrImage::descew() {
 bool OcrImage::inverted() const { return m_inverted; }
 
 void OcrImage::setInverted(bool inverted) { m_inverted = inverted; }
+
+void OcrImage::paintEvent(QPaintEvent *event) {
+  BaseScanImage::paintEvent(event);
+
+  QPainter painter(this);
+  QPen pen(QColor("red"), 2);
+  painter.setPen(pen);
+
+  for (QLineF line : m_lines) {
+    painter.drawLine(line);
+  }
+}
 
 // double OcrImage::houghTransform(Mat &im) {
 //  double skew;

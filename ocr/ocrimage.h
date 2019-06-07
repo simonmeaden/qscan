@@ -1,7 +1,11 @@
 #ifndef OCRIMAGE_H
 #define OCRIMAGE_H
 
+#include <QLineF>
 #include <QList>
+#include <QPainter>
+#include <QPen>
+#include <QPointF>
 #include <QWidget>
 #include <QtDebug>
 
@@ -54,8 +58,11 @@ public:
   QList<QImage> m_op_images;
   int m_binarise_changes{};
   bool m_inverted;
-  bool m_binarised;
+  QList<QLineF> m_lines;
+  qreal m_angle;
+  //  bool m_binarised;
 
+  void paintEvent(QPaintEvent *event) override;
   //  double houghTransform(Mat &im /*, Mat& orig*/);
 };
 
