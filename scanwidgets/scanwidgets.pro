@@ -32,9 +32,9 @@ SOURCES += \
         imagelistmodel.cpp \
         imageview.cpp \
         pageview.cpp \
-        scanedit.cpp \
         scaneditor.cpp \
-        scanimage.cpp
+        scanimage.cpp \
+        scanlist.cpp
 
 HEADERS += \
         basescanimage.h \
@@ -44,9 +44,9 @@ HEADERS += \
         imagelistmodel.h \
         imageview.h \
         pageview.h \
-        scanedit.h \
         scaneditor.h \
         scanimage.h \
+        scanlist.h \
         scanwidgets_global.h 
 
 unix {

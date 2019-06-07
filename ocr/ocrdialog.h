@@ -21,7 +21,7 @@
 #include "documentdata.h"
 
 class OcrImage;
-class ScanEdit;
+class ScanList;
 
 class OcrDialog : public QDialog
 {
@@ -49,25 +49,25 @@ public:
 signals:
   void sendOcrRequest(int, const QImage&);
   void saveModifiedImage(int index, const QImage& image);
-  void saveModifiedText(int index, const QStringList& text);
+  void saveModifiedText(int index, const QStringList &text);
 
-protected:
-  ScanEdit* m_text_edit;
-  OcrImage* m_image_display;
+  protected:
+  ScanList *m_text_edit;
+  OcrImage *m_image_display;
   int m_page_no{};
   DocumentData m_page;
   bool m_image_changed;
-  QPushButton* m_crop_btn{};
-  QPushButton* m_cut_btn{};
-  QPushButton* m_binarise_btn{};
-  QPushButton* m_ocr_btn{};
-  QPushButton* m_ocr_sel_btn{};
-  QLabel* threshold_lbl{};
-  QStackedLayout* m_ctl_stack{};
+  QPushButton *m_crop_btn{};
+  QPushButton *m_cut_btn{};
+  QPushButton *m_binarise_btn{};
+  QPushButton *m_ocr_btn{};
+  QPushButton *m_ocr_sel_btn{};
+  QSlider *threshold_slider{};
+  QLabel *threshold_lbl{};
+  QStackedLayout *m_ctl_stack{};
   int m_btn_stack{}, m_threshold_stack{};
 
-
-  void resizeEvent(QResizeEvent* event) override;
+  void resizeEvent(QResizeEvent *event) override;
 
   void initGui();
   void requestOcr();
@@ -88,8 +88,9 @@ protected:
   void undoChanges();
   void close();
 
-  void setThreshold(int threshold);
+  void setThresholdLabel(int threshold);
   void thresholdAccepted();
+  void applyThreshold();
 
   void disableBinarise();
   void enableBinarise();

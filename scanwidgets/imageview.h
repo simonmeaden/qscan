@@ -47,12 +47,16 @@ public:
   void setHasText(int index, bool has_text);
   void setInternalImage(int index, bool internal);
 
-protected:
+  void setCurrentRow(int row);
+
+  void setSelectionModel(QItemSelectionModel *selectionModel) override;
+
+  protected:
   ImageListModel* m_model;
+  QItemSelectionModel *m_selection_model;
 
   void dropEvent(QDropEvent* event) override;
-  bool isIndexHidden(const QModelIndex& index) const override;
-
+  bool isIndexHidden(const QModelIndex &index) const override;
 };
 
 #endif // IMAGEVIEW_H

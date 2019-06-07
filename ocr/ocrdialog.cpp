@@ -1,7 +1,7 @@
 #include "ocrdialog.h"
 
 #include "ocrimage.h"
-#include "scanedit.h"
+#include "scanlist.h"
 
 OcrDialog::OcrDialog(QWidget* parent)
   : QDialog(parent)
@@ -25,13 +25,14 @@ QImage OcrDialog::image()
   return m_image_display->image();
 }
 
-void OcrDialog::setData(int index, const QImage& image, const DocumentData&  page)
-{
+void OcrDialog::setData(int index, const QImage &image,
+                        const DocumentData &doc_data) {
   m_page_no = index;
-  m_page = page;
+  m_page = doc_data;
   m_page_no = index,
   m_image_display->setImage(image);
-  m_text_edit->setText(page->textList());
+  m_image_display->setInverted(doc_data->inverted());
+  m_text_edit->setText(doc_data->textList());
 }
 
 void OcrDialog::setOcrImage(int index, const QImage& image)
@@ -93,7 +94,7 @@ void OcrDialog::initGui()
   auto* layout = new QGridLayout;
   setLayout(layout);
 
-  m_text_edit = new ScanEdit(this);
+  m_text_edit = new ScanList(this);
   layout->addWidget(m_text_edit, 0, 0);
 
   auto* stacked_frame = new QFrame(this);
@@ -106,7 +107,8 @@ void OcrDialog::initGui()
   m_image_display = new OcrImage(this);
   connect(m_image_display, &OcrImage::selected, this, &OcrDialog::setSelected);
   connect(m_image_display, &OcrImage::unselected, this, &OcrDialog::setUnselected);
-  connect(m_image_display, &OcrImage::thresholdAccepted, this, &OcrDialog::thresholdAccepted);
+  connect(m_image_display, &OcrImage::binariseCompleted, this,
+          &OcrDialog::thresholdAccepted);
   layout->addWidget(m_image_display, 0, 2);
 
   auto* threshold_frame = new QFrame();
@@ -115,33 +117,44 @@ void OcrDialog::initGui()
   m_threshold_stack = m_ctl_stack->addWidget(threshold_frame);
   {
     // initialise threshold frame
-    auto* threshold_slider = new QSlider(Qt::Vertical, this);
+    int row = 0;
+    threshold_slider = new QSlider(Qt::Vertical, this);
     threshold_slider->setMinimum(0);
     threshold_slider->setMaximum(255);
-    threshold_slider->setValue(200); // 200 is a reasonable start point for threshold.
-    connect(threshold_slider, &QSlider::valueChanged, m_image_display, &OcrImage::setThreshold);
-    connect(threshold_slider, &QSlider::valueChanged, this, &OcrDialog::setThreshold);
-    threshold_layout->addWidget(threshold_slider, 0, 0, Qt::AlignHCenter);
+    threshold_slider->setValue(OcrImage::BASE_THRESHOLD);
+    //    connect(threshold_slider, &QSlider::valueChanged, m_image_display,
+    //    &OcrImage::setThreshold);
+    connect(threshold_slider, &QSlider::valueChanged, this,
+            &OcrDialog::setThresholdLabel);
+    threshold_layout->addWidget(threshold_slider, row, 0, Qt::AlignHCenter);
 
-    threshold_lbl = new QLabel("200", this);
+    threshold_lbl =
+        new QLabel(QString::number(threshold_slider->value()), this);
     QFont font;
     font.setWeight(QFont::Bold);
     font.setPixelSize(40);
     threshold_lbl->setFont(font);
     threshold_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignCenter);
-    threshold_layout->addWidget(threshold_lbl, 0, 1);
+    threshold_layout->addWidget(threshold_lbl, row++, 1);
 
     auto* apply_thresh_btn = new QPushButton(tr("Apply Threshold"), this);
-    connect(apply_thresh_btn, &QPushButton::clicked, m_image_display, &OcrImage::applyThreshold);
-    threshold_layout->addWidget(apply_thresh_btn, 2, 0, 1, 2);
+    connect(apply_thresh_btn, &QPushButton::clicked, this,
+            &OcrDialog::applyThreshold);
+    threshold_layout->addWidget(apply_thresh_btn, row++, 0, 1, 2);
 
-    auto* accept_thresh_btn = new QPushButton(tr("Accept"), this);
-    connect(accept_thresh_btn, &QPushButton::clicked, m_image_display, &OcrImage::acceptThreshold);
-    threshold_layout->addWidget(accept_thresh_btn, 3, 0, 1, 2);
+    auto *accept_thresh_btn = new QPushButton(tr("Accept"), this);
+    connect(accept_thresh_btn, &QPushButton::clicked, m_image_display,
+            &OcrImage::acceptThreshold);
+    threshold_layout->addWidget(accept_thresh_btn, row++, 0, 1, 2);
 
-    auto* cancel_thresh_btn = new QPushButton(tr("Cancel"), this);
+    auto *undo_last_btn = new QPushButton(tr("Undo Last"), this);
+    connect(undo_last_btn, &QPushButton::clicked, m_image_display,
+            &OcrImage::undoLast);
+    threshold_layout->addWidget(undo_last_btn, row++, 0, 1, 2);
+
+    auto *cancel_thresh_btn = new QPushButton(tr("Cancel"), this);
     connect(cancel_thresh_btn, &QPushButton::clicked, m_image_display, &OcrImage::cancelThreshold);
-    threshold_layout->addWidget(cancel_thresh_btn, 4, 0, 1, 2);
+    threshold_layout->addWidget(cancel_thresh_btn, row++, 0, 1, 2);
   }
 
   auto* btn_box = new QFrame(this);
@@ -310,9 +323,9 @@ void OcrDialog::dewarp()
   // TODO dewarp
 }
 
-void OcrDialog::descew()
-{
-  // TODO descew
+void OcrDialog::descew() {
+  m_image_display->descew();
+  m_image_changed = true;
 }
 
 void OcrDialog::rescale()
@@ -379,12 +392,12 @@ void OcrDialog::close()
   if (result == QMessageBox::Yes) {
     saveImage();
     saveText();
+    m_page->setInverted(m_image_display->inverted());
     QDialog::accept();
   }
 }
 
-void OcrDialog::setThreshold(int threshold)
-{
+void OcrDialog::setThresholdLabel(int threshold) {
   threshold_lbl->setText(QString::number(threshold));
 }
 
@@ -393,15 +406,14 @@ void OcrDialog::thresholdAccepted()
   m_ctl_stack->setCurrentIndex(m_btn_stack);
 }
 
-void OcrDialog::disableBinarise()
-{
-  m_binarise_btn->setEnabled(false);
+void OcrDialog::applyThreshold() {
+  int threshold = threshold_slider->value();
+  m_image_display->applyThreshold(threshold);
 }
 
-void OcrDialog::enableBinarise()
-{
-  m_binarise_btn->setEnabled(true);
-}
+void OcrDialog::disableBinarise() { m_binarise_btn->setEnabled(false); }
+
+void OcrDialog::enableBinarise() { m_binarise_btn->setEnabled(true); }
 
 void OcrDialog::resizeEvent(QResizeEvent* event)
 {

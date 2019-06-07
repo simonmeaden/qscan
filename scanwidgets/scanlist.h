@@ -31,11 +31,11 @@ public:
 
 /* ScanEdit
  **************************************************************************************/
-class ScanEdit : public QListView
+class ScanList : public QListView
 {
   Q_OBJECT
 public:
-  explicit ScanEdit(QWidget* parent = nullptr);
+  explicit ScanList(QWidget* parent = nullptr);
 
   void setText(const QString& text);
   void setText(const QStringList& list);

@@ -359,9 +359,9 @@ void ScanEditor::receiveLoadText(int page_no) {
 }
 
 void ScanEditor::receiveWorkOnRequest(int page_no) {
-  DocumentData page = m_doc_data->documentData(page_no);
+  DocumentData doc_data = m_doc_data->documentData(page_no);
 
-  if (!page.isNull()) {
+  if (!doc_data.isNull()) {
     m_ocr_dlg = new OcrDialog(this);
     connect(m_ocr_dlg, &OcrDialog::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
     connect(m_ocr_dlg, &OcrDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
@@ -371,8 +371,8 @@ void ScanEditor::receiveWorkOnRequest(int page_no) {
             this,
             &ScanEditor::receiveOcrDialogFinished);
 
-    QImage image(page->filename(), "PNG");
-    m_ocr_dlg->setData(page_no, image, page);
+    QImage image(doc_data->filename(), "PNG");
+    m_ocr_dlg->setData(page_no, image, doc_data);
 
     m_ocr_dlg->open();
   }
@@ -416,7 +416,7 @@ void ScanEditor::saveModifiedText(int page_no, const QStringList &text) {
   m_doc_data->save(m_data_filename);
 }
 
-void ScanEditor::receiveOcrPageResult(const DocumentData &page) {
+void ScanEditor::receiveOcrPageResult(const DocumentData &doc_data) {
   m_ocr_dlg = new OcrDialog(this);
   connect(m_ocr_dlg, &OcrDialog::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
   connect(m_ocr_dlg, &OcrDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
@@ -424,9 +424,9 @@ void ScanEditor::receiveOcrPageResult(const DocumentData &page) {
   connect(
     m_ocr_dlg, &QDialog::finished, this, &ScanEditor::receiveOcrDialogFinished);
 
-  int page_no = page->pageNumber();
-  QImage image(page->filename(), "PNG");
-  m_ocr_dlg->setData(page_no, image, page);
+  int page_no = doc_data->pageNumber();
+  QImage image(doc_data->filename(), "PNG");
+  m_ocr_dlg->setData(page_no, image, doc_data);
 
   m_ocr_dlg->open();
 }

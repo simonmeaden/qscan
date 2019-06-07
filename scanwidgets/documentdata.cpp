@@ -13,6 +13,7 @@
 const QString DocumentDataStore::FILENAME = "filename";
 const QString DocumentDataStore::PAGE_NUMBER = "page number";
 const QString DocumentDataStore::INTERNAL_IMAGE = "internal image";
+const QString DocumentDataStore::INVERTED = "inverted";
 const QString DocumentDataStore::INTERNAL_IMAGE_NAME = "internal name";
 const QString DocumentDataStore::TEXT_LIST = "text list";
 
@@ -23,6 +24,10 @@ DocumentDataStore::DocumentDataStore(QObject* parent)
 {}
 
 int DocumentDataStore::nextPageNumber() { return ++m_highest_page; }
+
+bool DocumentDataStore::inverted() const { return m_inverted; }
+
+void DocumentDataStore::setInverted(bool inverted) { m_inverted = inverted; }
 
 void DocumentDataStore::appendData(DocumentData& data)
 {
@@ -79,6 +84,10 @@ void DocumentDataStore::load(const QString& filename)
             data->setIsInternalImage(item[INTERNAL_IMAGE].as<bool>());
           }
 
+          if (item[INVERTED]) {
+            data->setInverted(item[INVERTED].as<bool>());
+          }
+
           if (item[INTERNAL_IMAGE_NAME]) {
             data->setInternalName(item[INTERNAL_IMAGE_NAME].as<QString>());
           }
@@ -131,6 +140,9 @@ void DocumentDataStore::save(const QString& filename)
         bool internal_image = data->isInternalImage();
         emitter << YAML::Key << INTERNAL_IMAGE;
         emitter << YAML::Value << internal_image;
+
+        emitter << YAML::Key << INVERTED;
+        emitter << YAML::Value << data->inverted();
 
         /* the internal images are used for in-document images
            not ocr-able images.*/

@@ -8,11 +8,12 @@ PageView::PageView(QWidget* parent)
 {
   auto* layout = new QHBoxLayout;
   setLayout(layout);
-  m_image_list = new ImageView(this);
-  m_image_list->setSelectionMode(QAbstractItemView::SingleSelection);
-  m_image_list->setDragDropMode(QAbstractItemView::InternalMove);
-  connect(m_image_list->model(), &QAbstractItemModel::rowsMoved, this, &PageView::rowsMoved);
-  connect(m_image_list->selectionModel(),
+  m_image_view = new ImageView(this);
+  m_image_view->setSelectionMode(QAbstractItemView::SingleSelection);
+  m_image_view->setDragDropMode(QAbstractItemView::InternalMove);
+  connect(m_image_view->model(), &QAbstractItemModel::rowsMoved, this,
+          &PageView::rowsMoved);
+  connect(m_image_view->selectionModel(),
           &QItemSelectionModel::selectionChanged, this,
           &PageView::selectionChanged);
 
@@ -40,13 +41,13 @@ PageView::PageView(QWidget* parent)
   connect(m_work_with_act, &QAction::triggered, this, &PageView::workOnImage);
   connect(
     m_load_text_act, &QAction::triggered, this, &PageView::loadTextIntoEditor);
-  layout->addWidget(m_image_list);
+  layout->addWidget(m_image_view);
 }
 
 int PageView::appendThumbnail(const QImage &thumbnail, bool has_text,
                               bool is_internal_image) {
   // this list will always start at position 1.
-  return m_image_list->appendThumbnail(thumbnail, has_text, is_internal_image);
+  return m_image_view->appendThumbnail(thumbnail, has_text, is_internal_image);
 }
 
 void PageView::removeImage()
@@ -62,7 +63,7 @@ void PageView::removeImage()
                            QMessageBox::No);
 
     if (answer == QMessageBox::Yes) {
-      m_image_list->setCover(QImage());
+      m_image_view->setCover(QImage());
       emit removeCurrentImage(0);
       m_current_row = -1;
     }
@@ -79,7 +80,7 @@ void PageView::removeImage()
                                       QMessageBox::No);
 
     if (answer == QMessageBox::Yes) {
-      m_image_list->removeThumbnail(m_current_row);
+      m_image_view->removeThumbnail(m_current_row);
       emit removeCurrentImage(m_current_row);
       m_current_row = -1;
     }
@@ -106,27 +107,24 @@ void PageView::removeText()
 
 void PageView::removeThumbnail(int index)
 {
-  m_image_list->removeThumbnail(index);
+  m_image_view->removeThumbnail(index);
 }
 
 void PageView::replaceThumbnail(int index, const QImage &image, bool has_text,
                                 bool is_internal_image) {
-  m_image_list->replaceThumbnail(index, image, has_text, is_internal_image);
+  m_image_view->replaceThumbnail(index, image, has_text, is_internal_image);
 }
 
 void PageView::insertThumbnail(int row, const QImage& thumbnail, bool has_text, bool is_internal_image)
 {
-  m_image_list->insertThumbnail(row, thumbnail, has_text, is_internal_image);
+  m_image_view->insertThumbnail(row, thumbnail, has_text, is_internal_image);
 }
 
-void PageView::setCover(const QImage& cover)
-{
-  m_image_list->setCover(cover);
-}
+void PageView::setCover(const QImage &cover) { m_image_view->setCover(cover); }
 
 void PageView::setHasText(int index, bool has_text)
 {
-  m_image_list->setHasText(index, has_text);
+  m_image_view->setHasText(index, has_text);
 }
 
 bool PageView::hasText(int page_no)
@@ -149,7 +147,7 @@ bool PageView::isInternalImage(int page_no)
 
 void PageView::setIsInternal(int index, bool is_internal_image)
 {
-  m_image_list->setInternalImage(index, is_internal_image);
+  m_image_view->setInternalImage(index, is_internal_image);
 }
 
 QMap<int, bool> PageView::has_text() const
@@ -173,7 +171,7 @@ void PageView::contextMenuEvent(QContextMenuEvent* event)
   //  context_menu->addAction(m_move_page_down_act);
 
   // index 0 is always the cover.
-  m_current_row = m_image_list->indexAt(event->pos()).row();
+  m_current_row = m_image_view->indexAt(event->pos()).row();
 
   if (m_current_row > 0) {
     context_menu->addSeparator();
@@ -228,27 +226,20 @@ void PageView::moveUp()
     return;
   }
 
-  m_image_list->moveThumbnail(m_current_row, m_current_row - 1);
-  m_current_row--;
+  m_image_view->moveThumbnail(m_current_row, m_current_row - 1);
+  m_image_view->setCurrentRow(--m_current_row);
 }
 
 void PageView::moveDown()
 {
-  //  QModelIndexList rows = m_image_list->selectionModel()->selectedRows();
-
-  //  if (rows.size() > 1) {
-  //    return;
-  //  }
-
-  //  int row = rows.at(0).row();
 
   if (m_current_row ==
-      (m_image_list->model()->rowCount() - 1)) { // already at bottom
+      (m_image_view->model()->rowCount() - 1)) { // already at bottom
     return;
   }
 
-  m_image_list->moveThumbnail(m_current_row, m_current_row + 1);
-  m_current_row++;
+  m_image_view->moveThumbnail(m_current_row, m_current_row + 1);
+  m_image_view->setCurrentRow(++m_current_row);
 }
 
 void PageView::nonOcrImage()
@@ -279,5 +270,5 @@ void PageView::workOnImage()
 
 void PageView::loadTextIntoEditor()
 {
-  emit loadText(m_image_list->currentIndex().row());
+  emit loadText(m_image_view->currentIndex().row());
 }

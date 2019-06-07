@@ -72,6 +72,7 @@ cv::Mat imageToMat(const QImage& image, bool clone_image_data)
   }
 
   // 8-bit, 1 channel
+  case QImage::Format_Grayscale8:
   case QImage::Format_Indexed8: {
     cv::Mat mat(image.height(),
                 image.width(),
@@ -81,6 +82,11 @@ cv::Mat imageToMat(const QImage& image, bool clone_image_data)
 
     return (clone_image_data ? mat.clone() : mat);
   }
+
+    //  case QImage::Format_Grayscale8:
+    //    cv::Mat mat(image.height(),
+    //                image.width(),
+    //                CV_8UC1,)
 
   default:
     qWarning() << QString("ImageConverter::imageToMat() - QImage format not "

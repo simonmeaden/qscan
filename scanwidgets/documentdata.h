@@ -50,6 +50,9 @@ public:
   QString internalName() const;
   void setInternalName(const QString &internalName);
 
+  bool inverted() const;
+  void setInverted(bool inverted);
+
   protected:
   int m_page_no{};
   QString m_filename;
@@ -60,6 +63,7 @@ public:
   bool m_text_initialised;
   bool m_remove_image_later;
   bool m_remove_text_later;
+  bool m_inverted;
 };
 using DocumentData = QSharedPointer<DocData>;
 
@@ -98,6 +102,7 @@ public:
   static const QString FILENAME;
   static const QString PAGE_NUMBER;
   static const QString INTERNAL_IMAGE;
+  static const QString INVERTED;
   static const QString INTERNAL_IMAGE_NAME;
   static const QString TEXT_LIST;
 

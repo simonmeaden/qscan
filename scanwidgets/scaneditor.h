@@ -166,7 +166,7 @@ protected:
   void receiveWorkOnRequest(int documentData);
   void receiveOcrPageRequest(int documentData);
   void receiveOcrImageRequest(int documentData, const QImage& image);
-  void receiveOcrPageResult(const DocumentData& documentData);
+  void receiveOcrPageResult(const DocumentData &doc_data);
   void receiveOcrImageResult(int documentData, const QString& text);
   void receiveOcrDialogFinished(int result);
   void removeImage(int page_no);

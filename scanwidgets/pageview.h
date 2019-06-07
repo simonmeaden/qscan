@@ -53,12 +53,12 @@ public:
   ImageList m_images;
   QMap<int, bool> m_has_text;
   QMap<int, bool> m_is_internal_image;
-  ImageView* m_image_list;
+  ImageView *m_image_view;
   QImage m_cover;
   int m_current_row{};
   int m_page_selected = -1;
 
-  void contextMenuEvent(QContextMenuEvent* event) override;
+  void contextMenuEvent(QContextMenuEvent *event) override;
   QSize minimumSizeHint() const override;
   QSize sizeHint() const override;
 

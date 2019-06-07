@@ -1,10 +1,8 @@
-#include "scanedit.h"
+#include "scanlist.h"
 
 /* ScanEdit
  **************************************************************************************/
-ScanEdit::ScanEdit(QWidget* parent)
-  : QListView(parent)
-{
+ScanList::ScanList(QWidget *parent) : QListView(parent) {
   m_model = new QStringListModel(this);
   setModel(m_model);
 
@@ -13,25 +11,19 @@ ScanEdit::ScanEdit(QWidget* parent)
   m_model->setStringList(list);
 }
 
-void ScanEdit::setText(const QString& text)
-{
+void ScanList::setText(const QString &text) {
   QStringList list;
   list << text;
   m_model->setStringList(list);
 }
 
-void ScanEdit::setText(const QStringList& list)
-{
+void ScanList::setText(const QStringList &list) {
   m_model->setStringList(list);
 }
 
-QStringList ScanEdit::text()
-{
-  return m_model->stringList();
-}
+QStringList ScanList::text() { return m_model->stringList(); }
 
-void ScanEdit::contextMenuEvent(QContextMenuEvent* event)
-{
+void ScanList::contextMenuEvent(QContextMenuEvent *event) {
   auto* context_menu = new QMenu();
 }
 

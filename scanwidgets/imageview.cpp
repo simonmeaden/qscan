@@ -63,6 +63,17 @@ void ImageView::setInternalImage(int index, bool internal_image)
   m_model->setInternalImage(index, internal_image);
 }
 
+void ImageView::setCurrentRow(int row) {
+  QModelIndex index = m_model->index(row, 0, QModelIndex());
+  m_selection_model->clearSelection();
+  m_selection_model->setCurrentIndex(index, QItemSelectionModel::Select);
+}
+
+void ImageView::setSelectionModel(QItemSelectionModel *selectionModel) {
+  m_selection_model = selectionModel;
+  QListView::setSelectionModel(selectionModel);
+}
+
 void ImageView::dropEvent(QDropEvent* event)
 {
   // This is needed because of a bug in QListView which removes the
