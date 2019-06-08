@@ -34,6 +34,7 @@
 #include <QProgressDialog>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <QScrollerProperties>
 
 #include "logger.h"
 
@@ -134,8 +135,7 @@ protected:
   QString m_data_dir{};
   QString m_lang{};
   OcrDialog* m_ocr_dlg{};
-  QPushButton *m_crop_btn{}, *m_left_btn{}, *m_move_up_btn{},
-      *m_move_down_btn{};
+  QPushButton *m_crop_btn{}, *m_left_btn{}, *m_move_up_btn{}, *m_move_down_btn{};
   QPushButton *m_cover_btn{};
   QPushButton *m_right_btn{};
   QPushButton *m_both_btn{};
@@ -169,6 +169,7 @@ protected:
   void receiveOcrPageResult(const DocumentData &doc_data);
   void receiveOcrImageResult(int documentData, const QString& text);
   void receiveOcrDialogFinished(int result);
+  void receivePageMoved(int start_row, int dest_row);
   void removeImage(int page_no);
   void removeText(int page_no);
   void saveModifiedText(int page_no, const QStringList& text);

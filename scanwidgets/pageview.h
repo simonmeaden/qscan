@@ -18,11 +18,9 @@ class PageView : public QWidget
 public:
   explicit PageView(QWidget* parent = nullptr);
 
-  int appendThumbnail(const QImage &thumbnail, bool has_text = false,
-                      bool is_internal_image = false);
+  int appendThumbnail(const QImage &thumbnail, bool has_text = false, bool is_internal_image = false);
   void removeThumbnail(int index);
-  void replaceThumbnail(int index, const QImage &image, bool has_text = false,
-                        bool is_internal_image = false);
+  void replaceThumbnail(int index, const QImage &image, bool has_text = false, bool is_internal_image = false);
   void insertThumbnail(int index,
                        const QImage& thumbnail,
                        bool has_text = false,
@@ -62,8 +60,7 @@ public:
   QSize minimumSizeHint() const override;
   QSize sizeHint() const override;
 
-  void selectionChanged(const QItemSelection &selected_items,
-                        const QItemSelection &);
+  void selectionChanged(const QItemSelection &selected_items, const QItemSelection &);
 
   QAction* m_remove_page_act{};
   QAction* m_remove_image_act{};
@@ -76,7 +73,7 @@ public:
   //  QAction* m_do_ocr_act{};
   //  QAction* m_do_all_ocr_act{};
 
-  void rowsMoved(const QModelIndex&, int start, int, const QModelIndex&, int row);
+  void rowsMoved(const QModelIndex &, int start_row, int, const QModelIndex &, int dest_row);
   void removePage();
   void removeImage();
   void removeText();

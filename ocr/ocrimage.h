@@ -8,6 +8,7 @@
 #include <QPointF>
 #include <QWidget>
 #include <QtDebug>
+#include <QtMath>
 
 #include <vector>
 
@@ -21,6 +22,8 @@ public:
   explicit OcrImage(QWidget* parent = nullptr);
   ~OcrImage() override = default;
 
+  //  void setImage(const QImage &image) override;
+
   void undoAllChanges();
   void undoLastChange();
 
@@ -32,24 +35,24 @@ public:
   void acceptThreshold();
   void applyThreshold(int value);
   void cancelThreshold();
-  void undoLast();
 
   void invert();
 
   void denoise();
 
-  void descew();
+  void deskew();
 
   // 180 gives a good starter value.
   static const int BASE_THRESHOLD = 180;
 
-  bool inverted() const;
-  void setInverted(bool inverted);
+  bool isInverted() const;
+  void setInverted(bool isInverted);
 
   signals:
   void binariseCompleted();
   void disableBinarise();
   void enableBinarise();
+  void enableModification();
 
   protected:
   //  QImage m_temp_image;
@@ -59,7 +62,7 @@ public:
   int m_binarise_changes{};
   bool m_inverted;
   QList<QLineF> m_lines;
-  qreal m_angle;
+  qreal m_angle{};
   //  bool m_binarised;
 
   void paintEvent(QPaintEvent *event) override;

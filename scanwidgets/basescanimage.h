@@ -30,7 +30,7 @@ public:
   QRect selection();
   void rotateBy(qreal angle);
 
-  void setImage(const QImage& image);
+  virtual void setImage(const QImage &image);
   QImage image();
   QImage modifiedImage();
   QImage selectedSubImage();

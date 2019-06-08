@@ -36,7 +36,6 @@ void BaseScanImage::setImage(const QImage& image)
 {
   m_image = image;
   m_modified_image = image;
-  //  updateImage();
   fitByType();
 }
 
@@ -118,12 +117,12 @@ void BaseScanImage::cropToSelection()
 }
 
 void BaseScanImage::scaleModifiedImage(
-    /*qreal factor,*/ /*const QImage& image*/) {
-  int w = int(m_modified_image.width() * m_scale_by);
-  int h = int(m_modified_image.height() * m_scale_by);
-  m_scaled_image = m_modified_image.scaled(w, h, Qt::KeepAspectRatio,
-                                           Qt::SmoothTransformation);
-  update();
+    /*qreal factor,*/ /*const QImage& image*/)
+{
+    int w = int(m_modified_image.width() * m_scale_by);
+    int h = int(m_modified_image.height() * m_scale_by);
+    m_scaled_image = m_modified_image.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    update();
 }
 
 void BaseScanImage::clearSelection()
