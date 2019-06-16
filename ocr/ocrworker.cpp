@@ -30,20 +30,19 @@ void OcrWorker::convertImage(int page_no, const QImage& image)
 
 void OcrWorker::process()
 {
-  auto* m_api = new TessTools(m_datapath, m_lang, this);
-  connect(m_api, &TessTools::log, this, &OcrWorker::log);
+  QString text;
 
   while (m_running) {
 
     if (!m_images.isEmpty()) {
       QImage image = m_images.takeFirst();
       int page_no = m_page_nos.takeFirst();
-      QString text = m_api->getStringFromImage(image);
+      text = TessTools::getStringFromImage(m_datapath, m_lang, image);
       emit imageConverted(page_no, text);
 
     } else if (!m_pages.isEmpty()) {
       DocumentData page = m_pages.takeFirst();
-      m_api->getStringFromPage(page);
+      TessTools::getStringFromPage(m_datapath, m_lang, page);
       emit pageConverted(page);
     }
 
@@ -51,9 +50,6 @@ void OcrWorker::process()
 
     QThread::msleep(1000);
   }
-
-  disconnect(m_api, &TessTools::log, this, &OcrWorker::log);
-  delete m_api;
 }
 
 void OcrWorker::stopRunning()

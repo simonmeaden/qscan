@@ -11,7 +11,6 @@
 #include "documentdata.h"
 #include "logger.h"
 
-class TessTools;
 class OcrWorker;
 
 class OCRSHARED_EXPORT OcrTools : public QObject

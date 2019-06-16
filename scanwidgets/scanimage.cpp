@@ -21,10 +21,6 @@ ScanImage::ScanImage(QString  datadir, QWidget* parent)
   connect(this, &ScanImage::selected, this, &ScanImage::disableNoSelectionActions);
 }
 
-void ScanImage::rotateByEdge()
-{
-  m_state = EDGE_SELECTED;
-}
 
 void ScanImage::scaleBy()
 {
@@ -55,12 +51,14 @@ void ScanImage::saveAs()
   }
 }
 
-QImage ScanImage::saveAsCover() {
+QImage ScanImage::saveAsCover()
+{
   //  emit sendCover(m_image);
   return m_modified_image;
 }
 
-QRect ScanImage::selection() {
+QRect ScanImage::selection()
+{
   if (hasSelection()) {
     return m_rubber_band;
   }
@@ -244,8 +242,7 @@ void ScanImage::initActions()
           this,
           &ScanImage::cropToSelection);
   m_clear_selection_act->setToolTip(tr("Removes selection rectangle."));
-  connect(m_clear_selection_act, &QAction::triggered, this,
-          &ScanImage::clearSelection);
+  connect(m_clear_selection_act, &QAction::triggered, this, &ScanImage::clearSelection);
   connect(m_crop_to_content_act,
           &QAction::triggered,
           this,
@@ -255,7 +252,7 @@ void ScanImage::initActions()
           this,
           &ScanImage::setDefaultPageCropSize);
   connect(m_rotate_cw_act, &QAction::triggered, this, &ScanImage::rotateCW);
-  connect(m_rotate_acw_act, &QAction::triggered, this, &ScanImage::rotateACW);
+  connect(m_rotate_acw_act, &QAction::triggered, this, &ScanImage::rotateCCW);
   connect(m_rotate_180_act, &QAction::triggered, this, &ScanImage::rotate180);
   connect(m_rotate_by_angle_act,
           &QAction::triggered,
@@ -264,7 +261,7 @@ void ScanImage::initActions()
   connect(
     m_rotate_by_edge_act, &QAction::triggered, this, &ScanImage::rotateByEdge);
   connect(m_rescan_act, &QAction::triggered, this, &ScanImage::rescan);
-  connect(m_scale_act, &QAction::triggered, this, &ScanImage::scale);
+  connect(m_scale_act, &QAction::triggered, this, &ScanImage::rescale);
   connect(m_selectall_act, &QAction::triggered, this, &ScanImage::selectAll);
   connect(m_save_act, &QAction::triggered, this, &ScanImage::save);
   connect(m_save_as_act, &QAction::triggered, this, &ScanImage::saveAs);
@@ -278,48 +275,16 @@ void ScanImage::cropToContent()
   // TODO crop to content
 }
 
-void ScanImage::rotate180()
-{
-  rotateBy(180);
-}
 
-void ScanImage::rotateCW()
-{
-  rotateBy(90.0);
-}
-
-void ScanImage::rotateACW()
-{
-  rotateBy(-90.0);
-}
-
-void ScanImage::rotateByAngle()
-{
-  bool ok;
-  qreal angle = QInputDialog::getDouble(
-                  this,
-                  tr("Rotate by angle"),
-                  tr("Rotate the image by a fixed angle around the centre."),
-                  0.0,   // value
-                  0.0,   // min
-                  360.0, // max
-                  1,     // decimals
-                  &ok);
-
-  if (angle > 0.0 && ok) {
-    rotateBy(angle);
-  }
-}
 
 void ScanImage::rescan()
 {
   // TODO rescan
 }
 
-void ScanImage::scale()
+void ScanImage::rescale()
 {
-  // TODO scale
-  scaleBy();
+  m_op_images.append(m_modified_image);
 }
 void ScanImage::enableSetDefaultCropSize()
 {

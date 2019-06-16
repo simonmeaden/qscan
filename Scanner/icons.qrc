@@ -9,7 +9,7 @@
         <file>Devices-scanner-icon96.png</file>
         <file>Devices-scanner-icon128.png</file>
         <file alias="crop">transform-crop.png</file>
-        <file>transform-crop-and-resize.png</file>
+        <file alias="resize">transform-crop-and-resize.png</file>
         <file>transform-move.png</file>
         <file>transform-rotate.png</file>
         <file alias="scale">transform-scale.png</file>
@@ -48,5 +48,6 @@
         <file>go-previous-view-page.png</file>
         <file alias="top">go-top.png</file>
         <file alias="up">go-up.png</file>
+        <file alias="move_to_edit">move_to_edit.png</file>
     </qresource>
 </RCC>

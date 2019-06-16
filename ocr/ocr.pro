@@ -61,3 +61,5 @@ DEPENDPATH += $$PWD/../scanwidgets
 unix|win32: LIBS += -ltesseract
 unix|win32: LIBS += -lopencv_core
 unix|win32: LIBS += -lopencv_imgcodecs
+
+unix|win32: LIBS += -lqwt-qt5

@@ -23,54 +23,23 @@
 #define TESSTOOLS_H
 
 #include <QApplication>
-#include <QDir>
-#include <QFileInfo>
-#include <QFileInfoList>
-#include <QImage>
-#include <QMessageBox>
-#include <QObject>
-#include <QStringLiteral>
+#include <QString>
+#include <QtDebug>
 
 #include "logger.h"
-#include <leptonica/allheaders.h>
-#include <tesseract/baseapi.h>
-//#include "scanpage.h"
-#include "documentdata.h"
 
+#include "documentdata.h"
+#include "imageconverter.h"
 #include "ocr_global.h"
 
-class Mat;
-
 // void monitorProgress(ETEXT_DESC *monitor, int page);
-void ocrProcess(tesseract::TessBaseAPI* api, ETEXT_DESC* monitor);
+//void ocrProcess(tesseract::TessBaseAPI* api, ETEXT_DESC* monitor);
 
-class OCRSHARED_EXPORT TessTools : public QObject
-{
-  Q_OBJECT
-public:
-  explicit TessTools(const QString& datapath, const QString& lang, QObject* parent = nullptr);
-  TessTools(const TessTools& other);     // copy constructor
-  TessTools(TessTools&& other) noexcept; // move constructor
-  ~TessTools() override;                 // destructor
+namespace TessTools {
 
-  TessTools& operator=(TessTools const& other);     // copy assignment
-  TessTools& operator=(TessTools&& other) noexcept; // move assignment
+void getStringFromPage(const QString &datapath, const QString &lang, const DocumentData &page);
+QString getStringFromImage(const QString &datapath, const QString &lang, const QImage &image);
 
-  void getStringFromPage(const DocumentData& page);
-  QString getStringFromImage(const QImage& image);
-
-
-signals:
-  void log(LogLevel, const QString&);
-
-protected:
-  tesseract::TessBaseAPI* m_api{};
-  const char* m_api_lang{};
-  const char* m_datapath{};
-  //  ETEXT_DESC *monitor;
-
-  static const char* kTrainedDataSuffix;
-  void init(const char* datapath, const char* lang, tesseract::TessBaseAPI* api);
-};
+} // namespace TessTools
 
 #endif // TESSTOOLS_H

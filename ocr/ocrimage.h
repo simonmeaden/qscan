@@ -27,16 +27,15 @@ public:
   void undoAllChanges();
   void undoLastChange();
 
-  void cutSelection();
+  void clearToBackground();
   void cropToSelection();
 
   void binarise();
   //  void setThreshold(int thresh_value = 100);
-  void acceptThreshold();
+  void acceptChanges();
   void applyThreshold(int value);
-  void cancelThreshold();
-
-  void invert();
+  void applyRescale(double value);
+  void cancelChanges();
 
   void denoise();
 
@@ -44,29 +43,26 @@ public:
 
   // 180 gives a good starter value.
   static const int BASE_THRESHOLD = 180;
+  static const int BASE_RESCALE = 1.0;
 
   bool isInverted() const;
   void setInverted(bool isInverted);
 
   signals:
-  void binariseCompleted();
-  void disableBinarise();
-  void enableBinarise();
   void enableModification();
 
   protected:
   //  QImage m_temp_image;
   //  QList<Operations> m_operations;
   //  QList<QVariant> m_op_data;
-  QList<QImage> m_op_images;
-  int m_binarise_changes{};
-  bool m_inverted;
+  int m_changes{};
   QList<QLineF> m_lines;
   qreal m_angle{};
   //  bool m_binarised;
 
   void paintEvent(QPaintEvent *event) override;
   //  double houghTransform(Mat &im /*, Mat& orig*/);
+  void clearChanges();
 };
 
 #endif // OCRIMAGE_H

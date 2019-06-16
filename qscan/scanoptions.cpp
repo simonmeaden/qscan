@@ -280,11 +280,21 @@ void ScanOptions::setResolutionY(int scan_resolution_y)
   m_resolution_y = scan_resolution_y;
 }
 
+/*!
+   \brief Scan resolution in dots-per-inch.
+
+   \return integer DPI value.
+*/
 int ScanOptions::resolution() const
 {
   return m_resolution;
 }
 
+/*!
+   \brief Set the scan resolution in dots-per-inch.
+
+   \param integer DPI value.
+*/
 void ScanOptions::setResolution(int scan_resolution)
 {
   m_resolution = scan_resolution;

@@ -23,7 +23,10 @@ DocumentDataStore::DocumentDataStore(QObject* parent)
   : QObject(parent)
 {}
 
-int DocumentDataStore::nextPageNumber() { return ++m_highest_page; }
+int DocumentDataStore::nextPageNumber()
+{
+  return ++m_highest_page;
+}
 
 void DocumentDataStore::appendData(DocumentData& data)
 {
@@ -208,7 +211,8 @@ void DocumentDataStore::remove(const DocumentData& data)
    \param start the initial page number
    \param finish the new page number
 */
-void DocumentDataStore::moveKey(int old_page, int new_page) {
+void DocumentDataStore::moveKey(int old_page, int new_page)
+{
   m_data.insert(new_page, m_data.value(old_page));
   m_data.remove(old_page);
 }
@@ -380,7 +384,10 @@ int DocData::pageNumber() const
   return m_page_no;
 }
 
-void DocData::setPageNumber(int page_no) { m_page_no = page_no; }
+void DocData::setPageNumber(int page_no)
+{
+  m_page_no = page_no;
+}
 
 bool DocData::isRemoveImageLater() const
 {
@@ -402,15 +409,35 @@ void DocData::setRemoveTextLater(bool remove_text_later)
   m_remove_text_later = remove_text_later;
 }
 
-QString DocData::internalName() const { return m_internal_name; }
+QString DocData::internalName() const
+{
+  return m_internal_name;
+}
 
-void DocData::setInternalName(const QString &internal_name) {
+void DocData::setInternalName(const QString &internal_name)
+{
   m_internal_name = internal_name;
 }
 
-bool DocData::inverted() const { return m_inverted; }
+bool DocData::inverted() const
+{
+  return m_inverted;
+}
 
-void DocData::setInverted(bool inverted) { m_inverted = inverted; }
+void DocData::setInverted(bool inverted)
+{
+  m_inverted = inverted;
+}
+
+int DocData::resolution() const
+{
+  return m_resolution;
+}
+
+void DocData::setResolution(int resolution)
+{
+  m_resolution = resolution;
+}
 
 /*!
   \brief Text was initialised using setText().

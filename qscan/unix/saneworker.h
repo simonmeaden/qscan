@@ -52,17 +52,17 @@ public:
   void cancelScan();
 
 signals:
-  void scanCompleted(const QImage&);
-  void scanFailed();
-  void scanProgress(double);
-  void finished();
-  //  void availableScannerOptions(ScanDevice*);
-  //  void sendIntValue(ScanDevice*, int);
-  void optionsSet(ScanDevice*);
-  void sourceChanged(ScanDevice*);
-  void modeChanged(ScanDevice*);
+    void scanCompleted(const QImage &, const int resolution);
+    void scanFailed();
+    void scanProgress(double);
+    void finished();
+    //  void availableScannerOptions(ScanDevice*);
+    //  void sendIntValue(ScanDevice*, int);
+    void optionsSet(ScanDevice *);
+    void sourceChanged(ScanDevice *);
+    void modeChanged(ScanDevice *);
 
-  void log(LogLevel, const QString&);
+    void log(LogLevel, const QString &);
 
 protected:
   //  Log4Qt::Logger* m_logger;

@@ -2,6 +2,7 @@
 #define BASESCANIMAGE_H
 
 #include <QImage>
+#include <QInputDialog>
 #include <QLabel>
 #include <QPainter>
 #include <QPoint>
@@ -10,6 +11,7 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "imageconverter.h"
 #include "logger.h"
 
 using namespace cv;
@@ -21,16 +23,22 @@ public:
   explicit BaseScanImage(QWidget* parent = nullptr);
 
   bool hasSelection();
-  void cutSelection();
+  void clearToBackground();
   void cropToSelection();
   void fitBest();
   void fitHeight();
   void fitWidth();
   void clearSelection();
   QRect selection();
+  void rotate180();
+  void rotateCW();
+  void rotateCCW();
+  void rotateByAngle();
+  void rotateByEdge();
   void rotateBy(qreal angle);
+  void invert();
 
-  virtual void setImage(const QImage &image);
+  virtual void setImage(const QImage &image, const int resolution = 0);
   QImage image();
   QImage modifiedImage();
   QImage selectedSubImage();
@@ -41,7 +49,10 @@ public:
   void fitByType();
   void undoAllChanges();
 
-signals:
+  int resolution() const;
+  void setResolution(int resolution);
+
+  signals:
   void imageIsLoaded();
   void adjustScrollbar(qreal);
   void selected();
@@ -80,6 +91,7 @@ protected:
   };
 
   Log4Qt::Logger* m_logger;
+  QList<QImage> m_op_images;
   State m_state;
   FitType m_fit_type;
   QImage m_image; // original unmodified image.
@@ -97,9 +109,11 @@ protected:
   QPoint m_edge_start;
   QPoint m_edge_finish;
   qreal m_scale_by;
+  int m_resolution;
   QRect m_default_crop_size;
   bool m_def_crop_set;
   bool m_is_inside;
+  bool m_inverted;
 
   void mousePressEvent(QMouseEvent* event) override;
   void mouseReleaseEvent(QMouseEvent* event) override;

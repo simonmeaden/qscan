@@ -4,9 +4,9 @@
   ===============================================================================*/
 
 ImageView::ImageView(QWidget *parent)
-    : QListView(parent)
-    , m_drag_state(DragStopped)
-    , m_drag_start_pos(-1)
+  : QListView(parent)
+  , m_drag_state(DragStopped)
+  , m_drag_start_x(-1)
 {
   m_model = new ImageListModel(this);
   setModel(m_model);
@@ -22,9 +22,68 @@ ImageView::ImageView(QWidget *parent)
   setDragDropOverwriteMode(false);
   setDefaultDropAction(Qt::MoveAction);
 
-  m_scroll_bar = verticalScrollBar();
-
   //  setStyle(new DropIndicatorProxyStyle);
+}
+
+void ImageView::mousePressEvent(QMouseEvent *event)
+{
+  if (event->button() == Qt::LeftButton) {
+    m_drag_state = DragStarted;
+    m_drag_start_x = int(event->localPos().x());
+
+  } /*else {*/
+
+  QListView::mousePressEvent(event);
+  //  }
+}
+
+void ImageView::mouseReleaseEvent(QMouseEvent *event)
+{
+  if (m_drag_state) {
+    m_drag_state = DragStopped;
+    m_drag_start_x = 0;
+    return;
+  }
+
+  QListView::mouseReleaseEvent(event);
+}
+
+void ImageView::mouseMoveEvent(QMouseEvent *event)
+{
+  QPoint pos = event->localPos().toPoint();
+
+  if (m_drag_state != DragStopped) {
+    const int mouse_position = int(pos.x());
+    const int mouse_distance = qAbs(m_drag_start_x - mouse_position);
+    DragDirection drag_direction = (mouse_distance < 10
+                                      ? Drag_Up
+                                      : (mouse_distance > 10 ? Drag_Down : Drag_None));
+
+    if (drag_direction != Drag_None) { // mouse has moved significantly
+      QScrollBar *scroll_bar = verticalScrollBar();
+      QWidget *viewport = qobject_cast<QAbstractScrollArea *>(this)->viewport();
+
+      const int view_x = viewport->x();
+      const int view_height = viewport->height();
+
+      if (drag_direction == Drag_Up && (mouse_position < view_x && mouse_position > view_x + 10)) {
+        scroll_bar->setValue(scroll_bar->value() - mouse_distance);
+        pos.setX(view_x + 5); // don't let the mouse above the widget while dragging
+
+      } else if (drag_direction == Drag_Down
+                 && (mouse_position > view_x + view_height
+                     && mouse_position > view_x + view_height - 10)) {
+        scroll_bar->setValue(scroll_bar->value() + mouse_distance);
+        pos.setX(view_x + view_height - 5); // don't let the mouse below the widget while dragging
+      }
+
+      event->setLocalPos(pos);
+
+      m_drag_state = Dragged;
+    }
+  }
+
+  QListView::mouseMoveEvent(event);
 }
 
 void ImageView::setCover(const QImage &image)
@@ -34,7 +93,7 @@ void ImageView::setCover(const QImage &image)
 
 int ImageView::appendThumbnail(const QImage &image, bool has_text, bool is_internal_image)
 {
-    return m_model->appendThumbnail(image, has_text, is_internal_image);
+  return m_model->appendThumbnail(image, has_text, is_internal_image);
 }
 
 void ImageView::insertThumbnail(int row, const QImage &image, bool has_text, bool is_internal_image)
@@ -49,12 +108,12 @@ void ImageView::removeThumbnail(int row)
 
 bool ImageView::moveThumbnail(int source, int destination)
 {
-    return m_model->moveThumbnail(source, destination);
+  return m_model->moveThumbnail(source, destination);
 }
 
 void ImageView::replaceThumbnail(int row, const QImage &image, bool has_text, bool is_internal_image)
 {
-    m_model->replaceThumbnail(row, image, has_text, is_internal_image);
+  m_model->replaceThumbnail(row, image, has_text, is_internal_image);
 }
 
 void ImageView::setHasText(int index, bool has_text)
@@ -64,79 +123,30 @@ void ImageView::setHasText(int index, bool has_text)
 
 void ImageView::setInternalImage(int index, bool internal_image)
 {
-    m_model->setInternalImage(index, internal_image);
+  m_model->setInternalImage(index, internal_image);
 }
 
 void ImageView::setCurrentRow(int row)
 {
-    QModelIndex index = m_model->index(row, 0, QModelIndex());
-    m_selection_model->clearSelection();
-    m_selection_model->setCurrentIndex(index, QItemSelectionModel::Select);
+  QModelIndex index = m_model->index(row, 0, QModelIndex());
+  m_selection_model->clearSelection();
+  m_selection_model->setCurrentIndex(index, QItemSelectionModel::Select);
 }
 
 void ImageView::setSelectionModel(QItemSelectionModel *selectionModel)
 {
-    m_selection_model = selectionModel;
-    QListView::setSelectionModel(selectionModel);
+  m_selection_model = selectionModel;
+  QListView::setSelectionModel(selectionModel);
 }
 
 void ImageView::dropEvent(QDropEvent *event)
 {
-    // This is needed because of a bug in QListView which removes the
-    // destination image when moved.
-    if (event->dropAction() == Qt::MoveAction) {
-        event->setDropAction(Qt::CopyAction);
-        QListView::dropEvent(event);
-    }
-}
-
-void ImageView::mousePressEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton) {
-        m_drag_state = DragStarted;
-        m_drag_start_pos = event->pos().y();
-
-    } else {
-        QListView::mousePressEvent(event);
-    }
-}
-
-void ImageView::mouseReleaseEvent(QMouseEvent *event)
-{
-    if (m_drag_state) {
-        m_drag_state = DragStopped;
-        m_drag_start_pos = -1;
-        return;
-    }
-
-    QListView::mouseReleaseEvent(event);
-}
-
-void ImageView::mouseMoveEvent(QMouseEvent *event)
-{
-    if (m_drag_state != DragStopped) {
-        const int itemSize = sizeHintForRow(0) / 2;
-        const int distance = qAbs(m_drag_start_pos - event->pos().y());
-
-        if (distance > 10) {
-            m_drag_state = Dragged;
-        }
-
-        if (distance > itemSize) {
-            int stepCount = (distance / itemSize);
-
-            if (m_drag_start_pos < event->pos().y()) {
-                stepCount = -stepCount; // scrolling up
-            }
-
-            m_scroll_bar->setValue(m_scroll_bar->value() + (stepCount * m_scroll_bar->singleStep()));
-            m_drag_start_pos = event->y();
-        }
-
-        return;
-    }
-
-    QListView::mouseMoveEvent(event);
+  // This is needed because of a bug in QListView which removes the
+  // destination image when moved.
+  if (event->dropAction() == Qt::MoveAction) {
+    event->setDropAction(Qt::CopyAction);
+    QListView::dropEvent(event);
+  }
 }
 
 bool ImageView::isIndexHidden(const QModelIndex &index) const

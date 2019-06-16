@@ -27,17 +27,12 @@ public:
 
   //  void rotateBy(int angle);
   void cropToContent();
-  void rotate180();
-  void rotateCW();
-  void rotateACW();
-  void rotateByAngle();
-  void rotateByEdge();
   void scaleBy();
   void save();
   void saveAs();
   QImage saveAsCover();
   void rescan();
-  void scale();
+  void rescale();
 
   QSize minimumSizeHint() const override;
   QSize sizeHint() const override;

@@ -63,7 +63,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     for (int i = 0; i < scanners.size(); i++) {
       ScanDevice* scanner = m_scan_lib->device(scanners.at(i));
-      QString s("%1 %2");
+      QString s("%1 %2 %3");
       m_scanner_box->addItem(
         s.arg(scanner->model, scanner->type, scanner->name));
     }
@@ -152,12 +152,6 @@ void MainWindow::initGui()
   installEventFilter(m_image_editor);
   connect(m_image_editor, &ScanEditor::scanCancelled, this, &MainWindow::cancelScanning);
   int row = 0;
-
-  //  // logger editor
-  //  m_empty_edit = new QPlainTextEdit(this);
-  //  m_empty_edit->setReadOnly(true);
-  //  m_empty_edit->setSizePolicy(QSizePolicy::Expanding,
-  //  QSizePolicy::Expanding);
 
   //  m_main_layout->addWidget(m_empty_edit, row, 1);
   m_main_layout->addWidget(m_image_editor, 0, 0, row + 1, 1);
@@ -269,8 +263,7 @@ QToolBar* MainWindow::initModeToolbar()
   return toolbar;
 }
 
-QToolBar*
-MainWindow::initResolutionToolbar()
+QToolBar *MainWindow::initResolutionToolbar()
 {
   auto* toolbar = addToolBar("mode bar");
 
@@ -419,8 +412,7 @@ void MainWindow::initActions()
   disableNoSelectionActions();
 }
 
-void
-MainWindow::initPixmaps()
+void MainWindow::initPixmaps()
 {
   help_key = QPixmapCache::insert(QPixmap(":/icons/help-contents"));
   scan_key = QPixmapCache::insert(QPixmap(":/icons/scan"));
@@ -441,8 +433,7 @@ MainWindow::initPixmaps()
   fit_height_key = QPixmapCache::insert(QPixmap(":/icons/fit-height"));
 }
 
-void
-MainWindow::makeConnections()
+void MainWindow::makeConnections()
 {
   connect(m_close_act, &QAction::triggered, this, &MainWindow::close);
   connect(m_scan_act, &QAction::triggered, this, &MainWindow::startScanning);
@@ -470,8 +461,7 @@ MainWindow::makeConnections()
     m_scan_lib, &QScan::sourceChanged, this, &MainWindow::receiveSourceChange);
 }
 
-void
-MainWindow::makeDelayedConnections()
+void MainWindow::makeDelayedConnections()
 {
   // These have been delayed until scanners have been properly detected.
   connect(m_scanner_box,

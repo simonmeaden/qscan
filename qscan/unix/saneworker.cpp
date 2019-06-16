@@ -207,7 +207,8 @@ void SaneWorker::scan(ScanDevice* device)
   sane_close(m_sane_handle);
   m_sane_handle = nullptr;
 
-  emit scanCompleted(image);
+  emit scanCompleted(image, device->options->resolution());
+
   //  emit finished();
   //  emit scanFailed();
   //  return;
@@ -348,34 +349,33 @@ void SaneWorker::loadAvailableScannerOptions(ScanDevice* device)
           QStringList list;
 
           switch (option->type) {
-            case SANE_TYPE_STRING: {
-              QString s;
+          case SANE_TYPE_STRING: {
+            QString s;
 
-              switch (option->constraint_type) {
-                case SANE_CONSTRAINT_STRING_LIST:
-                  for (int i = 0; option->constraint.string_list[i] != nullptr;
-                       i++) {
-                    s = QString(option->constraint.string_list[i]);
-                    list.append(s);
-                  }
-
-                  break;
-
-                case SANE_CONSTRAINT_WORD_LIST:
-                  for (int i = 1; i <= option->constraint.word_list[0]; i++) {
-                    s = QString(option->constraint.word_list[i]);
-                    list.append(s);
-                  }
-
-                  break;
-
-                default:
-                  break;
+            switch (option->constraint_type) {
+            case SANE_CONSTRAINT_STRING_LIST:
+              for (int i = 0; option->constraint.string_list[i] != nullptr; i++) {
+                s = QString(option->constraint.string_list[i]);
+                list.append(s);
               }
-            }
+
+              break;
+
+            case SANE_CONSTRAINT_WORD_LIST:
+              for (int i = 1; i <= option->constraint.word_list[0]; i++) {
+                s = QString(option->constraint.word_list[i]);
+                list.append(s);
+              }
+
+              break;
 
             default:
               break;
+            }
+          }
+
+          default:
+            break;
           }
 
           if (!list.isEmpty()) {
@@ -392,34 +392,33 @@ void SaneWorker::loadAvailableScannerOptions(ScanDevice* device)
           QStringList list;
 
           switch (option->type) {
-            case SANE_TYPE_STRING: {
-              QString s;
+          case SANE_TYPE_STRING: {
+            QString s;
 
-              switch (option->constraint_type) {
-                case SANE_CONSTRAINT_STRING_LIST:
-                  for (int i = 0; option->constraint.string_list[i] != nullptr;
-                       i++) {
-                    s = QString(option->constraint.string_list[i]);
-                    list.append(s);
-                  }
-
-                  break;
-
-                case SANE_CONSTRAINT_WORD_LIST:
-                  for (int i = 1; i <= option->constraint.word_list[0]; i++) {
-                    s = QString(option->constraint.word_list[i]);
-                    list.append(s);
-                  }
-
-                  break;
-
-                default:
-                  break;
+            switch (option->constraint_type) {
+            case SANE_CONSTRAINT_STRING_LIST:
+              for (int i = 0; option->constraint.string_list[i] != nullptr; i++) {
+                s = QString(option->constraint.string_list[i]);
+                list.append(s);
               }
-            }
+
+              break;
+
+            case SANE_CONSTRAINT_WORD_LIST:
+              for (int i = 1; i <= option->constraint.word_list[0]; i++) {
+                s = QString(option->constraint.word_list[i]);
+                list.append(s);
+              }
+
+              break;
 
             default:
               break;
+            }
+          }
+
+          default:
+            break;
           }
 
           if (!list.isEmpty()) {

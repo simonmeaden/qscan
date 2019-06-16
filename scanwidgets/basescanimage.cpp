@@ -8,7 +8,7 @@ const QBrush BaseScanImage::RUBBERBAND_BRUSH = QBrush(QColor(128, 128, 255, 128)
 const qreal BaseScanImage::ZOOM_IN_FACTOR = 1.1;
 const qreal BaseScanImage::ZOOM_OUT_FACTOR = 0.9;
 
-BaseScanImage::BaseScanImage(QWidget* parent)
+BaseScanImage::BaseScanImage(QWidget *parent)
   : QLabel(parent)
   , m_state(DOING_NOTHING)
   , m_fit_type(FIT_BEST)
@@ -21,6 +21,7 @@ BaseScanImage::BaseScanImage(QWidget* parent)
   , m_scale_by(1.0)
   , m_def_crop_set(false)
   , m_is_inside(false)
+  , m_inverted(false)
 {
   m_logger = Log4Qt::Logger::logger(tr("ScanImage"));
 
@@ -32,24 +33,17 @@ bool BaseScanImage::hasSelection()
   return (m_state == RUBBERBAND_COMPLETE);
 }
 
-void BaseScanImage::setImage(const QImage& image)
+void BaseScanImage::setImage(const QImage &image, const int resolution)
 {
   m_image = image;
   m_modified_image = image;
+
+  if (resolution > 0) {
+    m_resolution = resolution;
+  }
+
   fitByType();
 }
-
-// void BaseScanImage::updateImage(/*const QImage& image*/) {
-//  emit imageIsLoaded();
-
-//  // allows multi use of the same crop size.
-//  if (m_def_crop_set) {
-//    m_rubber_band = m_default_crop_size;
-//    m_state = RUBBERBAND_COMPLETE;
-//  }
-
-//  update();
-//}
 
 QImage BaseScanImage::image()
 {
@@ -77,25 +71,44 @@ QImage BaseScanImage::selectedSubImage()
   return QImage();
 }
 
-void BaseScanImage::cutSelection()
+void BaseScanImage::clearToBackground()
 {
   if (hasSelection()) {
-    QRect scaled_rect;
-    scaled_rect.setX(int(m_rubber_band.x() / m_scale_by));
-    scaled_rect.setY(int(m_rubber_band.y() / m_scale_by));
-    scaled_rect.setWidth(int(m_rubber_band.width() / m_scale_by));
-    scaled_rect.setHeight(int(m_rubber_band.height() / m_scale_by));
+    QRect selected_rect;
+    selected_rect.setX(int(m_rubber_band.x() / m_scale_by));
+    selected_rect.setY(int(m_rubber_band.y() / m_scale_by));
+    selected_rect.setWidth(int(m_rubber_band.width() / m_scale_by));
+    selected_rect.setHeight(int(m_rubber_band.height() / m_scale_by));
 
-    QImage white(scaled_rect.size(), QImage::Format_Mono);
-    white.fill(Qt::white);
+    QColor fill_color(Qt::white);
+
+    if (m_inverted) {
+      fill_color = QColor(Qt::black);
+    }
 
     QPainter painter(&m_modified_image);
-    painter.drawImage(scaled_rect.topLeft(), white);
+    QPen pen(fill_color);
+    painter.setPen(pen);
+    painter.setBrush(fill_color);
+    painter.drawRect(selected_rect);
     painter.end();
 
     scaleModifiedImage();
     clearSelection();
   }
+}
+
+void BaseScanImage::invert()
+{
+  m_op_images.append(m_modified_image);
+
+  // create a modifiable image.
+  cv::Mat modified = ImageConverter::imageToMat(m_modified_image);
+  cv::bitwise_not(modified, modified);
+  QImage image = ImageConverter::matToImage(modified);
+  m_modified_image = image;
+  m_inverted = !m_inverted;
+  scaleModifiedImage();
 }
 
 void BaseScanImage::cropToSelection()
@@ -117,12 +130,12 @@ void BaseScanImage::cropToSelection()
 }
 
 void BaseScanImage::scaleModifiedImage(
-    /*qreal factor,*/ /*const QImage& image*/)
+  /*qreal factor,*/ /*const QImage& image*/)
 {
-    int w = int(m_modified_image.width() * m_scale_by);
-    int h = int(m_modified_image.height() * m_scale_by);
-    m_scaled_image = m_modified_image.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    update();
+  int w = int(m_modified_image.width() * m_scale_by);
+  int h = int(m_modified_image.height() * m_scale_by);
+  m_scaled_image = m_modified_image.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  update();
 }
 
 void BaseScanImage::clearSelection()
@@ -201,7 +214,17 @@ void BaseScanImage::undoAllChanges()
   m_modified_image = m_image;
 }
 
-void BaseScanImage::mousePressEvent(QMouseEvent* event)
+int BaseScanImage::resolution() const
+{
+  return m_resolution;
+}
+
+void BaseScanImage::setResolution(int resolution)
+{
+  m_resolution = resolution;
+}
+
+void BaseScanImage::mousePressEvent(QMouseEvent *event)
 {
   if (!m_modified_image.isNull()) {
     m_mouse_moved = false;
@@ -209,15 +232,12 @@ void BaseScanImage::mousePressEvent(QMouseEvent* event)
     int e_y = event->y();
 
     if (event->button() == Qt::LeftButton) {
-
       if (m_is_inside) {
-
         switch (m_state) {
         case EDGE_SELECTED:
           m_state = EDGE_STARTING;
-          m_logger->info(tr("Edge draw pressed. (%1, %2)")
-                         .arg(m_edge_start.x())
-                         .arg(m_edge_start.y()));
+          m_logger->info(
+            tr("Edge draw pressed. (%1, %2)").arg(m_edge_start.x()).arg(m_edge_start.y()));
           m_edge_start = event->pos();
           m_edge_finish = m_edge_start;
           update();
@@ -239,20 +259,17 @@ void BaseScanImage::mousePressEvent(QMouseEvent* event)
           int right = left + m_rubber_band.width();
           emit selectionUnderway();
 
-          if ((e_x > left - 10 && e_x < left + 10) &&
-              (e_y > bottom - 10 && e_y < bottom + 10)) {
+          if ((e_x > left - 10 && e_x < left + 10) && (e_y > bottom - 10 && e_y < bottom + 10)) {
             m_state = STRETCH_BOTTOMLEFT;
 
-          } else if ((e_x > right - 10 && e_x < right + 10) &&
-                     (e_y > top - 10 && e_y < top + 10)) {
+          } else if ((e_x > right - 10 && e_x < right + 10) && (e_y > top - 10 && e_y < top + 10)) {
             m_state = STRETCH_TOPRIGHT;
 
-          } else if ((e_x > left - 10 && e_x < left + 10) &&
-                     (e_y > top - 10 && e_y < top + 10)) {
+          } else if ((e_x > left - 10 && e_x < left + 10) && (e_y > top - 10 && e_y < top + 10)) {
             m_state = STRETCH_TOPLEFT;
 
-          } else if ((e_x < right + 10 && e_x > right - 10) &&
-                     (e_y > bottom - 10 && e_y < bottom + 10)) {
+          } else if ((e_x < right + 10 && e_x > right - 10)
+                     && (e_y > bottom - 10 && e_y < bottom + 10)) {
             m_state = STRETCH_BOTTOMRIGHT;
 
           } else if (e_x > left - 10 && e_x < left + 10) {
@@ -283,7 +300,7 @@ void BaseScanImage::mousePressEvent(QMouseEvent* event)
   }       // end m_image check
 }
 
-void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
+void BaseScanImage::mouseMoveEvent(QMouseEvent *event)
 {
   if (!m_modified_image.isNull()) {
     int e_x = event->x();
@@ -314,9 +331,7 @@ void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
         break;
 
       case EDGE_DRAWING:
-        m_logger->info(tr("Edge moving. (%1, %2)")
-                       .arg(m_edge_finish.x())
-                       .arg(m_edge_finish.y()));
+        m_logger->info(tr("Edge moving. (%1, %2)").arg(m_edge_finish.x()).arg(m_edge_finish.y()));
         m_edge_finish = event->pos();
         break;
 
@@ -330,16 +345,12 @@ void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
       case RUBBERBANDING:
         m_rb_end_x = e_x;
         m_rb_end_y = e_y;
-        m_rubber_band.setX(
-          (m_rb_start_x < m_rb_end_x ? m_rb_start_x : m_rb_end_x));
-        m_rubber_band.setWidth((m_rb_start_x < m_rb_end_x
-                                ? m_rb_end_x - m_rb_start_x
-                                : m_rb_start_x - m_rb_end_x));
-        m_rubber_band.setY(
-          (m_rb_start_y < m_rb_end_y ? m_rb_start_y : m_rb_end_y));
-        m_rubber_band.setHeight((m_rb_start_y < m_rb_end_y
-                                 ? m_rb_end_y - m_rb_start_y
-                                 : m_rb_start_y - m_rb_end_y));
+        m_rubber_band.setX((m_rb_start_x < m_rb_end_x ? m_rb_start_x : m_rb_end_x));
+        m_rubber_band.setWidth(
+          (m_rb_start_x < m_rb_end_x ? m_rb_end_x - m_rb_start_x : m_rb_start_x - m_rb_end_x));
+        m_rubber_band.setY((m_rb_start_y < m_rb_end_y ? m_rb_start_y : m_rb_end_y));
+        m_rubber_band.setHeight(
+          (m_rb_start_y < m_rb_end_y ? m_rb_end_y - m_rb_start_y : m_rb_start_y - m_rb_end_y));
         setCursor(Qt::CrossCursor);
         break;
 
@@ -359,20 +370,17 @@ void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
         int bottom = top + m_rubber_band.height();
         int right = left + m_rubber_band.width();
 
-        if ((e_x > left - 10 && e_x < left + 10) &&
-            (e_y > bottom - 10 && e_y < bottom + 10)) {
+        if ((e_x > left - 10 && e_x < left + 10) && (e_y > bottom - 10 && e_y < bottom + 10)) {
           setCursor(Qt::SizeBDiagCursor);
 
-        } else if ((e_x > right - 10 && e_x < right + 10) &&
-                   (e_y > top - 10 && e_y < top + 10)) {
+        } else if ((e_x > right - 10 && e_x < right + 10) && (e_y > top - 10 && e_y < top + 10)) {
           setCursor(Qt::SizeBDiagCursor);
 
-        } else if ((e_x > left - 10 && e_x < left + 10) &&
-                   (e_y > top - 10 && e_y < top + 10)) {
+        } else if ((e_x > left - 10 && e_x < left + 10) && (e_y > top - 10 && e_y < top + 10)) {
           setCursor(Qt::SizeFDiagCursor);
 
-        } else if ((e_x < right + 10 && e_x > right - 10) &&
-                   (e_y > bottom - 10 && e_y < bottom + 10)) {
+        } else if ((e_x < right + 10 && e_x > right - 10)
+                   && (e_y > bottom - 10 && e_y < bottom + 10)) {
           setCursor(Qt::SizeFDiagCursor);
 
         } else if (e_x > left - 10 && e_x < left + 10) {
@@ -397,8 +405,7 @@ void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
 
       case STRETCH_TOP:
         m_stretched_band.setY(e_y);
-        m_stretched_band.setHeight(m_rubber_band.height() -
-                                   (e_y - m_rubber_band.y()));
+        m_stretched_band.setHeight(m_rubber_band.height() - (e_y - m_rubber_band.y()));
         break;
 
       case STRETCH_BOTTOM:
@@ -407,8 +414,7 @@ void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
 
       case STRETCH_LEFT:
         m_stretched_band.setX(e_x);
-        m_stretched_band.setWidth(m_rubber_band.width() -
-                                  (e_x - m_rubber_band.x()));
+        m_stretched_band.setWidth(m_rubber_band.width() - (e_x - m_rubber_band.x()));
         break;
 
       case STRETCH_RIGHT:
@@ -417,25 +423,21 @@ void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
 
       case STRETCH_TOPLEFT:
         m_stretched_band.setY(e_y);
-        m_stretched_band.setHeight(m_rubber_band.height() -
-                                   (e_y - m_rubber_band.y()));
+        m_stretched_band.setHeight(m_rubber_band.height() - (e_y - m_rubber_band.y()));
         m_stretched_band.setX(e_x);
-        m_stretched_band.setWidth(m_rubber_band.width() -
-                                  (e_x - m_rubber_band.x()));
+        m_stretched_band.setWidth(m_rubber_band.width() - (e_x - m_rubber_band.x()));
         break;
 
       case STRETCH_TOPRIGHT:
         m_stretched_band.setY(e_y);
-        m_stretched_band.setHeight(m_rubber_band.height() -
-                                   (e_y - m_rubber_band.y()));
+        m_stretched_band.setHeight(m_rubber_band.height() - (e_y - m_rubber_band.y()));
         m_stretched_band.setWidth(e_x - m_rubber_band.x());
         break;
 
       case STRETCH_BOTTOMLEFT:
         m_stretched_band.setHeight(e_y - m_rubber_band.y());
         m_stretched_band.setX(e_x);
-        m_stretched_band.setWidth(m_rubber_band.width() -
-                                  (e_x - m_rubber_band.x()));
+        m_stretched_band.setWidth(m_rubber_band.width() - (e_x - m_rubber_band.x()));
         break;
 
       case STRETCH_BOTTOMRIGHT:
@@ -456,7 +458,7 @@ void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
   }
 }
 
-void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
+void BaseScanImage::mouseReleaseEvent(QMouseEvent *event)
 {
   if (!m_modified_image.isNull()) {
     int e_x = event->x();
@@ -489,9 +491,8 @@ void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
       m_mouse_moved = false;
       m_edge_finish = event->pos();
       m_state = DOING_NOTHING;
-      m_logger->info(tr("Edge draw released. (%1, %2)")
-                     .arg(m_edge_finish.x())
-                     .arg(m_edge_finish.y()));
+      m_logger->info(
+        tr("Edge draw released. (%1, %2)").arg(m_edge_finish.x()).arg(m_edge_finish.y()));
       rotateUsingEdge();
       emit unselected();
       break;
@@ -499,22 +500,18 @@ void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
     case RUBBERBANDING: {
       m_rb_end_x = e_x;
       m_rb_end_y = e_y;
-      m_rubber_band.setX(
-        (m_rb_start_x < m_rb_end_x ? m_rb_start_x : m_rb_end_x));
-      m_rubber_band.setWidth((m_rb_start_x < m_rb_end_x
-                              ? m_rb_end_x - m_rb_start_x
-                              : m_rb_start_x - m_rb_end_x));
-      m_rubber_band.setY(
-        (m_rb_start_y < m_rb_end_y ? m_rb_start_y : m_rb_end_y));
-      m_rubber_band.setHeight((m_rb_start_y < m_rb_end_y
-                               ? m_rb_end_y - m_rb_start_y
-                               : m_rb_start_y - m_rb_end_y));
+      m_rubber_band.setX((m_rb_start_x < m_rb_end_x ? m_rb_start_x : m_rb_end_x));
+      m_rubber_band.setWidth(
+        (m_rb_start_x < m_rb_end_x ? m_rb_end_x - m_rb_start_x : m_rb_start_x - m_rb_end_x));
+      m_rubber_band.setY((m_rb_start_y < m_rb_end_y ? m_rb_start_y : m_rb_end_y));
+      m_rubber_band.setHeight(
+        (m_rb_start_y < m_rb_end_y ? m_rb_end_y - m_rb_start_y : m_rb_start_y - m_rb_end_y));
       m_stretched_band = m_rubber_band;
       m_logger->debug(tr("x:%1, y:%2, width:%3, height:%4")
-                      .arg(m_rubber_band.x())
-                      .arg(m_rubber_band.y())
-                      .arg(m_rubber_band.width())
-                      .arg(m_rubber_band.height()));
+                        .arg(m_rubber_band.x())
+                        .arg(m_rubber_band.y())
+                        .arg(m_rubber_band.width())
+                        .arg(m_rubber_band.height()));
       m_state = RUBBERBAND_COMPLETE;
       emit selected();
       update();
@@ -558,7 +555,7 @@ void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
     } // end of switch.
   }
 }
-void BaseScanImage::paintEvent(QPaintEvent* event)
+void BaseScanImage::paintEvent(QPaintEvent *event)
 {
   if (!m_modified_image.isNull()) {
     QLabel::paintEvent(event);
@@ -569,7 +566,7 @@ void BaseScanImage::paintEvent(QPaintEvent* event)
   }
 }
 
-void BaseScanImage::paintRubberBand(QPainter* painter)
+void BaseScanImage::paintRubberBand(QPainter *painter)
 {
   QPen pen;
   QBrush brush;
@@ -634,8 +631,7 @@ void BaseScanImage::paintRubberBand(QPainter* painter)
     painter->setPen(pen);
     painter->setBrush(brush);
     painter->drawRect(m_stretched_band);
-    painter->drawRect(
-      m_stretched_band.x() - 10, m_stretched_band.y() - 10, 20, 20);
+    painter->drawRect(m_stretched_band.x() - 10, m_stretched_band.y() - 10, 20, 20);
     painter->drawRect(m_stretched_band.x() + m_stretched_band.width() - 10,
                       m_stretched_band.y() - 10,
                       20,
@@ -655,19 +651,17 @@ void BaseScanImage::paintRubberBand(QPainter* painter)
   } // end of switch
 }
 
-
-void BaseScanImage::enterEvent(QEvent*)
+void BaseScanImage::enterEvent(QEvent *)
 {
   m_is_inside = true;
 }
 
-void BaseScanImage::leaveEvent(QEvent*)
+void BaseScanImage::leaveEvent(QEvent *)
 {
   m_is_inside = false;
 }
 
-
-void BaseScanImage::wheelEvent(QWheelEvent* event)
+void BaseScanImage::wheelEvent(QWheelEvent *event)
 {
   int delta = event->delta();
 
@@ -687,7 +681,7 @@ void BaseScanImage::wheelEvent(QWheelEvent* event)
   }
 }
 
-//void BaseScanImage::resizeEvent(QResizeEvent* event)
+// void BaseScanImage::resizeEvent(QResizeEvent* event)
 //{
 //  QLabel::resizeEvent(event);
 //}
@@ -706,6 +700,46 @@ void BaseScanImage::zoomOut()
   fitByType();
 }
 
+void BaseScanImage::rotateByEdge()
+{
+  m_state = EDGE_SELECTED;
+}
+
+void BaseScanImage::rotateByAngle()
+{
+  bool ok;
+  qreal angle = QInputDialog::getDouble(this,
+                                        tr("Rotate by angle"),
+                                        tr("Rotate the image by a fixed angle around the centre."),
+                                        0.0,   // value
+                                        0.0,   // min
+                                        360.0, // max
+                                        1,     // decimals
+                                        &ok);
+
+  if (angle > 0.0 && ok) {
+    rotateBy(angle);
+  }
+}
+
+void BaseScanImage::rotate180()
+{
+  m_op_images.append(m_modified_image);
+  rotateBy(180);
+}
+
+void BaseScanImage::rotateCW()
+{
+  m_op_images.append(m_modified_image);
+  rotateBy(90.0);
+}
+
+void BaseScanImage::rotateCCW()
+{
+  m_op_images.append(m_modified_image);
+  rotateBy(-90.0);
+}
+
 void BaseScanImage::rotateBy(qreal angle)
 {
   m_logger->info(tr("Rotating by %1°").arg(angle));
@@ -714,8 +748,7 @@ void BaseScanImage::rotateBy(qreal angle)
     matrix.translate(center.x(), center.y());
     matrix.rotate(angle);
     return matrix;
-  }
-  (m_modified_image.rect().center()));
+  }(m_modified_image.rect().center()));
   setImage(rotated);
   fitBest();
   update();
@@ -729,13 +762,13 @@ void BaseScanImage::rotateUsingEdge()
   int y_finish = m_edge_finish.y();
   qreal w = x_finish - x_start;
   qreal h = y_finish - y_start;
-  qreal angle = qRadiansToDegrees(qAtan(qAbs(w) / qAbs(h)));
+  qreal angle = qRadiansToDegrees(qAtan(qAbs(h) / qAbs(w)));
 
   if ((w > 0 && h > 0) || (w < 0 && h < 0)) {
-    rotateBy(angle);
+    rotateBy(-angle);
 
   } else {
-    rotateBy(-angle);
+    rotateBy(angle);
   }
 
   clearSelection();

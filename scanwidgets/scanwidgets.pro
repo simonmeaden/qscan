@@ -32,6 +32,7 @@ SOURCES += \
         imagelistmodel.cpp \
         imageview.cpp \
         pageview.cpp \
+        qdoubleslider.cpp \
         scaneditor.cpp \
         scanimage.cpp \
         scanlist.cpp
@@ -44,6 +45,7 @@ HEADERS += \
         imagelistmodel.h \
         imageview.h \
         pageview.h \
+        qdoubleslider.h \
         scaneditor.h \
         scanimage.h \
         scanlist.h \

@@ -63,7 +63,7 @@ public:
   void loadOptions(const QString& filename = QString());
   void saveOptions(const QString& filename = QString());
 
-  void setImage(const QImage& image);
+  void setImage(const QImage &image, const int resolution);
   void setScanProgress(const int& progress);
   void scanningStarted();
   QString documentName() const;
@@ -111,7 +111,10 @@ public:
 
   void cleanupImages();
 
-signals:
+  int resolution() const;
+  void setResolution(int resolution);
+
+  signals:
   void scanCancelled();
   void selected();
   void unselected();
@@ -124,7 +127,7 @@ protected:
   QString m_current_doc_name;
   QString m_options_file;
   QString m_data_filename;
-  DocumentDataStore* m_doc_data{};
+  DocumentDataStore *m_doc_data_store{};
   ScanImage* m_scan_display{};
   QProgressDialog* m_prog_dlg{};
   QScan* m_scan_lib{};
@@ -135,21 +138,28 @@ protected:
   QString m_data_dir{};
   QString m_lang{};
   OcrDialog* m_ocr_dlg{};
-  QPushButton *m_crop_btn{}, *m_left_btn{}, *m_move_up_btn{}, *m_move_down_btn{};
+  QPushButton *m_crop_btn{}, *m_left_btn{}, *m_move_up_btn{}, *m_move_down_btn{}, *m_move_to_btn{};
   QPushButton *m_cover_btn{};
   QPushButton *m_right_btn{};
   QPushButton *m_both_btn{};
   QPushButton *m_single_btn{};
+  QPushButton *m_internal_btn{};
   QGroupBox *group1{}, *group2{}, *group3{};
 
   DocumentData m_cover;
+  int m_resolution;
 
-  QPixmapCache::Key crop_key, move_up_key, move_down_key;
+  QPixmapCache::Key crop_key;
+  QPixmapCache::Key move_up_key;
+  QPixmapCache::Key move_down_key;
+  QPixmapCache::Key move_to_key;
+  QPixmapCache::Key internal_key;
   QPixmapCache::Key cover_key;
   QPixmapCache::Key left_key;
   QPixmapCache::Key right_key;
   QPixmapCache::Key single_key;
   QPixmapCache::Key both_key;
+  QPixmapCache::Key scale_key;
 
   bool eventFilter(QObject* obj, QEvent* event) override;
 
@@ -174,6 +184,7 @@ protected:
   void removeText(int page_no);
   void saveModifiedText(int page_no, const QStringList& text);
   QImage thumbnail(const QImage& image) const;
+  void rescale();
 
   void enableMoveBtns(bool enable);
   void enableListBtns();

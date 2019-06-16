@@ -10,8 +10,6 @@
 //#include "scanpage.h"
 #include "documentdata.h"
 
-class TessTools;
-
 class OcrWorker : public QObject
 {
   Q_OBJECT

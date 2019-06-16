@@ -18,9 +18,14 @@ class PageView : public QWidget
 public:
   explicit PageView(QWidget* parent = nullptr);
 
-  int appendThumbnail(const QImage &thumbnail, bool has_text = false, bool is_internal_image = false);
+  int appendThumbnail(const QImage &thumbnail,
+                      bool has_text = false,
+                      bool is_internal_image = false);
   void removeThumbnail(int index);
-  void replaceThumbnail(int index, const QImage &image, bool has_text = false, bool is_internal_image = false);
+  void replaceThumbnail(int index,
+                        const QImage &image,
+                        bool has_text = false,
+                        bool is_internal_image = false);
   void insertThumbnail(int index,
                        const QImage& thumbnail,
                        bool has_text = false,
@@ -36,6 +41,7 @@ public:
 
   void moveUp();
   void moveDown();
+  void workOnImage();
 
   signals:
   void pageMoved(int from, int to);
@@ -80,8 +86,8 @@ public:
   void nonOcrImage();
   //  void doOcr();
   //  void doAllOcr();
-  void workOnImage();
   void loadTextIntoEditor();
+  void itemDoubleClicked(const QModelIndex &index);
 
   static const QString HASTEXT;
   static const QString HASNOTEXT;

@@ -3,22 +3,25 @@
 
 #include <QDialog>
 #include <QDialogButtonBox>
-#include <QFrame>
-#include <QLabel>
 #include <QFont>
+#include <QFrame>
 #include <QGridLayout>
-#include <QVBoxLayout>
-#include <QStackedLayout>
-#include <QObject>
-#include <QTextEdit>
-#include <QPushButton>
 #include <QGuiApplication>
-#include <QScreen>
+#include <QLabel>
 #include <QMessageBox>
+#include <QObject>
+#include <QPushButton>
+#include <QScreen>
 #include <QSlider>
+#include <QStackedLayout>
+#include <QTextEdit>
+#include <QVBoxLayout>
+#include <qt5/qwt/qwt_scale_engine.h>
+#include <qt5/qwt/qwt_slider.h>
 
 //#include "scanpage.h"
 #include "documentdata.h"
+#include "qdoubleslider.h"
 
 class OcrImage;
 class ScanList;
@@ -49,26 +52,36 @@ public:
 signals:
   void sendOcrRequest(int, const QImage&);
   void saveModifiedImage(int index, const QImage& image);
-  void saveModifiedText(int index, const QStringList &text);
+  void saveModifiedText(int index, const QStringList& text);
 
-  protected:
-  ScanList *m_text_edit;
-  OcrImage *m_image_display;
+protected:
+  enum ChangeType
+  {
+    Binarise,
+    Rescale,
+  };
+  ScanList* m_text_edit;
+  OcrImage* m_image_display;
   int m_page_no{};
   DocumentData m_doc_data;
   bool m_image_changed;
-  QPushButton *m_crop_btn{};
-  QPushButton *m_cut_btn{};
-  QPushButton *m_binarise_btn{};
-  QPushButton *m_ocr_btn{};
-  QPushButton *m_ocr_sel_btn{};
-  QPushButton *denoise_btn{}, *dewarp_btn{}, *deskew_btn{};
-  QSlider *threshold_slider{};
-  QLabel *threshold_lbl{};
-  QStackedLayout *m_ctl_stack{};
-  int m_btn_stack{}, m_threshold_stack{};
+  QPushButton* m_crop_btn{};
+  QPushButton* m_clr_to_back_btn{};
+  QPushButton* m_binarise_btn{};
+  QPushButton* m_ocr_btn{};
+  QPushButton* m_ocr_sel_btn{};
+  QPushButton* denoise_btn{};
+  QPushButton* dewarp_btn{};
+  //  QPushButton *deskew_btn{};
+  QwtSlider *m_intvalue_slider{};
+  QwtSlider *m_dblvalue_slider{};
+  QLabel *m_intvalue_lbl{}, *m_dblvalue_lbl{};
+  QStackedLayout* m_ctl_stack{};
+  int m_btn_stack{};
+  int m_intvalue_stack{}, m_dblvalue_stack{};
+  ChangeType m_change_type;
 
-  void resizeEvent(QResizeEvent *event) override;
+  void resizeEvent(QResizeEvent* event) override;
 
   void initGui();
   void requestOcr();
@@ -82,6 +95,9 @@ signals:
   void denoise();
   void dewarp();
   void deskew();
+  void rotate180();
+  void rotateCW();
+  void rotateCCW();
   void rescale();
   void saveText();
   void saveImage();
@@ -89,14 +105,20 @@ signals:
   void undoChanges();
   void close();
 
-  void setThresholdLabel(int threshold);
-  void thresholdAccepted();
-  void applyThreshold();
+  void setIntValueLabel(qreal value);
+  void setDoubleValueLabel(qreal value);
+  void valueAccepted();
+  void applyValue();
+  void aValue();
+
+  void setCurrentValueType();
 
   void disableBinarise();
   void enableBinarise();
 
   void enableCleanImageBtns(bool enable);
+  QFrame *initIntSliderFrame();
+  QFrame *initDoubleSliderFrame();
 };
 
 #endif // OCRDIALOG_H

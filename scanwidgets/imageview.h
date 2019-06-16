@@ -16,11 +16,10 @@
 #include <QVariant>
 #include <QWidget>
 
-#include "scanwidgets_global.h"
-#include "logger.h"
-#include "imagelistmodel.h"
 #include "imagedelegate.h"
-
+#include "imagelistmodel.h"
+#include "logger.h"
+#include "scanwidgets_global.h"
 
 class DropIndicatorProxyStyle : public QProxyStyle
 {
@@ -50,20 +49,31 @@ public:
   void setSelectionModel(QItemSelectionModel *selectionModel) override;
 
   protected:
-  enum DragState { DragStopped, DragStarted, Dragged };
+  enum DragState {
+    DragStopped,
+    DragStarted,
+    Dragged,
+  };
+  enum DragDirection {
+    Drag_Up,
+    Drag_Down,
+    Drag_None,
+  };
 
-  ImageListModel* m_model;
+  ImageListModel *m_model;
   QItemSelectionModel *m_selection_model;
-  QScrollBar *m_scroll_bar;
-  quint8 m_drag_state;
-  int m_drag_start_pos;
+  DragState m_drag_state;
+  int m_drag_start_x;
 
-  bool isIndexHidden(const QModelIndex &index) const override;
-
-  void dropEvent(QDropEvent* event) override;
   void mousePressEvent(QMouseEvent *event) override;
   void mouseReleaseEvent(QMouseEvent *event) override;
   void mouseMoveEvent(QMouseEvent *event) override;
+
+  bool isIndexHidden(const QModelIndex &index) const override;
+
+  void dropEvent(QDropEvent *event) override;
+
+  friend class PageView;
 };
 
 #endif // IMAGEVIEW_H

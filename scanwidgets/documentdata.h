@@ -53,6 +53,9 @@ public:
   bool inverted() const;
   void setInverted(bool inverted);
 
+  int resolution() const;
+  void setResolution(int resolution);
+
   protected:
   int m_page_no{};
   QString m_filename;
@@ -64,6 +67,7 @@ public:
   bool m_remove_image_later;
   bool m_remove_text_later;
   bool m_inverted;
+  int m_resolution{};
 };
 using DocumentData = QSharedPointer<DocData>;
 

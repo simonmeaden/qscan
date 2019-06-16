@@ -67,12 +67,12 @@ public:
   void setSource(ScanDevice* device, const QString& source);
 
 signals:
-  void scanCompleted(const QImage&);
-  void scanFailed();
-  void scanProgress(const int&);
-  void optionsSet(ScanDevice*);
-  void sourceChanged(ScanDevice*);
-  void modeChanged(ScanDevice*);
+    void scanCompleted(const QImage &, const int resolution);
+    void scanFailed();
+    void scanProgress(const int &);
+    void optionsSet(ScanDevice *);
+    void sourceChanged(ScanDevice *);
+    void modeChanged(ScanDevice *);
 
 protected:
   Log4Qt::Logger* m_logger;

@@ -142,16 +142,17 @@ class ScanLibrary
   , public ScanInterface
 {
   Q_OBJECT
-public: ScanLibrary(QObject* parent = nullptr);
+  public:
+  ScanLibrary(QObject *parent = nullptr);
   //  ~ScanLibrary();
 
 signals:
-  void scanCompleted(const QImage& image);
-  void scanFailed();
-  void scanProgress(const int&);
-  void optionsSet(ScanDevice*);
-  void sourceChanged(ScanDevice*);
-  void modeChanged(ScanDevice*);
+    void scanCompleted(const QImage &image, const int resolution);
+    void scanFailed();
+    void scanProgress(const int &);
+    void optionsSet(ScanDevice *);
+    void sourceChanged(ScanDevice *);
+    void modeChanged(ScanDevice *);
 };
 
 #endif // SCANLIB_H

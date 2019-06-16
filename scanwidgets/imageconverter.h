@@ -1,8 +1,10 @@
 #ifndef IMAGECONVERTER_H
 #define IMAGECONVERTER_H
 
+#include "leptonica/allheaders.h"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/imgproc/types_c.h"
+
 #include <QImage>
 #include <QPixmap>
 #include <QtDebug>
@@ -53,15 +55,23 @@
 namespace ImageConverter {
 
 cv::Mat imageToMat(const QImage& image, bool clone_image_data = true);
-cv::Mat pixmapToMat(const QPixmap& pixmap, bool clone_image_data = true);
-QImage matToImage(cv::Mat mat);
-QPixmap matToPixmap(cv::Mat mat);
+QImage matToImage(const cv::Mat &mat);
+
+cv::Mat pixmapToMat(const QPixmap &pixmap, bool clone_image_data = true);
+QPixmap matToPixmap(const cv::Mat &mat);
+
+PIX *imageToPix(const QImage &image);
+QImage pixToImage(PIX *pixImage);
 
 bool isEqual(const cv::Mat& mat1, const cv::Mat& mat2);
-bool isEqual(const QImage& img1, const QImage& img2);
+bool isEqual(const QImage &img1, const QImage &img2);
+bool isEqual(PIX *img1, PIX *img2);
 
 // QImage fromIplImage(const IplImage* iplImg);
 // IplImage* toIplImage(const QImage& image);
+
+int dpiToDpm(int value);
+int dpmToDpi(int value);
 
 } // namespace ImageConverter
 

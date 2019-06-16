@@ -8,114 +8,99 @@
 using namespace cv;
 
 OcrImage::OcrImage(QWidget *parent)
-    : BaseScanImage(parent)
-    , m_inverted(false) /*, m_binarised(false)*/
+  : BaseScanImage(parent)
+/*, m_binarised(false)*/
 {
-    //  setStyleSheet("border: 2px solid red;");
+  //  setStyleSheet("border: 2px solid red;");
 }
-
-//void OcrImage::setImage(const QImage &image)
-//{
-//    if (image.format() == QImage::Format_Mono || image.format() == QImage::Format_Grayscale8) {
-//        emit disableBinarise();
-//    }
-
-//    BaseScanImage::setImage(image);
-//}
 
 void OcrImage::undoAllChanges()
 {
-    // TODO undo LAST change.
-    BaseScanImage::undoAllChanges();
-    //  m_mat_image = ImageConverter::imageToMat(m_image);
+  // TODO undo LAST change.
+  BaseScanImage::undoAllChanges();
+  //  m_mat_image = ImageConverter::imageToMat(m_image);
 }
 
 void OcrImage::undoLastChange()
 {
-    if (m_binarise_changes > 0) {
-        QImage image = m_op_images.takeLast();
-        m_modified_image = image;
-        scaleModifiedImage();
-        m_binarise_changes--;
-    }
+  if (m_changes > 0) {
+    QImage image = m_op_images.takeLast();
+    m_modified_image = image;
+    scaleModifiedImage();
+    m_changes--;
+  }
 }
 
-void OcrImage::cutSelection()
+void OcrImage::clearToBackground()
 {
-    m_op_images.append(m_modified_image);
-    BaseScanImage::cutSelection();
+  m_op_images.append(m_modified_image);
+  BaseScanImage::clearToBackground();
 }
 
 void OcrImage::cropToSelection()
 {
-    m_op_images.append(m_modified_image);
-    BaseScanImage::cropToSelection();
+  m_op_images.append(m_modified_image);
+  BaseScanImage::cropToSelection();
 }
 
 void OcrImage::binarise()
 {
-    if (!(m_modified_image.format() == QImage::Format_Mono || m_modified_image.format() == QImage::Format_Grayscale8)) {
-        m_op_images.append(m_modified_image);
-
-        // create a modifiable image.
-        Mat mat = ImageConverter::imageToMat(m_modified_image);
-        m_binarise_changes = 0;
-        // convert to grayscale
-        cvtColor(mat, mat, CV_BGR2GRAY);
-        QImage image = ImageConverter::matToImage(mat);
-        m_modified_image = image;
-
-        scaleModifiedImage();
-    }
-
-    emit disableBinarise();
-}
-
-void OcrImage::acceptThreshold()
-{
-    QImage image = m_modified_image.convertToFormat(QImage::Format::Format_Mono);
-    m_modified_image = image;
-    scaleModifiedImage();
-    emit enableBinarise();
-    emit binariseCompleted();
-}
-
-void OcrImage::applyThreshold(int value)
-{
+  if (!(m_modified_image.format() == QImage::Format_Mono
+        || m_modified_image.format() == QImage::Format_Grayscale8)) {
     m_op_images.append(m_modified_image);
-    m_binarise_changes++;
+
+    // create a modifiable image.
     Mat mat = ImageConverter::imageToMat(m_modified_image);
-    threshold(mat, mat, value, 255, THRESH_BINARY);
+    m_changes = 0;
+    // convert to grayscale
+    cvtColor(mat, mat, CV_BGR2GRAY);
     QImage image = ImageConverter::matToImage(mat);
     m_modified_image = image;
 
     scaleModifiedImage();
+  }
+
 }
 
-void OcrImage::cancelThreshold()
+void OcrImage::acceptChanges()
 {
-    // update to the pre-biniarise image
-    while (m_binarise_changes > 0) {
-        m_op_images.takeLast(); // dump unneeded changes
-    }
-
-    m_modified_image = m_op_images.takeLast();
-    scaleModifiedImage();
-    emit enableBinarise();
-    emit binariseCompleted();
+  QImage image = m_modified_image.convertToFormat(QImage::Format::Format_Mono);
+  m_modified_image = image;
+  scaleModifiedImage();
 }
 
-void OcrImage::invert()
+void OcrImage::applyThreshold(int value)
 {
-    m_op_images.append(m_modified_image);
+  m_op_images.append(m_modified_image);
+  m_changes++;
+  Mat mat = ImageConverter::imageToMat(m_modified_image);
+  threshold(mat, mat, value, 255, THRESH_BINARY);
+  QImage image = ImageConverter::matToImage(mat);
+  m_modified_image = image;
 
-    // create a modifiable image.
-    Mat modified = ImageConverter::imageToMat(m_modified_image);
-    bitwise_not(modified, modified);
-    QImage image = ImageConverter::matToImage(modified);
-    m_modified_image = image;
-    m_inverted = !m_inverted;
-    scaleModifiedImage();
+  scaleModifiedImage();
+}
+
+void OcrImage::applyRescale(double value)
+{
+  m_op_images.append(m_modified_image);
+  m_changes++;
+  Mat mat = ImageConverter::imageToMat(m_modified_image);
+  cv::resize(mat, mat, cv::Size(), value, value, CV_INTER_CUBIC);
+  QImage image = ImageConverter::matToImage(mat);
+  m_modified_image = image;
+
+  scaleModifiedImage();
+}
+
+void OcrImage::cancelChanges()
+{
+  // update to the pre-biniarise image
+  while (m_changes > 0) {
+    m_modified_image = m_op_images.takeLast(); // dump unneeded changes
+  }
+
+  scaleModifiedImage();
 }
 
 // void OcrImage::setThreshold(int thresh_value)
@@ -126,15 +111,17 @@ void OcrImage::invert()
 
 void OcrImage::denoise()
 {
-    m_op_images.append(m_modified_image);
+  m_op_images.append(m_modified_image);
 
-    // TODO
+  // TODO
 }
 
 void OcrImage::deskew()
 {
-    m_op_images.append(m_modified_image);
-
+  m_op_images.append(m_modified_image);
+  rotateByEdge();
+  /*
+    This doesn't work well at the moment. Just use manual system.
     // create a modifiable image.
     Mat mat = ImageConverter::imageToMat(m_modified_image);
 
@@ -145,38 +132,39 @@ void OcrImage::deskew()
     unsigned nb_lines = lines.size();
 
     for (unsigned i = 0; i < nb_lines; ++i) {
-        QLineF line(QPointF((double) lines[i][0], (double) lines[i][1]),
-                    QPointF((double) lines[i][2], (double) lines[i][3]));
-        m_lines.append(line);
-        angle += atan2((double) lines[i][3] - lines[i][1], (double) lines[i][2] - lines[i][0]);
+    QLineF line(QPointF((double) lines[i][0], (double) lines[i][1]),
+                QPointF((double) lines[i][2], (double) lines[i][3]));
+    m_lines.append(line);
+    angle += atan2((double) lines[i][3] - lines[i][1], (double) lines[i][2] - lines[i][0]);
     }
 
     m_angle = qRadiansToDegrees(angle / nb_lines); // mean angle, in radians.
 
     rotateBy(-m_angle);
+  */
 }
 
 bool OcrImage::isInverted() const
 {
-    return m_inverted;
+  return m_inverted;
 }
 
 void OcrImage::setInverted(bool inverted)
 {
-    m_inverted = inverted;
+  m_inverted = inverted;
 }
 
 void OcrImage::paintEvent(QPaintEvent *event)
 {
-    BaseScanImage::paintEvent(event);
+  BaseScanImage::paintEvent(event);
 
-    QPainter painter(this);
-    QPen pen(QColor("red"), 2);
-    painter.setPen(pen);
+  QPainter painter(this);
+  QPen pen(QColor("red"), 2);
+  painter.setPen(pen);
 
-    for (QLineF line : m_lines) {
-        painter.drawLine(line);
-    }
+  for (QLineF line : m_lines) {
+    painter.drawLine(line);
+  }
 }
 
 // double OcrImage::houghTransform(Mat &im) {
