@@ -3,11 +3,12 @@
 #include "ocrimage.h"
 #include "scanlist.h"
 
-OcrDialog::OcrDialog(QWidget* parent)
+OcrDialog::OcrDialog(QWidget *parent)
   : QDialog(parent)
   , m_text_edit(nullptr)
   , m_image_display(nullptr)
   , m_image_changed(false)
+  , m_change_type(None)
 {
   initGui();
 
@@ -24,13 +25,26 @@ QImage OcrDialog::image()
   return m_image_display->image();
 }
 
-void OcrDialog::setData(int index, const QImage& image, const DocumentData& doc_data)
+void OcrDialog::setResolution(const QImage &image)
+{
+  int x_dpi = Util::dpmToDpi(image.dotsPerMeterX());
+  int y_dpi = Util::dpmToDpi(image.dotsPerMeterY());
+  setResLabel(x_dpi, y_dpi);
+}
+
+void OcrDialog::setData(int index, const QImage &image, const DocumentData &doc_data)
 {
   m_page_no = index;
   m_doc_data = doc_data;
   m_image_display->setImage(image);
   m_image_display->setInverted(doc_data->inverted());
   m_text_edit->setText(doc_data->textList());
+
+  QFileInfo info(m_doc_data->filename());
+  setNameLabel(m_page_no, info.fileName());
+  setSizeLabel(image.width(), image.height());
+
+  setResolution(image);
 
   if (image.format() == QImage::Format_Mono || image.format() == QImage::Format_Grayscale8) {
     m_binarise_btn->setEnabled(false);
@@ -39,12 +53,12 @@ void OcrDialog::setData(int index, const QImage& image, const DocumentData& doc_
   enableCleanImageBtns(doc_data->inverted());
 }
 
-void OcrDialog::setOcrImage(int index, const QImage& image)
+void OcrDialog::setOcrImage(int index, const QImage &image)
 {
   m_page_no = index, m_image_display->setImage(image);
 }
 
-void OcrDialog::setOcrText(int page_no, const QString& text)
+void OcrDialog::setOcrText(int page_no, const QString &text)
 {
   if (page_no == m_page_no) {
     m_text_edit->setText(text);
@@ -92,7 +106,7 @@ void OcrDialog::open()
   m_image_display->fitByType();
 }
 
-QFrame* OcrDialog::initIntSliderFrame()
+QFrame *OcrDialog::initIntSliderFrame()
 {
   auto* intvalue_frame = new QFrame(this);
   auto* intvalue_layout = new QGridLayout;
@@ -119,22 +133,26 @@ QFrame* OcrDialog::initIntSliderFrame()
   connect(apply_value_btn, &QPushButton::clicked, this, &OcrDialog::applyValue);
   intvalue_layout->addWidget(apply_value_btn, row++, 0, 1, 2);
 
-  auto* accept_value_btn = new QPushButton(tr("Accept"), this);
-  connect(accept_value_btn, &QPushButton::clicked, m_image_display, &OcrImage::acceptChanges);
+  auto *accept_value_btn = new QPushButton(tr("Accept Changes"), this);
+  connect(accept_value_btn, &QPushButton::clicked, this, &OcrDialog::acceptChanges);
   intvalue_layout->addWidget(accept_value_btn, row++, 0, 1, 2);
 
-  auto* undo_last_btn = new QPushButton(tr("Undo Last"), this);
+  auto *undo_last_btn = new QPushButton(tr("Undo Last Change"), this);
   connect(undo_last_btn, &QPushButton::clicked, m_image_display, &OcrImage::undoLastChange);
   intvalue_layout->addWidget(undo_last_btn, row++, 0, 1, 2);
 
-  auto* cancel_change_btn = new QPushButton(tr("Cancel"), this);
-  connect(cancel_change_btn, &QPushButton::clicked, m_image_display, &OcrImage::cancelChanges);
+  auto *cancel_change_btn = new QPushButton(tr("Cancel Current Changes"), this);
+  connect(cancel_change_btn,
+          &QPushButton::clicked,
+          m_image_display,
+          &OcrImage::cancelCurrentChanges);
+  connect(cancel_change_btn, &QPushButton::clicked, this, &OcrDialog::reject);
   intvalue_layout->addWidget(cancel_change_btn, row++, 0, 1, 2);
 
   return intvalue_frame;
 }
 
-QFrame* OcrDialog::initDoubleSliderFrame()
+QFrame *OcrDialog::initDoubleSliderFrame()
 {
   auto* dblvalue_frame = new QFrame();
   auto* dblvalue_layout = new QGridLayout;
@@ -161,16 +179,21 @@ QFrame* OcrDialog::initDoubleSliderFrame()
   connect(apply_value_btn, &QPushButton::clicked, this, &OcrDialog::applyValue);
   dblvalue_layout->addWidget(apply_value_btn, row++, 0, 1, 2);
 
-  auto* accept_value_btn = new QPushButton(tr("Accept"), this);
-  connect(accept_value_btn, &QPushButton::clicked, m_image_display, &OcrImage::acceptChanges);
+  auto *accept_value_btn = new QPushButton(tr("Accept Changes"), this);
+  connect(accept_value_btn, &QPushButton::clicked, this, &OcrDialog::acceptChanges);
+  connect(accept_value_btn, &QPushButton::clicked, this, &OcrDialog::accept);
   dblvalue_layout->addWidget(accept_value_btn, row++, 0, 1, 2);
 
-  auto* undo_last_btn = new QPushButton(tr("Undo Last"), this);
+  auto *undo_last_btn = new QPushButton(tr("Undo Last Change"), this);
   connect(undo_last_btn, &QPushButton::clicked, m_image_display, &OcrImage::undoLastChange);
   dblvalue_layout->addWidget(undo_last_btn, row++, 0, 1, 2);
 
-  auto* cancel_change_btn = new QPushButton(tr("Cancel"), this);
-  connect(cancel_change_btn, &QPushButton::clicked, m_image_display, &OcrImage::cancelChanges);
+  auto *cancel_change_btn = new QPushButton(tr("Cancel Current Changes"), this);
+  connect(cancel_change_btn,
+          &QPushButton::clicked,
+          m_image_display,
+          &OcrImage::cancelCurrentChanges);
+  connect(cancel_change_btn, &QPushButton::clicked, this, &OcrDialog::reject);
   dblvalue_layout->addWidget(cancel_change_btn, row++, 0, 1, 2);
 
   return dblvalue_frame;
@@ -178,22 +201,51 @@ QFrame* OcrDialog::initDoubleSliderFrame()
 
 void OcrDialog::initGui()
 {
-  auto* layout = new QGridLayout;
+  auto *layout = new QGridLayout;
   setLayout(layout);
 
   m_text_edit = new ScanList(this);
   layout->addWidget(m_text_edit, 0, 0);
 
-  auto* stacked_frame = new QFrame(this);
+  auto *stacked_frame = new QFrame(this);
   m_ctl_stack = new QStackedLayout;
   stacked_frame->setLayout(m_ctl_stack);
   layout->addWidget(stacked_frame, 0, 1);
+
+  m_image_name = tr("Page %1 : %2");
+  m_image_size = tr("Size : %1 x %2");
+  m_resolution = tr("Resolution X : %1dpi , Y: %2dpi");
+
+  m_status_bar = new QStatusBar(this);
+
+  m_message_lbl = new QLabel(this);
+  m_message_lbl->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+  m_message_lbl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+  m_status_bar->addPermanentWidget(m_message_lbl, 2);
+
+  m_image_name_lbl = new QLabel(m_image_name.arg(0).arg(tr("No File")), this);
+  m_image_name_lbl->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+  m_image_name_lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  m_status_bar->addPermanentWidget(m_image_name_lbl);
+
+  m_image_size_lbl = new QLabel(m_image_size.arg(0).arg(0), this);
+  m_image_size_lbl->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+  m_image_size_lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  m_status_bar->addPermanentWidget(m_image_size_lbl);
+
+  m_res_lbl = new QLabel(m_resolution.arg(0).arg(0), this);
+  m_res_lbl->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+  m_res_lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  m_status_bar->addPermanentWidget(m_res_lbl);
+
+  layout->addWidget(m_status_bar, 1, 0, 1, 3);
 
   // This needs to be done before threshold/btns
   // so m_image_display exists for them to connect to.
   m_image_display = new OcrImage(this);
   connect(m_image_display, &OcrImage::selected, this, &OcrDialog::setSelected);
   connect(m_image_display, &OcrImage::unselected, this, &OcrDialog::setUnselected);
+  connect(m_image_display, &OcrImage::imageSizeChanged, this, &OcrDialog::imageSizeHasChanged);
   layout->addWidget(m_image_display, 0, 2);
 
   auto* intvalue_frame = initIntSliderFrame();
@@ -369,7 +421,6 @@ void OcrDialog::binarise()
   m_change_type = Binarise;
   setCurrentValueType();
   m_image_display->binarise();
-  m_image_changed = true;
 }
 
 void OcrDialog::invert()
@@ -418,9 +469,8 @@ void OcrDialog::rotateCCW()
 void OcrDialog::rescale()
 {
   m_change_type = Rescale;
+  m_image_display->rescale();
   setCurrentValueType();
-  //  m_ctl_stack->setCurrentIndex(m_dblvalue_stack);
-  m_image_changed = true;
 }
 
 void OcrDialog::saveText()
@@ -448,6 +498,11 @@ void OcrDialog::discard()
   if (result == QMessageBox::Yes) {
     reject();
   }
+}
+
+void OcrDialog::acceptChanges()
+{
+  m_image_display->acceptChanges();
 }
 
 void OcrDialog::undoChanges()
@@ -486,22 +541,20 @@ void OcrDialog::close()
 
 void OcrDialog::applyValue()
 {
-
   switch (m_change_type) {
   case Binarise: {
-    int value = m_intvalue_slider->value();
+    int value = qRound(m_intvalue_slider->value());
     m_image_display->applyThreshold(value);
     break;
   }
 
   case Rescale: {
-    qreal value = m_dblvalue_slider->value();
+    qreal value = Util::round(m_dblvalue_slider->value(), 2);
     m_image_display->applyRescale(value);
     break;
   }
   }
 }
-
 
 void OcrDialog::setCurrentValueType()
 {
@@ -509,9 +562,11 @@ void OcrDialog::setCurrentValueType()
 
   switch (m_change_type) {
   case Binarise:
-    for (qreal i = 0; i < 255; i += 50) {
+    for (qreal i = 0; i < 250; i += 50) {
       major_ticks << i;
     }
+
+    major_ticks << 255;
 
     for (qreal i = 0; i < 255; i += 10) {
       medium_ticks << i;
@@ -525,32 +580,34 @@ void OcrDialog::setCurrentValueType()
     m_intvalue_slider->setScale(QwtScaleDiv(0, 255, minor_ticks, medium_ticks, major_ticks));
     m_intvalue_slider->setValue(OcrImage::BASE_THRESHOLD);
     m_ctl_stack->setCurrentIndex(m_intvalue_stack);
+    setMessageLabel(tr("Binarising image"));
     break;
 
   case Rescale:
 
-    for (qreal i = 0.1; i < 1.0; i += 0.1) {
+    for (qreal i = 0.2; i < 1.0; i += 0.1) {
       major_ticks << i;
     }
 
     medium_ticks.clear();
 
-    for (qreal i = 1.0; i <= 10.0; i += 1.0) {
+    for (qreal i = 1.0; i <= 5.0; i += 1.0) {
       major_ticks << i;
     }
 
-    for (qreal i = 0.1; i < 1.0; i += 0.01) {
+    for (qreal i = 0.2; i < 1.0; i += 0.01) {
       minor_ticks << i;
     }
 
-    for (qreal i = 1.0; i < 10.0; i += 0.1) {
+    for (qreal i = 1.0; i < 5.0; i += 0.1) {
       minor_ticks << i;
     }
 
     m_dblvalue_slider->setScaleEngine(new QwtLogScaleEngine());
-    m_dblvalue_slider->setScale(QwtScaleDiv(0.1, 10.0, minor_ticks, medium_ticks, major_ticks));
+    m_dblvalue_slider->setScale(QwtScaleDiv(0.2, 5.0, minor_ticks, medium_ticks, major_ticks));
     m_dblvalue_slider->setValue(OcrImage::BASE_RESCALE);
     m_ctl_stack->setCurrentIndex(m_dblvalue_stack);
+    setMessageLabel(tr("Rescaling image"));
     break;
   }
 }
@@ -562,7 +619,7 @@ void OcrDialog::setIntValueLabel(qreal value)
 
 void OcrDialog::setDoubleValueLabel(qreal value)
 {
-  m_dblvalue_lbl->setText(QString::number(value, 'g', 2));
+  m_dblvalue_lbl->setText(QString("%1").arg(value, 0, 'g', 2));
 }
 
 void OcrDialog::valueAccepted()
@@ -588,7 +645,13 @@ void OcrDialog::enableCleanImageBtns(bool enable)
   //  deskew_btn->setEnabled(enable);
 }
 
-void OcrDialog::resizeEvent(QResizeEvent* event)
+void OcrDialog::imageSizeHasChanged(int width, int height, int xres, int yres)
+{
+  setSizeLabel(width, height);
+  setResLabel(xres, yres);
+}
+
+void OcrDialog::resizeEvent(QResizeEvent *event)
 {
   QSize parent_size = qobject_cast<QWidget*>(parent())->frameSize();
   auto size = parent_size;
@@ -596,4 +659,24 @@ void OcrDialog::resizeEvent(QResizeEvent* event)
 
   auto* e = new QResizeEvent(size, event->oldSize());
   QDialog::resizeEvent(e);
+}
+
+void OcrDialog::setMessageLabel(const QString &text)
+{
+  m_message_lbl->setText(text);
+}
+
+void OcrDialog::setSizeLabel(int width, int height)
+{
+  m_image_size_lbl->setText(m_image_size.arg(width).arg(height));
+}
+
+void OcrDialog::setNameLabel(int page, QString name)
+{
+  m_image_name_lbl->setText(m_image_name.arg(page).arg(name));
+}
+
+void OcrDialog::setResLabel(int xres, int yres)
+{
+  m_res_lbl->setText(m_resolution.arg(xres).arg(yres));
 }

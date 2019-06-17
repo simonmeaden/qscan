@@ -19,6 +19,9 @@ void ImageDelegate::paint(QPainter* painter,
     bool has_text = index.model()->data(i, Qt::DecorationRole).toBool();
     i = index.model()->index(index.row(), 2, index);
     bool is_internal = index.model()->data(i, Qt::DecorationRole).toBool();
+    bool has_image = !image.isNull();
+    bool illegal = ((!has_text && !has_image && !is_internal)
+                    || (has_text && has_image && is_internal) || (has_text && is_internal));
 
     if (option.state & QStyle::State_Selected) {
       painter->fillRect(option.rect, option.palette.highlight());
@@ -39,21 +42,45 @@ void ImageDelegate::paint(QPainter* painter,
 
     QPen pen;
 
-    if (is_internal) {
-      pen.setColor(QColor("yellow"));
+    if (!illegal) {
+      if (has_text && has_image) { // awaiting completion / re-edit
+        pen.setColor(QColor("darkgreen"));
 
-    } else if (has_text) {
-      pen.setColor(QColor("green"));
+      } else if (has_image && is_internal) { // awaiting completion
+        pen.setColor(QColor("darkgreen"));
+
+      } else if (is_internal) { // internal image
+        pen.setColor(QColor("yellow"));
+
+      } else if (has_text) {
+        pen.setColor(QColor("green"));
+
+      } else if (has_image) {
+        pen.setColor(QColor("blue"));
+
+      } else {
+        pen.setColor(QColor("red"));
+      }
+
+      pen.setWidth(4);
+      pen.setJoinStyle(Qt::MiterJoin);
+      painter->setPen(pen);
+      painter->drawImage(image_rect, image);
+      painter->drawRect(border_rect);
 
     } else {
-      pen.setColor(QColor("red"));
+      pen.setWidth(4);
+      pen.setJoinStyle(Qt::MiterJoin);
+      painter->setPen(pen);
+      painter->drawImage(image_rect, image);
+      painter->drawRect(border_rect);
+
+      QBrush overlay(QColor(255, 0, 0, 100));
+      painter->setPen(QPen());
+      painter->setBrush(overlay);
+      painter->drawRect(image_rect);
     }
 
-    pen.setWidth(4);
-    pen.setJoinStyle(Qt::MiterJoin);
-    painter->setPen(pen);
-    painter->drawImage(image_rect, image);
-    painter->drawRect(border_rect);
     painter->restore();
 
   } else {

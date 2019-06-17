@@ -9,6 +9,8 @@
 #include <QPixmap>
 #include <QtDebug>
 
+#include "util.h"
+
 /*
    Endianness
    ---
@@ -69,9 +71,6 @@ bool isEqual(PIX *img1, PIX *img2);
 
 // QImage fromIplImage(const IplImage* iplImg);
 // IplImage* toIplImage(const QImage& image);
-
-int dpiToDpm(int value);
-int dpmToDpi(int value);
 
 } // namespace ImageConverter
 

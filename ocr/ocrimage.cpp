@@ -16,9 +16,8 @@ OcrImage::OcrImage(QWidget *parent)
 
 void OcrImage::undoAllChanges()
 {
-  // TODO undo LAST change.
+  // reverts to original image.
   BaseScanImage::undoAllChanges();
-  //  m_mat_image = ImageConverter::imageToMat(m_image);
 }
 
 void OcrImage::undoLastChange()
@@ -47,6 +46,7 @@ void OcrImage::binarise()
 {
   if (!(m_modified_image.format() == QImage::Format_Mono
         || m_modified_image.format() == QImage::Format_Grayscale8)) {
+    m_image_base = m_modified_image;
     m_op_images.append(m_modified_image);
 
     // create a modifiable image.
@@ -62,10 +62,19 @@ void OcrImage::binarise()
 
 }
 
+void OcrImage::dumpImageChanges()
+{
+  while (m_changes > 0) {
+    m_op_images.takeLast();
+    m_changes--; // dump unneeded changes
+  }
+
+  m_image_base = QImage();
+}
+
 void OcrImage::acceptChanges()
 {
-  QImage image = m_modified_image.convertToFormat(QImage::Format::Format_Mono);
-  m_modified_image = image;
+  dumpImageChanges();
   scaleModifiedImage();
 }
 
@@ -76,8 +85,21 @@ void OcrImage::applyThreshold(int value)
   Mat mat = ImageConverter::imageToMat(m_modified_image);
   threshold(mat, mat, value, 255, THRESH_BINARY);
   QImage image = ImageConverter::matToImage(mat);
+  image = m_modified_image.convertToFormat(QImage::Format::Format_Mono);
   m_modified_image = image;
 
+  scaleModifiedImage();
+}
+
+void OcrImage::rescale()
+{
+  m_image_base = m_modified_image;
+}
+
+void OcrImage::revertRescale()
+{
+  m_modified_image = m_image_base;
+  dumpImageChanges();
   scaleModifiedImage();
 }
 
@@ -88,26 +110,27 @@ void OcrImage::applyRescale(double value)
   Mat mat = ImageConverter::imageToMat(m_modified_image);
   cv::resize(mat, mat, cv::Size(), value, value, CV_INTER_CUBIC);
   QImage image = ImageConverter::matToImage(mat);
+
+  int dpm = image.dotsPerMeterX();
+  //  image.setDotsPerMeterX(int(dpm * value));
+  dpm = image.dotsPerMeterY();
+  //  image.setDotsPerMeterY(int(dpm * value));
+
   m_modified_image = image;
-
   scaleModifiedImage();
+  emit imageSizeChanged(m_modified_image.width(),
+                        m_modified_image.height(),
+                        Util::dpmToDpi(m_modified_image.dotsPerMeterX()),
+                        Util::dpmToDpi(m_modified_image.dotsPerMeterY()));
 }
 
-void OcrImage::cancelChanges()
+void OcrImage::cancelCurrentChanges()
 {
-  // update to the pre-biniarise image
-  while (m_changes > 0) {
-    m_modified_image = m_op_images.takeLast(); // dump unneeded changes
-  }
-
+  // update to the pre-modified image
+  m_modified_image = m_image_base;
+  dumpImageChanges();
   scaleModifiedImage();
 }
-
-// void OcrImage::setThreshold(int thresh_value)
-//{
-//  // modify modifiable image to new threshold
-//  m_modifiable_int = thresh_value;
-//}
 
 void OcrImage::denoise()
 {

@@ -49,5 +49,8 @@
         <file alias="top">go-top.png</file>
         <file alias="up">go-up.png</file>
         <file alias="move_to_edit">move_to_edit.png</file>
+        <file alias="del_image">delete_image.png</file>
+        <file alias="del_image_text">delete_image_text.png</file>
+        <file alias="del_text">delete_text.png</file>
     </qresource>
 </RCC>

@@ -31,11 +31,14 @@ public:
   void cropToSelection();
 
   void binarise();
-  //  void setThreshold(int thresh_value = 100);
-  void acceptChanges();
   void applyThreshold(int value);
+
+  void rescale();
+  void revertRescale();
   void applyRescale(double value);
-  void cancelChanges();
+
+  void acceptChanges();
+  void cancelCurrentChanges();
 
   void denoise();
 
@@ -50,11 +53,13 @@ public:
 
   signals:
   void enableModification();
+  void imageSizeChanged(int w, int h, int xres, int yres);
 
   protected:
   //  QImage m_temp_image;
   //  QList<Operations> m_operations;
   //  QList<QVariant> m_op_data;
+  QImage m_image_base;
   int m_changes{};
   QList<QLineF> m_lines;
   qreal m_angle{};
@@ -62,7 +67,7 @@ public:
 
   void paintEvent(QPaintEvent *event) override;
   //  double houghTransform(Mat &im /*, Mat& orig*/);
-  void clearChanges();
+  void dumpImageChanges();
 };
 
 #endif // OCRIMAGE_H

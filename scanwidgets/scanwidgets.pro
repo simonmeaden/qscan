@@ -32,10 +32,10 @@ SOURCES += \
         imagelistmodel.cpp \
         imageview.cpp \
         pageview.cpp \
-        qdoubleslider.cpp \
         scaneditor.cpp \
         scanimage.cpp \
-        scanlist.cpp
+        scanlist.cpp \
+        util.cpp
 
 HEADERS += \
         basescanimage.h \
@@ -45,11 +45,11 @@ HEADERS += \
         imagelistmodel.h \
         imageview.h \
         pageview.h \
-        qdoubleslider.h \
         scaneditor.h \
         scanimage.h \
         scanlist.h \
-        scanwidgets_global.h 
+        scanwidgets_global.h  \
+        util.h
 
 unix {
     target.path = /usr/lib

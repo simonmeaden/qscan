@@ -78,6 +78,9 @@ ScanEditor::ScanEditor(QScan* scan,
   single_key = QPixmapCache::insert(QPixmap(":/icons/single64"));
   both_key = QPixmapCache::insert(QPixmap(":/icons/both64"));
   scale_key = QPixmapCache::insert(QPixmap(":/icons/scale"));
+  remove_text_key = QPixmapCache::insert(QPixmap(":/icons/del_text"));
+  remove_image_key = QPixmapCache::insert(QPixmap(":/icons/del_image"));
+  remove_both_key = QPixmapCache::insert(QPixmap(":/icons/del_image_text"));
 
   m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
 
@@ -107,6 +110,9 @@ void ScanEditor::initGui()
   QPixmap move_down_icon;
   QPixmap move_to_icon;
   QPixmap scale_icon;
+  QPixmap rem_img_icon;
+  QPixmap rem_txt_icon;
+  QPixmap rem_img_txt_icon;
   QPixmapCache::find(crop_key, &crop_icon);
   QPixmapCache::find(move_up_key, &move_up_icon);
   QPixmapCache::find(move_down_key, &move_down_icon);
@@ -117,6 +123,9 @@ void ScanEditor::initGui()
   QPixmapCache::find(single_key, &single_icon);
   QPixmapCache::find(both_key, &both_icon);
   QPixmapCache::find(scale_key, &scale_icon);
+  QPixmapCache::find(remove_image_key, &rem_img_icon);
+  QPixmapCache::find(remove_text_key, &rem_txt_icon);
+  QPixmapCache::find(remove_both_key, &rem_img_txt_icon);
 
   auto *layout = new QGridLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
@@ -222,6 +231,27 @@ void ScanEditor::initGui()
   group3_layout->addWidget(m_both_btn);
   connect(m_both_btn, &QPushButton::clicked, this, &ScanEditor::splitPages);
 
+  m_rem_txt_btn = new QPushButton(rem_txt_icon, "", this);
+  m_rem_txt_btn->setIconSize(QSize(96, 32));
+  m_rem_txt_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  m_rem_txt_btn->setToolTip(tr("Remove the text"));
+  group3_layout->addWidget(m_rem_txt_btn);
+  connect(m_rem_txt_btn, &QPushButton::clicked, this, &ScanEditor::removeText);
+
+  m_rem_img_btn = new QPushButton(rem_img_icon, "", this);
+  m_rem_img_btn->setIconSize(QSize(96, 32));
+  m_rem_img_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  m_rem_img_btn->setToolTip(tr("Remove the image"));
+  group3_layout->addWidget(m_rem_img_btn);
+  connect(m_rem_img_btn, &QPushButton::clicked, this, &ScanEditor::removeImage);
+
+  m_rem_both_btn = new QPushButton(rem_txt_icon, "", this);
+  m_rem_both_btn->setIconSize(QSize(96, 32));
+  m_rem_both_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  m_rem_both_btn->setToolTip(tr("Remove the both the image and the text"));
+  group3_layout->addWidget(m_rem_both_btn);
+  connect(m_rem_both_btn, &QPushButton::clicked, this, &ScanEditor::removeText);
+
   enableMoveBtns(false);
   disableEditBtns();
   disableListBtns();
@@ -249,8 +279,8 @@ void ScanEditor::makeConnections()
   connect(m_page_view, &PageView::workOn, this, &ScanEditor::receiveWorkOnRequest);
   connect(m_page_view, &PageView::sendOcrPage, this, &ScanEditor::receiveOcrPageRequest);
   connect(m_page_view, &PageView::loadText, this, &ScanEditor::receiveLoadText);
-  connect(m_page_view, &PageView::removeCurrentText, this, &ScanEditor::removeText);
-  connect(m_page_view, &PageView::removeCurrentImage, this, &ScanEditor::removeImage);
+  //  connect(m_page_view, &PageView::removeCurrentText, this, &ScanEditor::removeText);
+  //  connect(m_page_view, &PageView::removeCurrentImage, this, &ScanEditor::removeImage);
   connect(m_ocr_tools, &OcrTools::convertedPage, this, &ScanEditor::receiveOcrPageResult);
   connect(m_ocr_tools, &OcrTools::convertedImage, this, &ScanEditor::receiveOcrImageResult);
 }
@@ -488,15 +518,113 @@ void ScanEditor::receivePageMoved(int start_row, int dest_row)
   // TODO
 }
 
+void ScanEditor::removeBoth(int page_no)
+{
+  int page = page_no;
+
+  if (page < 0) { // no page supplied.
+    page = m_page_view->currentPageNumber();
+
+    if (page < 0) { // no current selection
+      return;
+    }
+  }
+
+  if (page >= 0) {
+    if (page == 0) { // cover image
+      // TODO
+    } else if (m_page_view->isInternalImage(page)) { // internal image
+      // TODO
+    } else if (m_page_view->has_text(page)) {
+      int answer
+        = QMessageBox::warning(this,
+                               tr("Remove Both Image and Text"),
+                               tr("You are about to remove the both the image and the text\n"
+                                  "This cannot be undone.\n"
+                                  "Are you sure?"),
+                               QMessageBox::Yes | QMessageBox::No,
+                               QMessageBox::No);
+
+      if (answer == QMessageBox::Yes) {
+        // TODO
+      }
+    }
+  }
+}
+
 void ScanEditor::removeImage(int page_no)
 {
+  int page = page_no;
+
+  if (page < 0) { // no page supplied.
+    page = m_page_view->currentPageNumber();
+
+    if (page < 0) { // no current selection
+      return;
+    }
+  }
+
+  if (page == 0) {
+    int answer = QMessageBox::warning(this,
+                                      tr("Remove Cover Image"),
+                                      tr("You are about to remove the Cover image\n"
+                                         "This cannot be undone.\n"
+                                         "Are you sure?"),
+                                      QMessageBox::Yes | QMessageBox::No,
+                                      QMessageBox::No);
+
+    if (answer == QMessageBox::Yes) {
+      m_page_view->removeImage();
+    }
+
+  } else if (page > 0) {
+    int answer = QMessageBox::warning(this,
+                                      (m_page_view->isInternalImage(page)
+                                         ? tr("Remove Internal Image")
+                                         : tr("Remove OCR Image")),
+                                      tr("You are about to remove the image\n"
+                                         "This cannot be undone.\n"
+                                         "Are you sure?"),
+                                      QMessageBox::Yes | QMessageBox::No,
+                                      QMessageBox::No);
+
+    if (answer == QMessageBox::Yes) {
+      m_page_view->removeImage();
+    }
+  }
+
   DocumentData doc_data = m_doc_data_store->documentData(page_no);
   doc_data->setRemoveImageLater(true);
 }
 
 void ScanEditor::removeText(int page_no)
 {
-  DocumentData doc_data = m_doc_data_store->documentData(page_no);
+  int page = page_no;
+
+  if (page < 0) { // no page supplied.
+    page = m_page_view->currentPageNumber();
+
+    if (page < 0) { // no current selection
+      return;
+    }
+  }
+
+  if (page > 0) {
+    int answer = QMessageBox::warning(this,
+                                      tr("Remove Text"),
+                                      tr("You are about to remove the text\n"
+                                         "for this OCR image.\n"
+                                         "This cannot be undone.\n"
+                                         "Are you sure?"),
+                                      QMessageBox::Yes | QMessageBox::No,
+                                      QMessageBox::No);
+
+    if (answer == QMessageBox::Yes) {
+      m_page_view->setHasText(page, false);
+    }
+  }
+
+  DocumentData doc_data = m_doc_data_store->documentData(page);
   doc_data->setRemoveTextLater(true);
 }
 

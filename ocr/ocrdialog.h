@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QFileInfo>
 #include <QFont>
 #include <QFrame>
 #include <QGridLayout>
@@ -14,14 +15,15 @@
 #include <QScreen>
 #include <QSlider>
 #include <QStackedLayout>
+#include <QStatusBar>
 #include <QTextEdit>
 #include <QVBoxLayout>
+
 #include <qt5/qwt/qwt_scale_engine.h>
 #include <qt5/qwt/qwt_slider.h>
 
-//#include "scanpage.h"
 #include "documentdata.h"
-#include "qdoubleslider.h"
+#include "util.h"
 
 class OcrImage;
 class ScanList;
@@ -31,7 +33,12 @@ class OcrDialog : public QDialog
   Q_OBJECT
 public:
   explicit OcrDialog(QWidget* parent = nullptr);
-  ~OcrDialog() override = default;
+  //  ~OcrDialog() override = default;
+
+  //  OcrDialog(const OcrDialog&) = delete;
+  //  OcrDialog(OcrDialog&&) = delete;
+  //  OcrDialog& operator=(const OcrDialog&) = delete;
+  //  OcrDialog& operator=(OcrDialog&&) = delete;
 
   QImage image();
   void setData(int index, const QImage& image, const DocumentData& page);
@@ -52,36 +59,44 @@ public:
 signals:
   void sendOcrRequest(int, const QImage&);
   void saveModifiedImage(int index, const QImage& image);
-  void saveModifiedText(int index, const QStringList& text);
+  void saveModifiedText(int index, const QStringList &text);
 
-protected:
-  enum ChangeType
-  {
+  protected:
+  enum ChangeType {
+    None,
     Binarise,
     Rescale,
   };
-  ScanList* m_text_edit;
-  OcrImage* m_image_display;
+  ScanList *m_text_edit;
+  OcrImage *m_image_display;
   int m_page_no{};
   DocumentData m_doc_data;
   bool m_image_changed;
-  QPushButton* m_crop_btn{};
-  QPushButton* m_clr_to_back_btn{};
-  QPushButton* m_binarise_btn{};
-  QPushButton* m_ocr_btn{};
-  QPushButton* m_ocr_sel_btn{};
-  QPushButton* denoise_btn{};
-  QPushButton* dewarp_btn{};
+  QPushButton *m_crop_btn{};
+  QPushButton *m_clr_to_back_btn{};
+  QPushButton *m_binarise_btn{};
+  QPushButton *m_ocr_btn{};
+  QPushButton *m_ocr_sel_btn{};
+  QPushButton *denoise_btn{};
+  QPushButton *dewarp_btn{};
   //  QPushButton *deskew_btn{};
   QwtSlider *m_intvalue_slider{};
   QwtSlider *m_dblvalue_slider{};
   QLabel *m_intvalue_lbl{}, *m_dblvalue_lbl{};
-  QStackedLayout* m_ctl_stack{};
+  QLabel *m_image_name_lbl{}, *m_image_size_lbl{}, *m_message_lbl{}, *m_res_lbl{};
+  QString m_image_name, m_image_size, m_message, m_resolution;
+  QStackedLayout *m_ctl_stack{};
+  QStatusBar *m_status_bar{};
   int m_btn_stack{};
   int m_intvalue_stack{}, m_dblvalue_stack{};
   ChangeType m_change_type;
 
-  void resizeEvent(QResizeEvent* event) override;
+  void resizeEvent(QResizeEvent *event) override;
+
+  void setMessageLabel(const QString &text);
+  void setSizeLabel(int width, int height);
+  void setNameLabel(int page, QString name);
+  void setResLabel(int xres, int yres);
 
   void initGui();
   void requestOcr();
@@ -102,6 +117,7 @@ protected:
   void saveText();
   void saveImage();
   void discard();
+  void acceptChanges();
   void undoChanges();
   void close();
 
@@ -117,8 +133,11 @@ protected:
   void enableBinarise();
 
   void enableCleanImageBtns(bool enable);
+  void imageSizeHasChanged(int width, int height, int xres, int yres);
+
   QFrame *initIntSliderFrame();
   QFrame *initDoubleSliderFrame();
+  void setResolution(const QImage &image);
 };
 
 #endif // OCRDIALOG_H

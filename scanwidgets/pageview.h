@@ -42,6 +42,11 @@ public:
   void moveUp();
   void moveDown();
   void workOnImage();
+  void removePage();
+  void removeImage();
+  //  void removeText();
+
+  int currentPageNumber() const;
 
   signals:
   void pageMoved(int from, int to);
@@ -62,27 +67,24 @@ public:
   int m_current_row{};
   int m_page_selected = -1;
 
-  void contextMenuEvent(QContextMenuEvent *event) override;
+  //  void contextMenuEvent(QContextMenuEvent *event) override;
   QSize minimumSizeHint() const override;
   QSize sizeHint() const override;
 
   void selectionChanged(const QItemSelection &selected_items, const QItemSelection &);
 
-  QAction* m_remove_page_act{};
-  QAction* m_remove_image_act{};
-  QAction* m_remove_text_act{};
+  //  QAction* m_remove_page_act{};
+  //  QAction* m_remove_image_act{};
+  //  QAction* m_remove_text_act{};
   //  QAction* m_move_page_up_act{};
   //  QAction* m_move_page_down_act{};
-  QAction* m_load_text_act{};
-  QAction* m_work_with_act{};
-  QAction* m_save_as_image_act{};
+  //  QAction* m_load_text_act{};
+  //  QAction* m_work_with_act{};
+  //  QAction* m_save_as_image_act{};
   //  QAction* m_do_ocr_act{};
   //  QAction* m_do_all_ocr_act{};
 
   void rowsMoved(const QModelIndex &, int start_row, int, const QModelIndex &, int dest_row);
-  void removePage();
-  void removeImage();
-  void removeText();
   void nonOcrImage();
   //  void doOcr();
   //  void doAllOcr();

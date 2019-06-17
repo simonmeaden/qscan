@@ -144,6 +144,9 @@ protected:
   QPushButton *m_both_btn{};
   QPushButton *m_single_btn{};
   QPushButton *m_internal_btn{};
+  QPushButton *m_rem_txt_btn{};
+  QPushButton *m_rem_img_btn{};
+  QPushButton *m_rem_both_btn{};
   QGroupBox *group1{}, *group2{}, *group3{};
 
   DocumentData m_cover;
@@ -160,6 +163,9 @@ protected:
   QPixmapCache::Key single_key;
   QPixmapCache::Key both_key;
   QPixmapCache::Key scale_key;
+  QPixmapCache::Key remove_both_key;
+  QPixmapCache::Key remove_text_key;
+  QPixmapCache::Key remove_image_key;
 
   bool eventFilter(QObject* obj, QEvent* event) override;
 
@@ -180,8 +186,9 @@ protected:
   void receiveOcrImageResult(int documentData, const QString& text);
   void receiveOcrDialogFinished(int result);
   void receivePageMoved(int start_row, int dest_row);
-  void removeImage(int page_no);
-  void removeText(int page_no);
+  void removeBoth(int page_no = -1);
+  void removeImage(int page_no = -1);
+  void removeText(int page_no = -1);
   void saveModifiedText(int page_no, const QStringList& text);
   QImage thumbnail(const QImage& image) const;
   void rescale();

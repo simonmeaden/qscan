@@ -211,8 +211,8 @@ PIX *imageToPix(const QImage &image)
   pixSetInputFormat(pixs, IFF_PNG);
 
   // set the xres and yres values.
-  pixSetXRes(pixs, ImageConverter::dpmToDpi(image.dotsPerMeterX()));
-  pixSetYRes(pixs, ImageConverter::dpmToDpi(image.dotsPerMeterY()));
+  pixSetXRes(pixs, Util::dpmToDpi(image.dotsPerMeterX()));
+  pixSetYRes(pixs, Util::dpmToDpi(image.dotsPerMeterY()));
 
   quint32 *datas = pixs->data;
 
@@ -251,8 +251,8 @@ QImage pixToImage(PIX *pixImage)
 
   QImage result((uchar *) s_data, width, height, bytesPerLine, format);
 
-  result.setDotsPerMeterX(ImageConverter::dpiToDpm(pixImage->xres));
-  result.setDotsPerMeterY(ImageConverter::dpiToDpm(pixImage->yres));
+  result.setDotsPerMeterX(Util::dpiToDpm(pixImage->xres));
+  result.setDotsPerMeterY(Util::dpiToDpm(pixImage->yres));
 
   if (pix_color_map != nullptr) {
     qint32 colors_allocated = pix_color_map->nalloc;
@@ -354,36 +354,6 @@ bool isEqual(PIX *pix1, PIX *pix2)
   }
 
   return (same == 1);
-}
-
-/*!
-  \brief Convert a dots-per-inch value to dots-per-meter.
-
-  Most images use a dots-per-inch value, however Qt at least,
-  probably others as well, use a dots-per-meter value.
-
-  \param value the dpi value.
-  \return an integer ppm value;
-*/
-int dpiToDpm(int value)
-{
-  int ppm = int(double(value) / 25.4) * 1000.0;
-  return ppm;
-}
-
-/*!
-  \brief Convert a  dots-per-meter value to dots-per-inch.
-
-  Most images use a dots-per-inch value, however Qt at least,
-  probably others as well, use a dots-per-meter value.
-
-  \param value the ppm value.
-  \return an integer dpi value;
-*/
-int dpmToDpi(int value)
-{
-  int dpi = int(double(value) * 25.4) / 1000.0;
-  return dpi;
 }
 
 } // namespace ImageConverter
