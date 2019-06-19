@@ -1,6 +1,7 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
+    qyaml-cpp \
     document \
     logger \
     ocr \
@@ -11,14 +12,14 @@ SUBDIRS += \
 logger.subdir = logger
 
 ocr.subdir = ocr
-ocr.depends = logger
+ocr.depends = logger qyaml-cpp
 
 qscan.subdir = qscan
-qscan.depends = logger
+qscan.depends = logger qyaml-cpp
 
 scanwidgets.subdir = scanwidgets
-scanwidgets.depends = qscan ocr logger
+scanwidgets.depends = qscan ocr logger qyaml-cpp
 
 Scanner.subdir = Scanner
-Scanner.depends = qscan ocr scanwidgets logger
+Scanner.depends = qscan ocr scanwidgets logger qyaml-cpp
 

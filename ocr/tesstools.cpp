@@ -82,185 +82,40 @@ void getStringFromPage(const QString &datapath, const QString &lang, const Docum
   api->End();
 }
 
-static void PreloadRenderers(tesseract::TessBaseAPI *api,
-                             tesseract::PointerVector<tesseract::TessResultRenderer> *renderers,
-                             tesseract::PageSegMode pagesegmode,
-                             const char *outputbase)
-{
-  if (pagesegmode == tesseract::PSM_OSD_ONLY) {
-#ifndef DISABLED_LEGACY_ENGINE
-    renderers->push_back(new tesseract::TessOsdRenderer(outputbase));
-#endif // ndef DISABLED_LEGACY_ENGINE
-
-  } else {
-    bool error = false;
-    bool b;
-    api->GetBoolVariable("tessedit_create_hocr", &b);
-
-    if (b) {
-      bool font_info;
-      api->GetBoolVariable("hocr_font_info", &font_info);
-      auto *renderer = new tesseract::TessHOcrRenderer(outputbase, font_info);
-
-      if (renderer->happy()) {
-        renderers->push_back(renderer);
-
-      } else {
-        delete renderer;
-        qWarning() << QString("Error, could not create hOCR output file: %1").arg(errno);
-        error = true;
-      }
-    }
-
-    api->GetBoolVariable("tessedit_create_alto", &b);
-
-    if (b) {
-      tesseract::TessAltoRenderer *renderer = new tesseract::TessAltoRenderer(outputbase);
-
-      if (renderer->happy()) {
-        renderers->push_back(renderer);
-
-      } else {
-        delete renderer;
-        qWarning() << QString("Error, could not create ALTO output file:  %1").arg(errno);
-        error = true;
-      }
-    }
-
-    api->GetBoolVariable("tessedit_create_tsv", &b);
-
-    if (b) {
-      bool font_info;
-      api->GetBoolVariable("hocr_font_info", &font_info);
-      tesseract::TessTsvRenderer *renderer = new tesseract::TessTsvRenderer(outputbase, font_info);
-
-      if (renderer->happy()) {
-        renderers->push_back(renderer);
-
-      } else {
-        delete renderer;
-        qWarning() << QString("Error, could not create TSV output file:  %1").arg(errno);
-        error = true;
-      }
-    }
-
-    api->GetBoolVariable("tessedit_create_pdf", &b);
-
-    if (b) {
-#ifdef WIN32
-
-      if (_setmode(_fileno(stdout), _O_BINARY) == -1) {
-        qWarning() << QString("ERROR: cin to binary:  %1").arg(errno);
-      }
-
-#endif // WIN32
-      bool textonly;
-      api->GetBoolVariable("textonly_pdf", &textonly);
-      tesseract::TessPDFRenderer *renderer = new tesseract::TessPDFRenderer(outputbase,
-                                                                            api->GetDatapath(),
-                                                                            textonly);
-
-      if (renderer->happy()) {
-        renderers->push_back(renderer);
-
-      } else {
-        delete renderer;
-        qWarning() << QString("Error, could not create PDF output file:  % 1").arg(errno);
-        error = true;
-      }
-    }
-
-    api->GetBoolVariable("tessedit_write_unlv", &b);
-
-    if (b) {
-      api->SetVariable("unlv_tilde_crunching", "true");
-      tesseract::TessUnlvRenderer *renderer = new tesseract::TessUnlvRenderer(outputbase);
-
-      if (renderer->happy()) {
-        renderers->push_back(renderer);
-
-      } else {
-        delete renderer;
-        qWarning() << QString("Error, could not create UNLV output file:  %1").arg(errno);
-        error = true;
-      }
-    }
-
-    api->GetBoolVariable("tessedit_create_boxfile", &b);
-
-    if (b) {
-      tesseract::TessBoxTextRenderer *renderer = new tesseract::TessBoxTextRenderer(outputbase);
-
-      if (renderer->happy()) {
-        renderers->push_back(renderer);
-
-      } else {
-        delete renderer;
-        qWarning() << QString("Error, could not create BOX output file:  %1").arg(errno);
-        error = true;
-      }
-    }
-
-    api->GetBoolVariable("tessedit_create_txt", &b);
-
-    if (b || (!error && renderers->empty())) {
-      tesseract::TessTextRenderer *renderer = new tesseract::TessTextRenderer(outputbase);
-
-      if (renderer->happy()) {
-        renderers->push_back(renderer);
-
-      } else {
-        delete renderer;
-        qWarning() << QString("Error, could not create TXT output file:  %1").arg(errno);
-      }
-    }
-  }
-
-  if (!renderers->empty()) {
-    // Since the PointerVector auto-deletes, null-out the renderers that are
-    // added to the root, and leave the root in the vector.
-    for (int r = 1; r < renderers->size(); ++r) {
-      (*renderers)[0]->insert((*renderers)[r]);
-      (*renderers)[r] = nullptr;
-    }
-  }
-}
-
-QString getStringFromImage(const QString &datapath, const QString &lang, const QImage &image)
+QString getStringFromImage(const QString &datapath,
+                           const QString &lang,
+                           const QImage &image,
+                           const QRect &rect)
 {
   setlocale(LC_ALL, "C");
   auto *api = new tesseract::TessBaseAPI();
 
-  if (!api->Init(datapath.toStdString().c_str(),
-                 lang.toStdString().c_str(),
-                 tesseract::OEM_LSTM_ONLY)) {
+  int result = api->Init(datapath.toStdString().c_str(),
+                         lang.toStdString().c_str(),
+                         tesseract::OEM_LSTM_ONLY);
+
+  if (result == -1) {
     return QString();
   }
 
   // pixToImage() and pixRead() of original file are equal according
   // to pixEqual().
   PIX *pix = ImageConverter::imageToPix(image);
-  //  Pix *pix2 = pixRead(
-  //    "/home/simonmeaden/.local/share/Biblos/ocr/The Flight of the Horse/ocrimage2.png");
-
-  // some online reading suggested that the alpha channel (if any) should be removed
-  // but still no text.
-  pix = pixRemoveAlpha(pix);
-
-  //  monitor = new ETEXT_DESC();
-
   api->SetPageSegMode(tesseract::PSM_AUTO);
 
   QApplication::setOverrideCursor(Qt::WaitCursor);
 
   api->SetImage(pix);
+
+  if (!rect.isNull()) {
+    api->SetRectangle(rect.left(), rect.top(), rect.width(), rect.height());
+  }
+
   // for some reason internal to tesseract it sometimes crashes with
   // a Segmentation Fault without this.
   api->ClearAdaptiveClassifier();
 
-  char *out_char = api->GetUTF8Text();
-  QString out_text = QString::fromUtf8(out_char);
-  delete[] out_char;
+  QString out_text = QString::fromUtf8(api->GetUTF8Text());
 
   QApplication::restoreOverrideCursor();
 

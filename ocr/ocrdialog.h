@@ -43,7 +43,8 @@ public:
   QImage image();
   void setData(int index, const QImage& image, const DocumentData& page);
   void setOcrImage(int index, const QImage& image);
-  void setOcrText(int page_no, const QString& text);
+  void setOcrText(int page_no, const QString &text);
+  void appendOcrText(int page_no, const QString &text);
   QStringList text();
 
   bool imageChanged() const;
@@ -56,8 +57,8 @@ public:
 
   void open() override;
 
-signals:
-  void sendOcrRequest(int, const QImage&);
+  signals:
+  void sendOcrRequest(int, const QImage &, const QRect &rect = QRect());
   void saveModifiedImage(int index, const QImage& image);
   void saveModifiedText(int index, const QStringList &text);
 
@@ -78,7 +79,7 @@ signals:
   QPushButton *m_ocr_btn{};
   QPushButton *m_ocr_sel_btn{};
   QPushButton *denoise_btn{};
-  QPushButton *dewarp_btn{};
+  QPushButton *dewarp_btn{}, *m_save_txt_btn{};
   //  QPushButton *deskew_btn{};
   QwtSlider *m_intvalue_slider{};
   QwtSlider *m_dblvalue_slider{};

@@ -19,7 +19,8 @@
 */
 #include <utility>
 
-#include <qyaml-cpp/qyaml-cpp.h>
+//#include <qyaml-cpp/qyaml-cpp.h>
+#include "QYamlCpp"
 #include <yaml-cpp/yaml.h>
 
 #include "documentdata.h"
@@ -55,16 +56,16 @@ const QString ScanEditor::LANGUAGE = "language";
    \param lang - the tesseract language.
    \param parent - the parent QObject.
 */
-ScanEditor::ScanEditor(QScan* scan,
-                       const QString& configdir,
-                       const QString& datadir,
-                       QWidget* parent)
+ScanEditor::ScanEditor(QScan *scan,
+                       const QString &configdir,
+                       const QString &datadir,
+                       QWidget *parent)
   : QFrame(parent)
   , m_scan_lib(scan)
   , m_config_dir(configdir)
   , m_data_dir(datadir)
   , m_cover(DocumentData(new DocData()))
-  , m_lang("eng")
+  , m_lang("eng") // default language is english
 {
   m_logger = Log4Qt::Logger::logger(tr("ScanEditor"));
 
@@ -84,7 +85,7 @@ ScanEditor::ScanEditor(QScan* scan,
 
   m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
 
-  QString datapath = configdir + QStringLiteral("/tesseract" /*/tessdata"*/);
+  QString datapath = configdir + QStringLiteral("/tesseract/tessdata");
   m_ocr_tools = new OcrTools(datapath, m_lang);
 
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -283,6 +284,7 @@ void ScanEditor::makeConnections()
   //  connect(m_page_view, &PageView::removeCurrentImage, this, &ScanEditor::removeImage);
   connect(m_ocr_tools, &OcrTools::convertedPage, this, &ScanEditor::receiveOcrPageResult);
   connect(m_ocr_tools, &OcrTools::convertedImage, this, &ScanEditor::receiveOcrImageResult);
+  connect(m_ocr_tools, &OcrTools::convertedImageRect, this, &ScanEditor::receiveOcrImageRectResult);
 }
 
 /*
@@ -444,17 +446,28 @@ void ScanEditor::receiveOcrPageRequest(int page_no)
   }
 }
 
-void ScanEditor::receiveOcrImageRequest(int page_no, const QImage &image)
+void ScanEditor::receiveOcrImageRequest(int page_no, const QImage &image, const QRect &rect)
 {
   if (page_no > 0) {
-    m_ocr_tools->convertImageToText(page_no, image);
+    m_ocr_tools->convertImageToText(page_no, image, rect);
   }
 }
 
 void ScanEditor::saveModifiedText(int page_no, const QStringList &text)
 {
-  DocumentData page = m_doc_data_store->documentData(page_no);
-  page->setText(text);
+  /*
+    Clean up double quotes. Any double quote, standard, left or right
+    that is unescaped will cause extraneous wierd characters to be
+    output.
+  */
+  QStringList text_list;
+
+  for (const auto &s : text) {
+    text_list << Util::cleanText(s);
+  }
+
+  DocumentData doc_data = m_doc_data_store->documentData(page_no);
+  doc_data->setText(text_list);
   m_doc_data_store->save(m_data_filename);
 }
 
@@ -535,7 +548,7 @@ void ScanEditor::removeBoth(int page_no)
       // TODO
     } else if (m_page_view->isInternalImage(page)) { // internal image
       // TODO
-    } else if (m_page_view->has_text(page)) {
+    } else if (m_page_view->hasText(page)) {
       int answer
         = QMessageBox::warning(this,
                                tr("Remove Both Image and Text"),
@@ -546,7 +559,11 @@ void ScanEditor::removeBoth(int page_no)
                                QMessageBox::No);
 
       if (answer == QMessageBox::Yes) {
-        // TODO
+        m_page_view->removeImage();
+        m_page_view->setHasText(page, false);
+        DocumentData doc_data = m_doc_data_store->documentData(page);
+        doc_data->setRemoveTextLater(true);
+        doc_data->setRemoveImageLater(true);
       }
     }
   }
@@ -575,6 +592,8 @@ void ScanEditor::removeImage(int page_no)
 
     if (answer == QMessageBox::Yes) {
       m_page_view->removeImage();
+      DocumentData doc_data = m_doc_data_store->documentData(page_no);
+      doc_data->setRemoveImageLater(true);
     }
 
   } else if (page > 0) {
@@ -590,11 +609,10 @@ void ScanEditor::removeImage(int page_no)
 
     if (answer == QMessageBox::Yes) {
       m_page_view->removeImage();
+      DocumentData doc_data = m_doc_data_store->documentData(page_no);
+      doc_data->setRemoveImageLater(true);
     }
   }
-
-  DocumentData doc_data = m_doc_data_store->documentData(page_no);
-  doc_data->setRemoveImageLater(true);
 }
 
 void ScanEditor::removeText(int page_no)
@@ -621,17 +639,23 @@ void ScanEditor::removeText(int page_no)
 
     if (answer == QMessageBox::Yes) {
       m_page_view->setHasText(page, false);
+      DocumentData doc_data = m_doc_data_store->documentData(page);
+      doc_data->setRemoveTextLater(true);
     }
   }
-
-  DocumentData doc_data = m_doc_data_store->documentData(page);
-  doc_data->setRemoveTextLater(true);
 }
 
 void ScanEditor::receiveOcrImageResult(int page_no, const QString &text)
 {
   if (m_ocr_dlg) {
     m_ocr_dlg->setOcrText(page_no, text);
+  }
+}
+
+void ScanEditor::receiveOcrImageRectResult(int page_no, const QString &text)
+{
+  if (m_ocr_dlg) {
+    m_ocr_dlg->appendOcrText(page_no, text);
   }
 }
 

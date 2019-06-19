@@ -19,30 +19,8 @@ PageView::PageView(QWidget *parent)
           this,
           &PageView::selectionChanged);
   connect(m_image_view, &QListView::doubleClicked, this, &PageView::itemDoubleClicked);
+  connect(m_image_view, &QListView::clicked, this, &PageView::itemClicked);
 
-  //  m_remove_page_act = new QAction(tr("Remove the selected image and text"), this);
-  //  m_remove_image_act = new QAction(tr("Remove the selected image"), this);
-  //  m_remove_text_act = new QAction(tr("Remove the selected text"), this);
-  //  m_save_as_image_act = new QAction(tr("Save the selected page as an internal image."), this);
-  //  m_save_as_image_act->setToolTip(tr("Stores image for non-OCR, internal use."));
-  //  m_move_page_up_act = new QAction(tr("Move page up"), this);
-  //  m_move_page_down_act = new QAction(tr("Move page down"), this);
-  //  m_load_text_act = new QAction(tr("Load text."), this);
-  //  m_work_with_act = new QAction(tr("Work with selected image."), this);
-  //  m_do_ocr_act = new QAction(tr("Run OCR on selected image."), this);
-  //  m_do_all_ocr_act = new QAction(tr("Run OCR on all text-free images."),
-  //  this);
-  //  connect(m_remove_page_act, &QAction::triggered, this, &PageView::removePage);
-  //  connect(m_remove_image_act, &QAction::triggered, this, &PageView::removeImage);
-  //  connect(m_remove_text_act, &QAction::triggered, this, &PageView::removeText);
-  //  connect(m_move_page_up_act, &QAction::triggered, this, &PageView::moveUp);
-  //  connect(m_move_page_down_act, &QAction::triggered, this,
-  //  &PageView::moveDown);
-  //  connect(m_save_as_image_act, &QAction::triggered, this, &PageView::nonOcrImage);
-  //  connect(m_do_ocr_act, &QAction::triggered, this, &PageView::doOcr);
-  //  connect(m_do_all_ocr_act, &QAction::triggered, this, &PageView::doAllOcr);
-  //  connect(m_work_with_act, &QAction::triggered, this, &PageView::workOnImage);
-  //  connect(m_load_text_act, &QAction::triggered, this, &PageView::loadTextIntoEditor);
   layout->addWidget(m_image_view);
 }
 
@@ -141,12 +119,12 @@ void PageView::setIsInternal(int index, bool is_internal_image)
   m_image_view->setInternalImage(index, is_internal_image);
 }
 
-QMap<int, bool> PageView::has_text() const
+QMap<int, bool> PageView::hasTextMap() const
 {
   return m_has_text;
 }
 
-void PageView::setHas_text(const QMap<int, bool> &has_text)
+void PageView::setHasTextMap(const QMap<int, bool> &has_text)
 {
   m_has_text = has_text;
 }
@@ -251,6 +229,12 @@ void PageView::workOnImage()
 void PageView::loadTextIntoEditor()
 {
   emit loadText(m_image_view->currentIndex().row());
+}
+
+void PageView::itemClicked(const QModelIndex &index)
+{
+  m_current_row = index.row();
+  emit loadText(m_current_row);
 }
 
 void PageView::itemDoubleClicked(const QModelIndex &index)

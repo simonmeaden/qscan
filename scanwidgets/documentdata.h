@@ -6,6 +6,8 @@
 #include <QSharedPointer>
 #include <QMap>
 
+#include "util.h"
+
 class DocData
 {
 public:

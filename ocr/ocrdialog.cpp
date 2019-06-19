@@ -65,6 +65,14 @@ void OcrDialog::setOcrText(int page_no, const QString &text)
   }
 }
 
+void OcrDialog::appendOcrText(int page_no, const QString &text)
+{
+  if (page_no == m_page_no) {
+    m_text_edit->appendText(text);
+    m_image_display->clearSelection();
+  }
+}
+
 QStringList OcrDialog::text()
 {
   return m_text_edit->text();
@@ -266,6 +274,7 @@ void OcrDialog::initGui()
     btn_layout->addWidget(m_ocr_btn);
 
     m_ocr_sel_btn = new QPushButton(tr("Run OCR on Selection"), this);
+    m_ocr_sel_btn->setEnabled(false);
     m_ocr_sel_btn->setToolTip(tr("Re run the OCR on part of the tweaked image."));
     connect(m_ocr_sel_btn, &QPushButton::clicked, this, &OcrDialog::requestOcrOnSelection);
     btn_layout->addWidget(m_ocr_sel_btn);
@@ -342,10 +351,11 @@ void OcrDialog::initGui()
 
     btn_layout->addStretch(1);
 
-    auto* save_txt_btn = new QPushButton(tr("Save Text"), this);
-    save_txt_btn->setToolTip(tr("Save the text."));
-    connect(save_txt_btn, &QPushButton::clicked, this, &OcrDialog::saveText);
-    btn_layout->addWidget(save_txt_btn);
+    m_save_txt_btn = new QPushButton(tr("Save Text"), this);
+    m_save_txt_btn->setEnabled(false);
+    m_save_txt_btn->setToolTip(tr("Save the text."));
+    connect(m_save_txt_btn, &QPushButton::clicked, this, &OcrDialog::saveText);
+    btn_layout->addWidget(m_save_txt_btn);
 
     auto* save_img_btn = new QPushButton(tr("Save Image"), this);
     save_img_btn->setToolTip(tr("Save the image."));
@@ -381,15 +391,17 @@ void OcrDialog::initGui()
 
 void OcrDialog::requestOcr()
 {
-  emit sendOcrRequest(m_page_no, m_image_display->modifiedImage());
+  QImage image = m_image_display->modifiedImage();
+  emit sendOcrRequest(m_page_no, image);
 }
 
 void OcrDialog::requestOcrOnSelection()
 {
-  QImage copy = m_image_display->selectedSubImage();
+  QRect copy_rect = m_image_display->selection();
+  QImage image = m_image_display->modifiedImage();
 
-  if (!copy.isNull()) {
-    emit sendOcrRequest(m_page_no, copy);
+  if (!copy_rect.isNull()) {
+    emit sendOcrRequest(m_page_no, image, copy_rect);
   }
 }
 
@@ -402,12 +414,16 @@ void OcrDialog::setSelected()
 {
   m_crop_btn->setEnabled(true);
   m_clr_to_back_btn->setEnabled(true);
+  m_save_txt_btn->setEnabled(true);
+  m_ocr_sel_btn->setEnabled(true);
 }
 
 void OcrDialog::setUnselected()
 {
   m_crop_btn->setEnabled(false);
   m_clr_to_back_btn->setEnabled(false);
+  m_save_txt_btn->setEnabled(false);
+  m_ocr_sel_btn->setEnabled(false);
 }
 
 void OcrDialog::crop()

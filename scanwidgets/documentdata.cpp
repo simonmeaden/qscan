@@ -4,7 +4,8 @@
 
 #include <algorithm>
 
-#include <qyaml-cpp/QYamlCpp>
+//#include <qyaml-cpp/QYamlCpp>
+#include "QYamlCpp"
 #include <yaml-cpp/yaml.h>
 
 /* DocumentDataStore
@@ -28,7 +29,7 @@ int DocumentDataStore::nextPageNumber()
   return ++m_highest_page;
 }
 
-void DocumentDataStore::appendData(DocumentData& data)
+void DocumentDataStore::appendData(DocumentData &data)
 {
   int page_no = data->pageNumber();
   m_data.insert(page_no, data);
@@ -38,7 +39,7 @@ void DocumentDataStore::appendData(DocumentData& data)
   }
 }
 
-void DocumentDataStore::insertData(int index, DocumentData& data)
+void DocumentDataStore::insertData(int index, DocumentData &data)
 {
   int page_no = data->pageNumber();
   m_data.insert(index, data);
@@ -58,7 +59,7 @@ DocumentData DocumentDataStore::documentData(int key)
   return m_data.value(key);
 }
 
-void DocumentDataStore::load(const QString& filename)
+void DocumentDataStore::load(const QString &filename)
 {
   QFile file(filename);
 
@@ -67,8 +68,7 @@ void DocumentDataStore::load(const QString& filename)
 
     if (!doc_data.IsNull()) {
       if (doc_data.IsMap()) {
-        for (YAML::const_iterator it = doc_data.begin(); it != doc_data.end();
-             ++it) {
+        for (YAML::const_iterator it = doc_data.begin(); it != doc_data.end(); ++it) {
           int page_number = it->first.as<int>();
           YAML::Node item = it->second;
           DocumentData data(new DocData());
@@ -111,7 +111,7 @@ void DocumentDataStore::load(const QString& filename)
   }
 }
 
-void DocumentDataStore::save(const QString& filename)
+void DocumentDataStore::save(const QString &filename)
 {
   QFile file(filename);
 
@@ -155,7 +155,7 @@ void DocumentDataStore::save(const QString& filename)
             emitter << YAML::Value;
             emitter << YAML::BeginSeq; // begin of text sequance
 
-            for (QString text : data->textList()) {
+            for (const QString &text : data->textList()) {
               emitter << YAML::Value << text;
             }
 
@@ -170,7 +170,7 @@ void DocumentDataStore::save(const QString& filename)
         }
 
         emitter << YAML::EndMap; // end of document data map
-      } // end of document data section
+      }                          // end of document data section
     }
 
     emitter << YAML::EndMap; // end of document map
@@ -186,21 +186,22 @@ void DocumentDataStore::remove(int index)
   m_data.remove(index);
 }
 
-void DocumentDataStore::remove(const QString& filename)
+void DocumentDataStore::remove(const QString &filename)
 {
   QList<DocumentData> values = m_data.values();
 
-  QList<DocumentData>::iterator data_it =
-  std::find_if(values.begin(), values.end(), [filename](DocumentData data) {
-    return data->filename() == filename;
-  });
+  QList<DocumentData>::iterator data_it = std::find_if(values.begin(),
+                                                       values.end(),
+                                                       [filename](DocumentData data) {
+                                                         return data->filename() == filename;
+                                                       });
 
   if (!data_it->isNull()) {
     m_data.remove(m_data.key(*data_it));
   }
 }
 
-void DocumentDataStore::remove(const DocumentData& data)
+void DocumentDataStore::remove(const DocumentData &data)
 {
   m_data.remove(m_data.key(data));
 }
@@ -259,7 +260,7 @@ DocData::DocData()
   , m_remove_text_later(false)
 {}
 
-DocData::DocData(QString  filename, const QString& text, bool is_internal)
+DocData::DocData(QString filename, const QString &text, bool is_internal)
   : m_filename(std::move(filename))
   , m_is_internal_image(is_internal)
   , m_text_initialised(false)
@@ -280,7 +281,7 @@ QString DocData::filename() const
   return m_filename;
 }
 
-void DocData::setFilename(const QString& filename)
+void DocData::setFilename(const QString &filename)
 {
   m_filename = filename;
 }
@@ -295,7 +296,7 @@ QStringList DocData::textList()
   return m_text_list;
 }
 
-void DocData::setText(const QString& text)
+void DocData::setText(const QString &text)
 {
   if (!m_text_list.isEmpty()) {
     m_text_initialised = true;
@@ -305,7 +306,7 @@ void DocData::setText(const QString& text)
   appendText(text);
 }
 
-void DocData::setText(const QStringList& text_list)
+void DocData::setText(const QStringList &text_list)
 {
   if (!m_text_list.isEmpty()) {
     m_text_initialised = true;
@@ -314,13 +315,13 @@ void DocData::setText(const QStringList& text_list)
   m_text_list = text_list;
 }
 
-void DocData::appendText(const QString& text)
+void DocData::appendText(const QString &text)
 {
   m_text_list.append(text);
   m_text_has_changed = true;
 }
 
-void DocData::appendText(const QStringList& text_list)
+void DocData::appendText(const QStringList &text_list)
 {
   m_text_list.append(text_list);
   m_text_has_changed = true;
@@ -332,13 +333,13 @@ void DocData::removeText(int index)
   m_text_has_changed = true;
 }
 
-bool DocData::removeText(const QString& text)
+bool DocData::removeText(const QString &text)
 {
   return m_text_list.removeOne(text);
   m_text_has_changed = true;
 }
 
-void DocData::insertText(int index, const QString& text)
+void DocData::insertText(int index, const QString &text)
 {
   m_text_list.insert(index, text);
   m_text_has_changed = true;

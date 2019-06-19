@@ -20,8 +20,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "QYamlCpp"
 #include "qscan.h"
-#include "qyaml-cpp/qyaml-cpp.h"
 #include "scaninterface.h"
 #include "yaml-cpp/yaml.h"
 

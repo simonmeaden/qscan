@@ -16,8 +16,8 @@ class ScanItemDelegate : public QStyledItemDelegate
 {
   Q_OBJECT
 
-public:
-  ScanItemDelegate(QObject* parent = nullptr);
+  public:
+  ScanItemDelegate(QObject *parent = nullptr);
 
   QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem&, const QModelIndex&) const override;
 
@@ -37,8 +37,9 @@ class ScanList : public QListView
 public:
   explicit ScanList(QWidget* parent = nullptr);
 
-  void setText(const QString& text);
-  void setText(const QStringList& list);
+  void appendText(const QString &text);
+  void setText(const QString &text);
+  void setText(const QStringList &list);
 
   QStringList text();
 

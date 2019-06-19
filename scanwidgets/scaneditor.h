@@ -138,7 +138,11 @@ protected:
   QString m_data_dir{};
   QString m_lang{};
   OcrDialog* m_ocr_dlg{};
-  QPushButton *m_crop_btn{}, *m_left_btn{}, *m_move_up_btn{}, *m_move_down_btn{}, *m_move_to_btn{};
+  QPushButton *m_crop_btn{};
+  QPushButton *m_left_btn{};
+  QPushButton *m_move_up_btn{};
+  QPushButton *m_move_down_btn{};
+  QPushButton *m_move_to_btn{};
   QPushButton *m_cover_btn{};
   QPushButton *m_right_btn{};
   QPushButton *m_both_btn{};
@@ -181,9 +185,10 @@ protected:
   void receiveLoadText(int page_no);
   void receiveWorkOnRequest(int documentData);
   void receiveOcrPageRequest(int documentData);
-  void receiveOcrImageRequest(int documentData, const QImage& image);
+  void receiveOcrImageRequest(int documentData, const QImage &image, const QRect &rect);
   void receiveOcrPageResult(const DocumentData &doc_data);
-  void receiveOcrImageResult(int documentData, const QString& text);
+  void receiveOcrImageResult(int documentData, const QString &text);
+  void receiveOcrImageRectResult(int documentData, const QString &text);
   void receiveOcrDialogFinished(int result);
   void receivePageMoved(int start_row, int dest_row);
   void removeBoth(int page_no = -1);

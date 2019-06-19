@@ -2,7 +2,9 @@
 
 /* ScanEdit
  **************************************************************************************/
-ScanList::ScanList(QWidget *parent) : QListView(parent) {
+ScanList::ScanList(QWidget *parent)
+  : QListView(parent)
+{
   m_model = new QStringListModel(this);
   setModel(m_model);
 
@@ -11,19 +13,35 @@ ScanList::ScanList(QWidget *parent) : QListView(parent) {
   m_model->setStringList(list);
 }
 
-void ScanList::setText(const QString &text) {
+void ScanList::appendText(const QString &text)
+{
+  int row = m_model->rowCount();
+
+  if (m_model->insertRow(row)) {
+    QModelIndex index = m_model->index(row, 0);
+    m_model->setData(index, text);
+  }
+}
+
+void ScanList::setText(const QString &text)
+{
   QStringList list;
   list << text;
   m_model->setStringList(list);
 }
 
-void ScanList::setText(const QStringList &list) {
+void ScanList::setText(const QStringList &list)
+{
   m_model->setStringList(list);
 }
 
-QStringList ScanList::text() { return m_model->stringList(); }
+QStringList ScanList::text()
+{
+  return m_model->stringList();
+}
 
-void ScanList::contextMenuEvent(QContextMenuEvent *event) {
+void ScanList::contextMenuEvent(QContextMenuEvent *event)
+{
   auto* context_menu = new QMenu();
 }
 

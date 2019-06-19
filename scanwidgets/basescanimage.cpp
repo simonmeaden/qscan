@@ -58,13 +58,13 @@ QImage BaseScanImage::modifiedImage()
 QImage BaseScanImage::selectedSubImage()
 {
   if (hasSelection()) {
-    QRect scaled_rect;
-    scaled_rect.setX(int(m_rubber_band.x() / m_scale_by));
-    scaled_rect.setY(int(m_rubber_band.y() / m_scale_by));
-    scaled_rect.setWidth(int(m_rubber_band.width() / m_scale_by));
-    scaled_rect.setHeight(int(m_rubber_band.height() / m_scale_by));
+    QRect selected_rect;
+    selected_rect.setX(int(m_rubber_band.x() / m_scale_by));
+    selected_rect.setY(int(m_rubber_band.y() / m_scale_by));
+    selected_rect.setWidth(int(m_rubber_band.width() / m_scale_by));
+    selected_rect.setHeight(int(m_rubber_band.height() / m_scale_by));
 
-    QImage copied_selection = m_modified_image.copy(scaled_rect);
+    QImage copied_selection = m_modified_image.copy(selected_rect);
     return copied_selection;
   }
 

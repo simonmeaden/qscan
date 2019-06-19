@@ -38,7 +38,10 @@
 namespace TessTools {
 
 void getStringFromPage(const QString &datapath, const QString &lang, const DocumentData &page);
-QString getStringFromImage(const QString &datapath, const QString &lang, const QImage &image);
+QString getStringFromImage(const QString &datapath,
+                           const QString &lang,
+                           const QImage &image,
+                           const QRect &rect);
 
 } // namespace TessTools
 

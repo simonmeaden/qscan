@@ -36,8 +36,8 @@ public:
   bool isInternalImage(int page_no);
   void setIsInternal(int index, bool is_internal_image);
 
-  QMap<int, bool> has_text() const;
-  void setHas_text(const QMap<int, bool>& has_text);
+  QMap<int, bool> hasTextMap() const;
+  void setHasTextMap(const QMap<int, bool> &has_text);
 
   void moveUp();
   void moveDown();
@@ -89,6 +89,7 @@ public:
   //  void doOcr();
   //  void doAllOcr();
   void loadTextIntoEditor();
+  void itemClicked(const QModelIndex &index);
   void itemDoubleClicked(const QModelIndex &index);
 
   static const QString HASTEXT;

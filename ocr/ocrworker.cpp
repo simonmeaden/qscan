@@ -21,11 +21,12 @@ void OcrWorker::convertPage(const DocumentData& page)
   m_pages.append(page);
 }
 
-void OcrWorker::convertImage(int page_no, const QImage& image)
+void OcrWorker::convertImage(int page_no, const QImage &image, const QRect &rect)
 {
   emit log(LogLevel::INFO, (tr("Converting image in OcrWorker.")));
   m_images.append(image);
   m_page_nos.append(page_no);
+  m_rects.append(rect);
 }
 
 void OcrWorker::process()
@@ -37,8 +38,15 @@ void OcrWorker::process()
     if (!m_images.isEmpty()) {
       QImage image = m_images.takeFirst();
       int page_no = m_page_nos.takeFirst();
-      text = TessTools::getStringFromImage(m_datapath, m_lang, image);
-      emit imageConverted(page_no, text);
+      QRect rect = m_rects.takeFirst();
+      text = TessTools::getStringFromImage(m_datapath, m_lang, image, rect);
+
+      if (rect.isNull()) {
+        emit imageConverted(page_no, text);
+
+      } else {
+        emit imageConvertedRect(page_no, text);
+      }
 
     } else if (!m_pages.isEmpty()) {
       DocumentData page = m_pages.takeFirst();

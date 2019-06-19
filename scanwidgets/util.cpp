@@ -44,4 +44,91 @@ int dpmToDpi(int value)
   return dpi;
 }
 
+/*!
+  \brief Cleans text of dodgy characters and un-escaped single and double quotes..
+
+  Some characters such as em-dash which are detected by trhe scanner
+  do not convert well in YAML so convert them to simpler forms such a hyphen.
+
+  Double quotes, either standard double quotes (") or their unicode
+  brethren, left and right double quotes, are converted into escaped
+  standard double quotes.
+
+  \param text - the string to clean.
+  \return - the 'cleaned' text.
+*/
+QString cleanText(const QString &text)
+{
+  if (text.contains(D_QUOTE) ||       // standard d-quote
+      text.contains(S_QUOTE) ||       // standard s-quote
+      text.contains(LEFT_D_QUOTE) ||  // left d-quote
+      text.contains(RIGHT_D_QUOTE) || // right d-quote
+      text.contains(LEFT_S_QUOTE) ||  // left s-quote
+      text.contains(RIGHT_D_QUOTE)) { // right s-quote
+    QString escaped_text;
+    bool bs = false;
+
+    int index = text.indexOf("tug") + 3;
+    QChar h = text.at(index);
+
+    for (auto c : text) {
+      if (c == D_QUOTE || c == S_QUOTE) { // standard d-quote or s-quote
+        //        if (!bs) {
+        //          //          escaped_text += BACKSLASH; // escape it
+        //        }
+
+        escaped_text += c;
+        bs = false;
+
+      } else if (c == LEFT_D_QUOTE || c == RIGHT_D_QUOTE) { // left or right d-quote char
+        //        if (!bs) {                                          // un-escaped
+        //          //          escaped_text += BACKSLASH;                        // escape it
+
+        //        } else {
+        //          bs = false;
+        //        }
+
+        escaped_text += D_QUOTE; // replace with standard s-quote
+        bs = false;
+
+      } else if (c == LEFT_S_QUOTE || c == RIGHT_S_QUOTE) { // left or right s-quote char
+        //        if (!bs) {                                          // un-escaped
+        //          //          escaped_text += BACKSLASH;                        // escape it
+
+        //        } else {
+        //          bs = false;
+        //        }
+
+        escaped_text += S_QUOTE; // replace with standard s-quote
+        bs = false;
+
+      } else if (c == EMDASH) {
+        escaped_text += HYPHEN;
+
+      } else if (c == BACKSLASH) { // escaped backslash char
+        if (!bs) {
+          bs = true;
+
+        } else { // escaped \ ie \\
+          bs = false;
+          escaped_text += c;
+        }
+
+      } else {
+        // any other character cancels escaped character.
+        if (bs) {
+          escaped_text += BACKSLASH; // escape it
+          bs = false;
+        }
+
+        escaped_text += c;
+      }
+    }
+
+    return escaped_text;
+  }
+
+  return text;
+}
+
 } // namespace Util

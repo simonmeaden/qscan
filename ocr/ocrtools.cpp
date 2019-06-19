@@ -23,6 +23,7 @@ OcrTools::OcrTools(const QString& datapath,
 
   connect(m_ocr_worker, &OcrWorker::pageConverted, this, &OcrTools::convertedPage);
   connect(m_ocr_worker, &OcrWorker::imageConverted, this, &OcrTools::convertedImage);
+  connect(m_ocr_worker, &OcrWorker::imageConvertedRect, this, &OcrTools::convertedImageRect);
   connect(m_ocr_worker, &OcrWorker::log, this, &OcrTools::log);
   m_logger->info(QString("Starting OCR Thread"));
 
@@ -40,9 +41,9 @@ void OcrTools::convertImageToText(const DocumentData& page)
   m_ocr_worker->convertPage(page);
 }
 
-void OcrTools::convertImageToText(int page_no, const QImage& image)
+void OcrTools::convertImageToText(int page_no, const QImage &image, const QRect &rect)
 {
-  m_ocr_worker->convertImage(page_no, image);
+  m_ocr_worker->convertImage(page_no, image, rect);
 }
 
 void OcrTools::log(LogLevel level, const QString& msg)

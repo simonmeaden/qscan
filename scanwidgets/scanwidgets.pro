@@ -76,3 +76,10 @@ else:unix: LIBS += -L$$OUT_PWD/../ocr/ -locr
 
 INCLUDEPATH += $$PWD/../ocr
 DEPENDPATH += $$PWD/../ocr
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qyaml-cpp/release/ -lqyaml-cpp
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../qyaml-cpp/debug/ -lqyaml-cpp
+else:unix: LIBS += -L$$OUT_PWD/../qyaml-cpp/ -lqyaml-cpp
+
+INCLUDEPATH += $$PWD/../qyaml-cpp
+DEPENDPATH += $$PWD/../qyaml-cpp
