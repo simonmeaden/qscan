@@ -17,25 +17,25 @@ public:
   explicit OcrWorker(QString  datapath, QString  lang);
 
   void process();
-  void convertPage(const DocumentData& page);
+  void convertPage(const OcrData &page);
   void convertImage(int page_no, const QImage &image, const QRect &rect);
 
   void stopRunning();
 
 signals:
-  void pageConverted(const DocumentData& page);
-  void imageConverted(int page_no, const QString &text);
-  void imageConvertedRect(int page_no, const QString &text);
-  void log(LogLevel, const QString &);
+    void pageConverted(const OcrData &page);
+    void imageConverted(int page_no, const QString &text);
+    void imageConvertedRect(int page_no, const QString &text);
+    void log(LogLevel, const QString &);
 
-  protected:
-  QString m_datapath, m_lang;
-  bool m_available;
-  QList<DocumentData> m_pages{};
-  QList<QImage> m_images;
-  QList<int> m_page_nos;
-  QList<QRect> m_rects;
-  bool m_running;
+protected:
+    QString m_datapath, m_lang;
+    bool m_available;
+    QList<OcrData> m_pages{};
+    QList<QImage> m_images;
+    QList<int> m_page_nos;
+    QList<QRect> m_rects;
+    bool m_running;
 };
 
 #endif // OCRWORKER_H

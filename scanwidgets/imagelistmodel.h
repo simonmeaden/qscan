@@ -16,20 +16,17 @@ public:
   explicit ImageListModel(QObject* parent = nullptr);
 
   void setCover(const QImage& image);
-  int appendThumbnail(const QImage &image, bool has_text,
-                      bool internal_image = false);
-  bool insertThumbnail(int row, const QImage& image, bool has_text, bool is_internal_image);
+  int appendThumbnail(const QImage &image);
+  bool insertThumbnail(int row, const QImage &image);
   bool removeThumbnail(int row);
   bool moveThumbnail(int source, int destination);
-  void replaceThumbnail(int row,
-                        const QImage& image,
-                        bool has_text,
-                        bool is_internal_image);
-  void setHasText(int row, bool has_text);
-  bool hasText(int row);
+  void replaceThumbnail(int row, const QImage &image);
+  QImage thumbnail(int row);
+  //  void setHasText(int row, bool has_text);
+  //  bool hasText(int row);
   bool isEmpty();
-  bool isInternalImage(int row);
-  void setInternalImage(int row, bool value);
+  //  bool isInternalImage(int row);
+  //  void setInternalImage(int row, bool value);
   QString tooltip(int row);
 
   QStringList mimeTypes() const override;
@@ -68,9 +65,9 @@ public:
 protected:
   Log4Qt::Logger* m_logger;
   ImageList m_images;
-  ImageList m_extra_images; // used to store internal images.
-  QList<bool> m_has_text;
-  QList<bool> m_internal_image;
+  ImageList m_internal_images; // used to store internal images.
+  //  QList<bool> m_has_text;
+  //  QList<bool> m_internal_image;
   QStringList m_headers;
 
   static const QString MIMETYPE;

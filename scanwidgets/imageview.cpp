@@ -91,19 +91,21 @@ void ImageView::setCover(const QImage &image)
   m_model->setCover(image);
 }
 
-int ImageView::appendThumbnail(const QImage &image, bool has_text, bool is_internal_image)
+int ImageView::appendThumbnail(const QImage &image)
 {
-  return m_model->appendThumbnail(image, has_text, is_internal_image);
+  return m_model->appendThumbnail(image);
 }
 
-void ImageView::insertThumbnail(int row, const QImage &image, bool has_text, bool is_internal_image)
+void ImageView::insertThumbnail(int row, const QImage &image)
 {
-  m_model->insertThumbnail(row, image, has_text, is_internal_image);
+  m_model->insertThumbnail(row, image);
 }
 
-void ImageView::removeThumbnail(int row)
+QImage ImageView::removeThumbnail(int row)
 {
+  QImage image = m_model->thumbnail(row);
   m_model->removeThumbnail(row);
+  return image;
 }
 
 bool ImageView::moveThumbnail(int source, int destination)
@@ -111,19 +113,14 @@ bool ImageView::moveThumbnail(int source, int destination)
   return m_model->moveThumbnail(source, destination);
 }
 
-void ImageView::replaceThumbnail(int row, const QImage &image, bool has_text, bool is_internal_image)
+void ImageView::replaceThumbnail(int row, const QImage &image)
 {
-  m_model->replaceThumbnail(row, image, has_text, is_internal_image);
+  m_model->replaceThumbnail(row, image);
 }
 
-void ImageView::setHasText(int index, bool has_text)
+QImage ImageView::thumbnail(int row)
 {
-  m_model->setHasText(index, has_text);
-}
-
-void ImageView::setInternalImage(int index, bool internal_image)
-{
-  m_model->setInternalImage(index, internal_image);
+  return m_model->thumbnail(row);
 }
 
 void ImageView::setCurrentRow(int row)
@@ -163,7 +160,7 @@ bool ImageView::isIndexHidden(const QModelIndex &index) const
 bool ImageView::event(QEvent *event)
 {
   if (event->type() == QEvent::ToolTip) {
-    auto* helpEvent = static_cast<QHelpEvent*>(event);
+    auto *helpEvent = dynamic_cast<QHelpEvent *>(event);
     QModelIndex index = indexAt(helpEvent->pos());
 
     if (index.isValid()) {

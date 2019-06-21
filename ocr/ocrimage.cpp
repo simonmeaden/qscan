@@ -42,6 +42,24 @@ void OcrImage::cropToSelection()
   BaseScanImage::cropToSelection();
 }
 
+QImage OcrImage::copySelection()
+{
+  if (hasSelection()) {
+    QRect copy_rect;
+    copy_rect.setX(int(m_rubber_band.x() / m_scale_by));
+    copy_rect.setY(int(m_rubber_band.y() / m_scale_by));
+    copy_rect.setWidth(int(m_rubber_band.width() / m_scale_by));
+    copy_rect.setHeight(int(m_rubber_band.height() / m_scale_by));
+
+    QImage copied = m_modified_image.copy(copy_rect);
+
+    clearSelection();
+    return copied;
+  }
+
+  return QImage();
+}
+
 void OcrImage::binarise()
 {
   if (!(m_modified_image.format() == QImage::Format_Mono

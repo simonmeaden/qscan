@@ -114,13 +114,13 @@ void BaseScanImage::invert()
 void BaseScanImage::cropToSelection()
 {
   if (hasSelection()) {
-    QRect scaled_rect;
-    scaled_rect.setX(int(m_rubber_band.x() / m_scale_by));
-    scaled_rect.setY(int(m_rubber_band.y() / m_scale_by));
-    scaled_rect.setWidth(int(m_rubber_band.width() / m_scale_by));
-    scaled_rect.setHeight(int(m_rubber_band.height() / m_scale_by));
+    QRect crop_rect;
+    crop_rect.setX(int(m_rubber_band.x() / m_scale_by));
+    crop_rect.setY(int(m_rubber_band.y() / m_scale_by));
+    crop_rect.setWidth(int(m_rubber_band.width() / m_scale_by));
+    crop_rect.setHeight(int(m_rubber_band.height() / m_scale_by));
 
-    QImage cropped = m_modified_image.copy(scaled_rect);
+    QImage cropped = m_modified_image.copy(crop_rect);
 
     m_modified_image = cropped;
     //    updateImage(/*cropped*/);
@@ -129,8 +129,7 @@ void BaseScanImage::cropToSelection()
   }
 }
 
-void BaseScanImage::scaleModifiedImage(
-  /*qreal factor,*/ /*const QImage& image*/)
+void BaseScanImage::scaleModifiedImage()
 {
   int w = int(m_modified_image.width() * m_scale_by);
   int h = int(m_modified_image.height() * m_scale_by);
@@ -153,7 +152,16 @@ void BaseScanImage::clearSelection()
 
 QRect BaseScanImage::selection()
 {
-  return m_rubber_band;
+  if (hasSelection()) {
+    QRect scaled_rect;
+    scaled_rect.setX(int(m_rubber_band.x() / m_scale_by));
+    scaled_rect.setY(int(m_rubber_band.y() / m_scale_by));
+    scaled_rect.setWidth(int(m_rubber_band.width() / m_scale_by));
+    scaled_rect.setHeight(int(m_rubber_band.height() / m_scale_by));
+    return scaled_rect;
+  }
+
+  return QRect();
 }
 
 void BaseScanImage::fitBest()

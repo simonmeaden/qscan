@@ -93,10 +93,12 @@ public:
   void fitHeight();
   void fitWidth();
   void setDefaultPageCropSize();
-  void splitPages();
-  void splitLeftPage();
-  void splitRightPage();
-  void makePage();
+  void moveBothPagesToDocument();
+  void moveLeftPageToDocument();
+  void moveRightPageToDocument();
+  void moveToImageDocument();
+  void moveToImageDocument(const QImage &image);
+  void movePageToDocument();
 
   void loadCover(const QString& filename);
 
@@ -143,6 +145,7 @@ protected:
   QPushButton *m_move_up_btn{};
   QPushButton *m_move_down_btn{};
   QPushButton *m_move_to_btn{};
+  QPushButton *m_move_to_doc_btn{};
   QPushButton *m_cover_btn{};
   QPushButton *m_right_btn{};
   QPushButton *m_both_btn{};
@@ -151,7 +154,7 @@ protected:
   QPushButton *m_rem_txt_btn{};
   QPushButton *m_rem_img_btn{};
   QPushButton *m_rem_both_btn{};
-  QGroupBox *group1{}, *group2{}, *group3{};
+  QGroupBox *image_edit_group{}, *page_list_group{}, *image_transfer_group{};
 
   DocumentData m_cover;
   int m_resolution;
@@ -160,6 +163,7 @@ protected:
   QPixmapCache::Key move_up_key;
   QPixmapCache::Key move_down_key;
   QPixmapCache::Key move_to_key;
+  QPixmapCache::Key move_to_internal_key;
   QPixmapCache::Key internal_key;
   QPixmapCache::Key cover_key;
   QPixmapCache::Key left_key;
@@ -179,14 +183,15 @@ protected:
   void receiveImage(const QImage& image);
   void receiveImages(const QImage& left, const QImage& right);
   void receiveString(int documentData, const QString& str);
-  QString saveImage(int index, const QImage& image);
-  void saveModifiedImage(int index, const QImage& image);
+  QString saveImage(int index, const QImage &image);
+  QString saveDocumentImage(int index, const QImage &image);
+  void saveModifiedImage(int index, const QImage &image);
   void makeCover();
   void receiveLoadText(int page_no);
   void receiveWorkOnRequest(int documentData);
   void receiveOcrPageRequest(int documentData);
   void receiveOcrImageRequest(int documentData, const QImage &image, const QRect &rect);
-  void receiveOcrPageResult(const DocumentData &doc_data);
+  void receiveOcrPageResult(const OcrData &doc_data);
   void receiveOcrImageResult(int documentData, const QString &text);
   void receiveOcrImageRectResult(int documentData, const QString &text);
   void receiveOcrDialogFinished(int result);
@@ -197,6 +202,7 @@ protected:
   void saveModifiedText(int page_no, const QStringList& text);
   QImage thumbnail(const QImage& image) const;
   void rescale();
+  void moveSelectionToInternal();
 
   void enableMoveBtns(bool enable);
   void enableListBtns();
@@ -214,6 +220,9 @@ protected:
   static const QString CURRENT_DOCUMENT;
   static const QString TESSERACT;
   static const QString LANGUAGE;
+  void initPageListBtns();
+  void initImageEditBtns();
+  void initTransferBtns();
 };
 
 #endif // SCANEDITOR_H

@@ -41,7 +41,7 @@ public:
   //  OcrDialog& operator=(OcrDialog&&) = delete;
 
   QImage image();
-  void setData(int index, const QImage& image, const DocumentData& page);
+  void setData(int index, const QImage &image, const OcrData &page);
   void setOcrImage(int index, const QImage& image);
   void setOcrText(int page_no, const QString &text);
   void appendOcrText(int page_no, const QString &text);
@@ -61,6 +61,7 @@ public:
   void sendOcrRequest(int, const QImage &, const QRect &rect = QRect());
   void saveModifiedImage(int index, const QImage& image);
   void saveModifiedText(int index, const QStringList &text);
+  void moveSelectionToDocument(const QImage &);
 
   protected:
   enum ChangeType {
@@ -79,7 +80,7 @@ public:
   QPushButton *m_ocr_btn{};
   QPushButton *m_ocr_sel_btn{};
   QPushButton *denoise_btn{};
-  QPushButton *dewarp_btn{}, *m_save_txt_btn{};
+  QPushButton *dewarp_btn{}, *m_save_txt_btn{}, *move_sel_to_doc_btn{};
   //  QPushButton *deskew_btn{};
   QwtSlider *m_intvalue_slider{};
   QwtSlider *m_dblvalue_slider{};
@@ -115,8 +116,9 @@ public:
   void rotateCW();
   void rotateCCW();
   void rescale();
+  void moveToDocument();
   void saveText();
-  void saveImage();
+  void saveCurrentStateImage();
   void discard();
   void acceptChanges();
   void undoChanges();
@@ -128,7 +130,7 @@ public:
   void applyValue();
   void aValue();
 
-  void setCurrentValueType();
+  void setCurrentChangeState();
 
   void disableBinarise();
   void enableBinarise();

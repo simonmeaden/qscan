@@ -36,13 +36,12 @@ public:
   bool event(QEvent* event) override;
 
   void setCover(const QImage& image);
-  int appendThumbnail(const QImage &image, bool has_text, bool is_internal_image);
-  void insertThumbnail(int row, const QImage &image, bool has_text, bool is_internal_image);
-  void removeThumbnail(int row);
+  int appendThumbnail(const QImage &image);
+  void insertThumbnail(int row, const QImage &image);
+  QImage removeThumbnail(int row);
   bool moveThumbnail(int source, int destination);
-  void replaceThumbnail(int row, const QImage &image, bool has_text, bool is_internal_image);
-  void setHasText(int index, bool has_text);
-  void setInternalImage(int index, bool internal);
+  void replaceThumbnail(int row, const QImage &image);
+  QImage thumbnail(int row);
 
   void setCurrentRow(int row);
 
@@ -61,7 +60,7 @@ public:
   };
 
   ImageListModel *m_model;
-  QItemSelectionModel *m_selection_model;
+  QItemSelectionModel *m_selection_model{};
   DragState m_drag_state;
   int m_drag_start_x;
 

@@ -32,7 +32,7 @@ void OcrDialog::setResolution(const QImage &image)
   setResLabel(x_dpi, y_dpi);
 }
 
-void OcrDialog::setData(int index, const QImage &image, const DocumentData &doc_data)
+void OcrDialog::setData(int index, const QImage &image, const OcrData &doc_data)
 {
   m_page_no = index;
   m_doc_data = doc_data;
@@ -351,15 +351,21 @@ void OcrDialog::initGui()
 
     btn_layout->addStretch(1);
 
+    move_sel_to_doc_btn = new QPushButton(tr("Set to Document"), this);
+    move_sel_to_doc_btn->setEnabled(false);
+    move_sel_to_doc_btn->setToolTip(tr("Set as an internal Document Image."));
+    connect(move_sel_to_doc_btn, &QPushButton::clicked, this, &OcrDialog::moveToDocument);
+    btn_layout->addWidget(move_sel_to_doc_btn);
+
     m_save_txt_btn = new QPushButton(tr("Save Text"), this);
     m_save_txt_btn->setEnabled(false);
     m_save_txt_btn->setToolTip(tr("Save the text."));
     connect(m_save_txt_btn, &QPushButton::clicked, this, &OcrDialog::saveText);
     btn_layout->addWidget(m_save_txt_btn);
 
-    auto* save_img_btn = new QPushButton(tr("Save Image"), this);
+    auto *save_img_btn = new QPushButton(tr("Save Image"), this);
     save_img_btn->setToolTip(tr("Save the image."));
-    connect(save_img_btn, &QPushButton::clicked, this, &OcrDialog::saveImage);
+    connect(save_img_btn, &QPushButton::clicked, this, &OcrDialog::saveCurrentStateImage);
     btn_layout->addWidget(save_img_btn);
 
     auto* discard_btn = new QPushButton(tr("Discard changes"), this);
@@ -399,6 +405,9 @@ void OcrDialog::requestOcrOnSelection()
 {
   QRect copy_rect = m_image_display->selection();
   QImage image = m_image_display->modifiedImage();
+  QImage cropped = image.copy(copy_rect);
+  QFileInfo info("rect_image.png");
+  cropped.save(info.filePath(), "PNG");
 
   if (!copy_rect.isNull()) {
     emit sendOcrRequest(m_page_no, image, copy_rect);
@@ -416,6 +425,7 @@ void OcrDialog::setSelected()
   m_clr_to_back_btn->setEnabled(true);
   m_save_txt_btn->setEnabled(true);
   m_ocr_sel_btn->setEnabled(true);
+  move_sel_to_doc_btn->setEnabled(true);
 }
 
 void OcrDialog::setUnselected()
@@ -424,6 +434,7 @@ void OcrDialog::setUnselected()
   m_clr_to_back_btn->setEnabled(false);
   m_save_txt_btn->setEnabled(false);
   m_ocr_sel_btn->setEnabled(false);
+  move_sel_to_doc_btn->setEnabled(false);
 }
 
 void OcrDialog::crop()
@@ -435,7 +446,7 @@ void OcrDialog::crop()
 void OcrDialog::binarise()
 {
   m_change_type = Binarise;
-  setCurrentValueType();
+  setCurrentChangeState();
   m_image_display->binarise();
 }
 
@@ -486,7 +497,14 @@ void OcrDialog::rescale()
 {
   m_change_type = Rescale;
   m_image_display->rescale();
-  setCurrentValueType();
+  setCurrentChangeState();
+}
+
+void OcrDialog::moveToDocument()
+{
+  QImage image = m_image_display->copySelection();
+
+  emit moveSelectionToDocument(image);
 }
 
 void OcrDialog::saveText()
@@ -494,7 +512,7 @@ void OcrDialog::saveText()
   emit saveModifiedText(m_page_no, m_text_edit->text());
 }
 
-void OcrDialog::saveImage()
+void OcrDialog::saveCurrentStateImage()
 {
   emit saveModifiedImage(m_page_no, m_image_display->modifiedImage());
   m_image_changed = false;
@@ -548,7 +566,7 @@ void OcrDialog::close()
                                     QMessageBox::No);
 
   if (result == QMessageBox::Yes) {
-    saveImage();
+    saveCurrentStateImage();
     saveText();
     m_doc_data->setInverted(m_image_display->isInverted());
     QDialog::accept();
@@ -572,7 +590,7 @@ void OcrDialog::applyValue()
   }
 }
 
-void OcrDialog::setCurrentValueType()
+void OcrDialog::setCurrentChangeState()
 {
   QList<double> major_ticks, medium_ticks, minor_ticks;
 

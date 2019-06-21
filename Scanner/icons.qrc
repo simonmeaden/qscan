@@ -52,5 +52,6 @@
         <file alias="del_image">delete_image.png</file>
         <file alias="del_image_text">delete_image_text.png</file>
         <file alias="del_text">delete_text.png</file>
+        <file alias="move_to_images">move_to_images.png</file>
     </qresource>
 </RCC>

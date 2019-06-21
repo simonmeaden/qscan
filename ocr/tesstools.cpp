@@ -51,7 +51,7 @@
 
 namespace TessTools {
 
-void getStringFromPage(const QString &datapath, const QString &lang, const DocumentData &page)
+void getStringFromPage(const QString &datapath, const QString &lang, const OcrData &doc_data)
 {
   setlocale(LC_ALL, "C");
   auto *api = new tesseract::TessBaseAPI();
@@ -62,7 +62,7 @@ void getStringFromPage(const QString &datapath, const QString &lang, const Docum
     return;
   }
 
-  cv::Mat mat_image = cv::imread(page->filename().toStdString(), cv::IMREAD_COLOR);
+  cv::Mat mat_image = cv::imread(doc_data->filename().toStdString(), cv::IMREAD_COLOR);
   QString out_text;
   //  monitor = new ETEXT_DESC();
 
@@ -75,7 +75,7 @@ void getStringFromPage(const QString &datapath, const QString &lang, const Docum
   // a Segmentation Fault without this.
   api->ClearAdaptiveClassifier();
   out_text = QString::fromUtf8(api->GetUTF8Text());
-  page->setText(out_text);
+  doc_data->setText(out_text);
 
   QApplication::restoreOverrideCursor();
 

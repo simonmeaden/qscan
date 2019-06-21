@@ -15,7 +15,7 @@ OcrWorker::OcrWorker(QString datapath, QString lang)
 {
 }
 
-void OcrWorker::convertPage(const DocumentData& page)
+void OcrWorker::convertPage(const OcrData &page)
 {
   emit log(LogLevel::INFO, (tr("Converting page in OcrWorker.")));
   m_pages.append(page);
@@ -49,9 +49,13 @@ void OcrWorker::process()
       }
 
     } else if (!m_pages.isEmpty()) {
-      DocumentData page = m_pages.takeFirst();
-      TessTools::getStringFromPage(m_datapath, m_lang, page);
-      emit pageConverted(page);
+      DocumentData doc_data = m_pages.takeFirst();
+      OcrData ocr_data = doc_data.dynamicCast<DocOcrData>();
+
+      if (ocr_data) {
+        TessTools::getStringFromPage(m_datapath, m_lang, ocr_data);
+        emit pageConverted(ocr_data);
+      }
     }
 
     //    }

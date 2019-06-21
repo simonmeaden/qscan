@@ -29,6 +29,7 @@ public:
 
   void clearToBackground();
   void cropToSelection();
+  QImage copySelection();
 
   void binarise();
   void applyThreshold(int value);
@@ -41,7 +42,6 @@ public:
   void cancelCurrentChanges();
 
   void denoise();
-
   void deskew();
 
   // 180 gives a good starter value.
