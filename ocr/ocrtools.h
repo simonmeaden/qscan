@@ -23,13 +23,13 @@ public:
   OcrTools& operator=(const OcrTools&) = delete;
   OcrTools(OcrTools&&) = delete;
   OcrTools& operator=(OcrTools&&) = delete;
-  void convertImageToText(const OcrData &page);
+  void convertImageToText(const DocumentData &doc_data);
   void convertImageToText(int page_no, const QImage &image, const QRect &rect);
 
   signals:
   void finished();
   //  void startConverting(Page page);
-  void convertedPage(const OcrData &page);
+  void convertedPage(const DocumentData &doc_data);
   void convertedImage(int page_no, const QString &text);
   void convertedImageRect(int page_no, const QString &text);
 

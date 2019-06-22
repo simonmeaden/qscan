@@ -22,11 +22,7 @@ public:
   void removeOcrThumbnail(int index);
   void replaceOcrThumbnail(int index, const QImage &image);
   void insertOcrThumbnail(int index, const QImage &thumbnail);
-  int moveOcrThumbnailToInternal(int row);
   void removeOcrThumbnail();
-
-  int appendDocImage(const QImage &thumbnail);
-  void removeDocImage(int page_no);
 
   void setCover(const QImage& cover);
 
@@ -39,7 +35,6 @@ public:
 
   signals:
   void ocrPageMoved(int from, int to);
-  void docPageMoved(int from, int to);
   void sendOcrPage(int);
   void workOn(int);
   void loadText(int);
@@ -50,20 +45,17 @@ public:
 
   protected:
   ImageView *m_image_view;
-  ImageView *m_doc_image_view;
   QImage m_cover;
-  int m_ocr_current_row{}, m_doc_current_row{};
+  int m_current_row{};
   int m_page_selected = -1;
 
   QSize minimumSizeHint() const override;
   QSize sizeHint() const override;
 
   void ocrSelectionChanged(const QItemSelection &selected_items, const QItemSelection &);
-  void docSelectionChanged(const QItemSelection &selected_items, const QItemSelection &);
   void ocrRowsMoved(const QModelIndex &, int start_row, int, const QModelIndex &, int dest_row);
-  void docRowsMoved(const QModelIndex &, int start_row, int, const QModelIndex &, int dest_row);
 
-  void nonOcrImage();
+  //  void nonOcrImage();
   void loadTextIntoEditor();
   void itemClicked(const QModelIndex &index);
   void itemDoubleClicked(const QModelIndex &index);

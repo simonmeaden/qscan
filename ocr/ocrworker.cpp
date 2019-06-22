@@ -15,10 +15,10 @@ OcrWorker::OcrWorker(QString datapath, QString lang)
 {
 }
 
-void OcrWorker::convertPage(const OcrData &page)
+void OcrWorker::convertPage(const DocumentData &doc_data)
 {
   emit log(LogLevel::INFO, (tr("Converting page in OcrWorker.")));
-  m_pages.append(page);
+  m_doc_data.append(doc_data);
 }
 
 void OcrWorker::convertImage(int page_no, const QImage &image, const QRect &rect)
@@ -42,19 +42,18 @@ void OcrWorker::process()
       text = TessTools::getStringFromImage(m_datapath, m_lang, image, rect);
 
       if (rect.isNull()) {
-        emit imageConverted(page_no, text);
+        emit imageConverted(page_no, Util::cleanText(text));
 
       } else {
-        emit imageConvertedRect(page_no, text);
+        emit imageConvertedRect(page_no, Util::cleanText(text));
       }
 
-    } else if (!m_pages.isEmpty()) {
-      DocumentData doc_data = m_pages.takeFirst();
-      OcrData ocr_data = doc_data.dynamicCast<DocOcrData>();
+    } else if (!m_doc_data.isEmpty()) {
+      DocumentData doc_data = m_doc_data.takeFirst();
 
-      if (ocr_data) {
-        TessTools::getStringFromPage(m_datapath, m_lang, ocr_data);
-        emit pageConverted(ocr_data);
+      if (doc_data) {
+        TessTools::getStringFromPage(m_datapath, m_lang, doc_data);
+        emit pageConverted(doc_data);
       }
     }
 

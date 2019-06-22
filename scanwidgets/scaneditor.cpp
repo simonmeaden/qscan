@@ -27,7 +27,7 @@
 #include "qscan.h"
 #include "scaneditor.h"
 
-#include "ocrdialog.h"
+#include "ocrframe.h"
 #include "ocrtools.h"
 
 /* ScanEditor
@@ -38,9 +38,9 @@
 */
 
 const QString ScanEditor::OCR_IMAGE_NAME = QStringLiteral("ocrimage%1.png");
-const QString ScanEditor::INTERNAL_IMAGE_NAME = QStringLiteral("internalimage%1.png");
+const QString ScanEditor::INTERNAL_IMAGE_NAME = QStringLiteral("docimage%1_%2.png");
 const QString ScanEditor::OCR_IMAGE_FILTER = QStringLiteral("ocrimage*.png");
-const QString ScanEditor::INTERNAL_IMAGE_FILTER = QStringLiteral("internalimage*.png");
+const QString ScanEditor::INTERNAL_IMAGE_FILTER = QStringLiteral("docimage*.png");
 
 const QString ScanEditor::OPTIONS_FILE = QStringLiteral("scanoptions.yaml");
 const QString ScanEditor::CURRENT_DOCUMENT = QStringLiteral("current document");
@@ -73,7 +73,7 @@ ScanEditor::ScanEditor(QScan *scan,
   move_up_key = QPixmapCache::insert(QPixmap(":/icons/up"));
   move_down_key = QPixmapCache::insert(QPixmap(":/icons/down"));
   move_to_key = QPixmapCache::insert(QPixmap(":/icons/move_to_edit"));
-  move_to_internal_key = QPixmapCache::insert(QPixmap(":/icons/move_to_images"));
+  //  move_to_internal_key = QPixmapCache::insert(QPixmap(":/icons/move_to_images"));
   cover_key = QPixmapCache::insert(QPixmap(":/icons/cover64"));
   left_key = QPixmapCache::insert(QPixmap(":/icons/left64"));
   right_key = QPixmapCache::insert(QPixmap(":/icons/right64"));
@@ -97,7 +97,7 @@ ScanEditor::ScanEditor(QScan *scan,
 ScanEditor::~ScanEditor()
 {
   cleanupImages();
-  m_doc_data_store->save(m_data_filename);
+  saveDataStore();
 }
 
 void ScanEditor::initPageListBtns()
@@ -180,14 +180,14 @@ void ScanEditor::initImageEditBtns()
 void ScanEditor::initTransferBtns()
 {
   QPixmap left_icon, right_icon, single_icon, both_icon, cover_icon;
-  QPixmap scale_icon, move_to_internal_icon;
+  QPixmap scale_icon /*, move_to_internal_icon*/;
   QPixmapCache::find(cover_key, &cover_icon);
   QPixmapCache::find(left_key, &left_icon);
   QPixmapCache::find(right_key, &right_icon);
   QPixmapCache::find(single_key, &single_icon);
   QPixmapCache::find(both_key, &both_icon);
   QPixmapCache::find(scale_key, &scale_icon);
-  QPixmapCache::find(move_to_key, &move_to_internal_icon);
+  //  QPixmapCache::find(move_to_internal_key, &move_to_internal_icon);
 
   image_transfer_group = new QGroupBox(tr("Transfer Image"), this);
   image_transfer_group->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
@@ -229,22 +229,36 @@ void ScanEditor::initTransferBtns()
   group3_layout->addWidget(m_both_btn);
   connect(m_both_btn, &QPushButton::clicked, this, &ScanEditor::moveBothPagesToDocument);
 
-  m_move_to_doc_btn = new QPushButton(move_to_internal_icon, "", this);
-  m_move_to_doc_btn->setIconSize(QSize(96, 32));
-  m_move_to_doc_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_move_to_doc_btn->setToolTip(tr("Move Image to Document Images"));
-  group3_layout->addWidget(m_move_to_doc_btn);
-  connect(m_move_to_doc_btn,
-          &QPushButton::clicked,
-          this,
-          qOverload<>(&ScanEditor::moveToImageDocument));
+  //  m_move_to_doc_btn = new QPushButton(move_to_internal_icon, "", this);
+  //  m_move_to_doc_btn->setIconSize(QSize(96, 32));
+  //  m_move_to_doc_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  //  m_move_to_doc_btn->setToolTip(tr("Move Image to Document Images"));
+  //  group3_layout->addWidget(m_move_to_doc_btn);
+  //  connect(m_move_to_doc_btn,
+  //          &QPushButton::clicked,
+  //          this,
+  //          qOverload<>(&ScanEditor::saveDocumentImage));
 }
 
 void ScanEditor::initGui()
 {
-  auto *layout = new QGridLayout(this);
-  layout->setContentsMargins(0, 0, 0, 0);
-  setLayout(layout);
+  m_main_layout = new QStackedLayout;
+  setLayout(m_main_layout);
+
+  QFrame *main_frame = new QFrame(this);
+  auto *grid_layout = new QGridLayout(this);
+  grid_layout->setContentsMargins(0, 0, 0, 0);
+  main_frame->setLayout(grid_layout);
+
+  m_main_stack_id = m_main_layout->addWidget(main_frame);
+
+  m_ocr_frame = new OcrFrame(this);
+  connect(m_ocr_frame, &OcrFrame::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
+  connect(m_ocr_frame, &OcrFrame::saveModifiedData, this, &ScanEditor::saveModifiedData);
+  connect(m_ocr_frame, &OcrFrame::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
+  connect(m_ocr_frame, &OcrFrame::saveSelectedDocumentImage, this, &ScanEditor::saveDocumentImage);
+  connect(m_ocr_frame, &OcrFrame::accept, this, &ScanEditor::receiveOcrActionFinished);
+  m_ocr_stack_id = m_main_layout->addWidget(m_ocr_frame);
 
   m_scroller = new QScrollArea(this);
   m_scroller->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -256,7 +270,7 @@ void ScanEditor::initGui()
   m_scan_display->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
   m_scan_display->setScaledContents(true);
   m_scroller->setWidget(m_scan_display);
-  layout->addWidget(m_scroller, 0, 0);
+  grid_layout->addWidget(m_scroller, 0, 0);
 
   m_page_view = new PageView(this);
   m_page_view->setContentsMargins(0, 0, 0, 0);
@@ -279,11 +293,13 @@ void ScanEditor::initGui()
   disableEditBtns();
   disableListBtns();
 
-  layout->addWidget(btn_frame, 0, 1);
-  layout->addWidget(m_page_view, 0, 2);
-  layout->setColumnStretch(0, 30);
-  layout->setColumnStretch(1, 3);
-  layout->setColumnStretch(2, 10);
+  grid_layout->addWidget(btn_frame, 0, 1);
+  grid_layout->addWidget(m_page_view, 0, 2);
+  grid_layout->setColumnStretch(0, 30);
+  grid_layout->setColumnStretch(1, 3);
+  grid_layout->setColumnStretch(2, 10);
+
+  m_main_layout->setCurrentIndex(m_main_stack_id);
 }
 
 void ScanEditor::makeConnections()
@@ -338,17 +354,16 @@ void ScanEditor::receiveImages(const QImage &left, const QImage &right)
   receiveImage(right);
 }
 
-void ScanEditor::receiveString(int page_no, const QString &str)
-{
-  if (page_no > 0) { // 0 is cover page so no text.
-    DocumentData doc_data = m_doc_data_store->documentData(page_no);
-    OcrData ocr_data = doc_data.dynamicCast<DocOcrData>();
+//void ScanEditor::receiveString(int page_no, const QString& text)
+//{
+//  if (page_no > 0) { // 0 is cover page so no text.
+//    DocumentData doc_data = m_doc_data_store->documentData(page_no);
 
-    if (ocr_data) {
-      ocr_data->setText(str);
-    }
-  }
-}
+//    if (doc_data) {
+//      doc_data->setText(page_no, Util::cleanText(text));
+//    }
+//  }
+//}
 
 QString ScanEditor::saveImage(int index, const QImage &image)
 {
@@ -384,7 +399,15 @@ QString ScanEditor::saveImage(int index, const QImage &image)
   return path;
 }
 
-QString ScanEditor::saveDocumentImage(int index, const QImage &image)
+void ScanEditor::saveDataStore()
+{
+  m_doc_data_store->save(m_data_filename);
+}
+
+QString ScanEditor::saveDocumentImage(int index,
+                                      int image_index,
+                                      const QImage &image,
+                                      const DocumentData &doc_data)
 {
   QString path;
 
@@ -400,7 +423,9 @@ QString ScanEditor::saveDocumentImage(int index, const QImage &image)
       path = m_data_dir + QDir::separator() + doc_name;
       QDir dir;
       dir.mkpath(path);
-      path += QDir::separator() + INTERNAL_IMAGE_NAME.arg(index);
+      path += QDir::separator() + INTERNAL_IMAGE_NAME.arg(index).arg(image_index);
+      doc_data->setImage(image_index, path);
+      saveDataStore();
 
       if (!image.save(path, "PNG", 100)) {
         m_logger->info(tr("Failed to save image %1").arg(path));
@@ -408,7 +433,9 @@ QString ScanEditor::saveDocumentImage(int index, const QImage &image)
     }
 
   } else {
-    path = m_data_dir + INTERNAL_IMAGE_NAME.arg(index);
+    path = m_data_dir + INTERNAL_IMAGE_NAME.arg(index).arg(image_index);
+    doc_data->setImage(image_index, path);
+    saveDataStore();
 
     if (!image.save(path, "PNG", 100)) {
       m_logger->info(tr("Failed to save image %1").arg(path));
@@ -421,7 +448,6 @@ QString ScanEditor::saveDocumentImage(int index, const QImage &image)
 void ScanEditor::saveModifiedImage(int page_no, const QImage &image)
 {
   DocumentData doc_data = m_doc_data_store->documentData(page_no);
-  OcrData ocr_data = doc_data.dynamicCast<DocOcrData>();
   QString path = doc_data->filename();
 
   if (!image.save(path, "PNG", 100)) {
@@ -429,11 +455,8 @@ void ScanEditor::saveModifiedImage(int page_no, const QImage &image)
     return;
   }
 
-  if (ocr_data) {
-    m_page_view->replaceOcrThumbnail(page_no,
-                                     thumbnail(image)/*,
-                                     ocr_data->hasText(),
-                                     ocr_data->isInternalImage()*/);
+  if (doc_data) {
+    m_page_view->replaceOcrThumbnail(page_no, thumbnail(image));
   }
 }
 
@@ -460,11 +483,10 @@ void ScanEditor::makeCover()
 void ScanEditor::receiveLoadText(int page_no)
 {
   if (page_no > 0) { //
-    DocumentData page = m_doc_data_store->documentData(page_no);
-    OcrData ocr_data = page.dynamicCast<DocOcrData>();
+    DocumentData doc_data = m_doc_data_store->documentData(page_no);
 
-    if (ocr_data) {
-      receiveOcrPageResult(ocr_data);
+    if (doc_data) {
+      receiveOcrPageResult(doc_data);
     }
   }
 }
@@ -472,23 +494,11 @@ void ScanEditor::receiveLoadText(int page_no)
 void ScanEditor::receiveWorkOnRequest(int page_no)
 {
   DocumentData doc_data = m_doc_data_store->documentData(page_no);
-  OcrData ocr_data = doc_data.dynamicCast<DocOcrData>();
 
-  if (!doc_data.isNull() && ocr_data) {
-    m_ocr_dlg = new OcrDialog(this);
-    connect(m_ocr_dlg, &OcrDialog::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
-    connect(m_ocr_dlg, &OcrDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
-    connect(m_ocr_dlg, &OcrDialog::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
-    connect(m_ocr_dlg,
-            &OcrDialog::moveSelectionToDocument,
-            this,
-            qOverload<const QImage &>(&ScanEditor::moveToImageDocument));
-    connect(m_ocr_dlg, &QDialog::finished, this, &ScanEditor::receiveOcrDialogFinished);
-
+  if (!doc_data) {
+    m_main_layout->setCurrentIndex(m_ocr_stack_id);
     QImage image(doc_data->filename(), "PNG");
-    m_ocr_dlg->setData(page_no, image, ocr_data);
-
-    m_ocr_dlg->open();
+    m_ocr_frame->setData(page_no, image, doc_data);
   }
 }
 
@@ -496,28 +506,20 @@ void ScanEditor::receiveOcrPageRequest(int page_no)
 {
   if (page_no > 0) { //
     DocumentData doc_data = m_doc_data_store->documentData(page_no);
-    OcrData ocr_data = doc_data.dynamicCast<DocOcrData>();
 
-    if (!doc_data.isNull()) {
-      if (ocr_data) {
-        m_ocr_tools->convertImageToText(ocr_data);
-      }
+    if (!doc_data) {
+      m_ocr_tools->convertImageToText(doc_data);
 
     } else {
-      if (ocr_data) {
-        if (QMessageBox::warning(this,
-                                 tr("Overwrite Text"),
-                                 tr("Text already exists for this image.\n"
-                                    "Continuing will overwrite the existing text.\n"
-                                    "Do you want to continue?"),
-                                 QMessageBox::Yes | QMessageBox::No,
-                                 QMessageBox::No)
-            == QMessageBox::Yes) {
-          m_ocr_tools->convertImageToText(ocr_data);
-        }
-
-      } else {
-        QMessageBox::warning(this, tr("Internal image."), tr("You cannot OCR an internal image."));
+      if (QMessageBox::warning(this,
+                               tr("Overwrite Text"),
+                               tr("Text already exists for this image.\n"
+                                  "Continuing will overwrite the existing text.\n"
+                                  "Do you want to continue?"),
+                               QMessageBox::Yes | QMessageBox::No,
+                               QMessageBox::No)
+          == QMessageBox::Yes) {
+        m_ocr_tools->convertImageToText(doc_data);
       }
     }
 
@@ -535,82 +537,57 @@ void ScanEditor::receiveOcrImageRequest(int page_no, const QImage &image, const 
   }
 }
 
-void ScanEditor::saveModifiedText(int page_no, const QStringList &text)
+void ScanEditor::saveModifiedData(const DocumentData &doc_data)
 {
-  /*
-    Clean up double quotes. Any double quote, standard, left or right
-    that is unescaped will cause extraneous wierd characters to be
-    output.
-  */
-  QStringList text_list;
-
-  for (const auto &s : text) {
-    text_list << Util::cleanText(s);
-  }
-
-  DocumentData doc_data = m_doc_data_store->documentData(page_no);
-  OcrData ocr_data = doc_data.dynamicCast<DocOcrData>();
-
-  if (ocr_data) {
-    ocr_data->setText(text_list);
-    m_doc_data_store->save(m_data_filename);
+  if (doc_data) {
+    saveDataStore();
   }
 }
 
-void ScanEditor::receiveOcrPageResult(const OcrData &doc_data)
+void ScanEditor::receiveOcrPageResult(const DocumentData &doc_data)
 {
-  m_ocr_dlg = new OcrDialog(this);
-  connect(m_ocr_dlg, &OcrDialog::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
-  connect(m_ocr_dlg, &OcrDialog::saveModifiedText, this, &ScanEditor::saveModifiedText);
-  connect(m_ocr_dlg, &OcrDialog::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
-  connect(m_ocr_dlg, &QDialog::finished, this, &ScanEditor::receiveOcrDialogFinished);
+  m_main_layout->setCurrentIndex(m_ocr_stack_id);
 
   int page_no = doc_data->pageNumber();
   QImage image(doc_data->filename(), "PNG");
-  m_ocr_dlg->setData(page_no, image, doc_data);
-
-  m_ocr_dlg->open();
+  m_ocr_frame->setData(page_no, image, doc_data);
 }
 
-void ScanEditor::receiveOcrDialogFinished(int result)
+void ScanEditor::receiveOcrActionFinished()
 {
-  DocumentData doc_data = m_ocr_dlg->page();
-  OcrData ocr_data = doc_data.dynamicCast<DocOcrData>();
+  DocumentData doc_data = m_ocr_frame->documentData();
 
-  if (result == QDialog::Accepted && ocr_data) {
-    ocr_data->setText(m_ocr_dlg->text());
-    int index = doc_data->pageNumber();
+  int index = doc_data->pageNumber();
 
-    if (ocr_data->textWasInitialised()) {
-      if (ocr_data->textHasChanged()) {
-        int answer = QMessageBox::question(this,
-                                           tr("Image text exists."),
-                                           tr("The image %1 already has text.\n"
-                                              "Do you want to overwrite this text?")
-                                             .arg(index),
-                                           QMessageBox::Yes | QMessageBox::No,
-                                           QMessageBox::No);
+  if (doc_data->textWasInitialised()) {
+    if (doc_data->textHasChanged()) {
+      int answer = QMessageBox::question(this,
+                                         tr("Image text exists."),
+                                         tr("The image %1 already has text.\n"
+                                            "Do you want to overwrite this text?")
+                                           .arg(index),
+                                         QMessageBox::Yes | QMessageBox::No,
+                                         QMessageBox::No);
 
-        if (answer == QMessageBox::Yes) {
-          m_doc_data_store->save(m_data_filename);
-        }
-      }
-
-    } else {
-      if (ocr_data->textHasChanged()) {
-        m_doc_data_store->save(m_data_filename);
+      if (answer == QMessageBox::Yes) {
+        saveDataStore();
       }
     }
 
-    if (m_ocr_dlg->imageChanged()) {
-      // this will only happen if not already saved
-      QImage image = m_ocr_dlg->modifiedImage();
-      int page_no = m_ocr_dlg->pageNumber();
-      saveModifiedImage(page_no, image);
+  } else {
+    if (doc_data->textHasChanged()) {
+      saveDataStore();
     }
   }
 
-  m_ocr_dlg->deleteLater();
+  if (m_ocr_frame->imageChanged()) {
+    // this will only happen if not already saved
+    QImage image = m_ocr_frame->modifiedImage();
+    int page_no = m_ocr_frame->pageNumber();
+    saveModifiedImage(page_no, image);
+  }
+
+  m_main_layout->setCurrentIndex(m_main_stack_id);
 }
 
 void ScanEditor::receivePageMoved(int start_row, int dest_row)
@@ -630,12 +607,11 @@ void ScanEditor::removeBoth(int page_no)
     }
   }
 
-  if (page >= 0) {
+  if (page > 0) {
     DocumentData doc_data = m_doc_data_store->documentData(page_no);
-    OcrData ocr_data = doc_data.dynamicCast<DocOcrData>();
 
-    if (ocr_data) {
-      if (ocr_data->hasText()) {
+    if (doc_data) {
+      if (doc_data->hasText()) {
         int answer
           = QMessageBox::warning(this,
                                  tr("Remove Both Image and Text"),
@@ -654,25 +630,6 @@ void ScanEditor::removeBoth(int page_no)
       }
 
       return;
-    }
-
-    ImageData image_data = doc_data.dynamicCast<DocImageData>();
-
-    if (image_data) { // it must be an internal image
-      int answer = QMessageBox::warning(this,
-                                        tr("Remove Document Image"),
-                                        tr("You are about to remove a document image\n"
-                                           "This cannot be undone.\n"
-                                           "Are you sure?"),
-                                        QMessageBox::Yes | QMessageBox::No,
-                                        QMessageBox::No);
-
-      if (answer == QMessageBox::Yes) {
-        m_page_view->removeOcrThumbnail();
-        DocumentData doc_data = m_doc_data_store->documentData(page);
-        doc_data->setRemoveTextLater(true);
-        doc_data->setRemoveImageLater(true);
-      }
     }
   }
 }
@@ -752,15 +709,15 @@ void ScanEditor::removeText(int page_no)
 
 void ScanEditor::receiveOcrImageResult(int page_no, const QString &text)
 {
-  if (m_ocr_dlg) {
-    m_ocr_dlg->setOcrText(page_no, text);
+  if (m_ocr_frame) {
+    m_ocr_frame->setOcrText(page_no, text);
   }
 }
 
 void ScanEditor::receiveOcrImageRectResult(int page_no, const QString &text)
 {
-  if (m_ocr_dlg) {
-    m_ocr_dlg->appendOcrText(page_no, text);
+  if (m_ocr_frame) {
+    m_ocr_frame->appendOcrText(page_no, text);
   }
 }
 
@@ -793,38 +750,21 @@ void ScanEditor::moveRightPageToDocument()
   receiveImage(image);
 }
 
-void ScanEditor::moveToImageDocument()
-{
-  int index = m_page_view->moveOcrThumbnailToInternal(index);
+//QString ScanEditor::saveDocumentImage(int page_no, int image_index, const QImage &image)
+//{
+//  DocumentData doc_data = m_doc_data_store->documentData(page_no);
 
-  DocumentData doc_data(new DocData());
-  doc_data->setResolution(m_scan_display->resolution());
-  doc_data->setPageNumber(index);
+//  QFileInfo info(m_data_dir);
+//  QDir dir = info.dir();
+//  QString filename = dir.path() + QDir::separator()
+//                     + INTERNAL_IMAGE_NAME.arg(page_no).arg(image_index);
+//  image.save(filename);
 
-  QString path = doc_data->filename();
-  QFileInfo info(path);
-  QDir dir = info.dir();
+//  doc_data->setImage(image_index, filename);
+//  doc_data->setResolution(m_scan_display->resolution());
 
-  QString filename = INTERNAL_IMAGE_NAME.arg(index);
-  dir.rename(info.fileName(), filename);
-
-  path = dir.path() + QDir::separator() + filename;
-  doc_data->setFilename(path);
-  m_doc_data_store->appendData(doc_data);
-}
-
-void ScanEditor::moveToImageDocument(const QImage &image)
-{
-  int index = m_page_view->appendDocImage(thumbnail(image));
-
-  QFileInfo info(m_data_dir);
-  QDir dir = info.dir();
-  QString filename = dir.path() + QDir::separator() + INTERNAL_IMAGE_NAME.arg(index);
-  image.save(filename);
-
-  ImageData doc_data(new DocImageData(index, filename));
-  doc_data->setResolution(m_scan_display->resolution());
-}
+//  return filename;
+//}
 
 /*!
    \brief Takes the image and makes it into a single page.
@@ -880,10 +820,6 @@ void ScanEditor::loadExistingFiles()
     }
   }
 }
-
-// void ScanEditor::moveImage(const DocumentData& data) {
-
-//}
 
 /*!
    \brief Loads the options file.

@@ -94,8 +94,8 @@ protected:
 
   QString m_selected_name;
   bool m_selected;
-  int m_stack_range{};
-  int m_stack_list{};
+  int m_stack_range_id{};
+  int m_stack_list_id{};
 
   QPixmapCache::Key help_key;
   QPixmapCache::Key scan_key;

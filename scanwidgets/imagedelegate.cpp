@@ -4,7 +4,7 @@ ImageDelegate::ImageDelegate(QObject* parent)
   : QStyledItemDelegate(parent)
 {}
 
-ImageDelegate::~ImageDelegate() {}
+ImageDelegate::~ImageDelegate() = default;
 
 void ImageDelegate::paint(QPainter* painter,
                           const QStyleOptionViewItem& option,

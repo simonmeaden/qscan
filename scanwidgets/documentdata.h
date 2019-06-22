@@ -13,7 +13,7 @@ class DocData
   public:
   DocData();
   DocData(int page_no, QString filename);
-  ~DocData();
+  //  ~DocData();
 
   QString filename() const;
   void setFilename(const QString &filename);
@@ -35,6 +35,34 @@ class DocData
   int resolution() const;
   void setResolution(int resolution);
 
+  bool hasText();
+  bool textWasInitialised() const;
+  bool textHasChanged();
+  void clearText();
+  void clearImages();
+
+  QString text(int index) const;
+  QString image(int index) const;
+
+  QMap<int, QString> textList();
+  QMap<int, QString> imageList();
+
+  void setText(int index, const QString &text);
+  void setText(const QMap<int, QString> &text_list);
+  void setImage(int index, const QString &text);
+  void setImage(const QMap<int, QString> &text_list);
+
+  int appendText(const QString &text);
+  //  void appendText(const QStringList &text_list);
+  void removeText(int index);
+  //  bool removeText(const QString &text);
+  void insertText(int index, const QString &text);
+  bool isEmpty();
+
+  int appendImage(const QString &image);
+  void removeImage(int index);
+  void insertImage(int index, const QString &text);
+
   protected:
   int m_page_no{};
   QString m_filename;
@@ -42,49 +70,13 @@ class DocData
   bool m_remove_text_later;
   bool m_inverted;
   int m_resolution{};
-};
-
-class DocImageData : public DocData
-{
-  public:
-  DocImageData();
-  DocImageData(int page_no, const QString &filename);
-  ~DocImageData();
-
-  bool isDocImage() const override;
-};
-
-class DocOcrData : public DocData
-{
-  public:
-  DocOcrData();
-  DocOcrData(int page_no, const QString &filename);
-  ~DocOcrData();
-
-  bool hasText();
-  bool textWasInitialised() const;
-  bool textHasChanged();
-  void clearText();
-  QString text(int index) const;
-  QStringList textList();
-  void setText(const QString &text);
-  void setText(const QStringList &text_list);
-  void appendText(const QString &text);
-  void appendText(const QStringList &text_list);
-  void removeText(int index);
-  bool removeText(const QString &text);
-  void insertText(int index, const QString &text);
-  bool isEmpty();
-
-  protected:
-  QStringList m_text_list;
-  bool m_text_has_changed;
+  QMap<int, QString> m_text_list;
+  QMap<int, QString> m_image_list;
+  bool m_text_has_changed, m_images_changed;
   bool m_text_initialised;
 };
 
 using DocumentData = QSharedPointer<DocData>;
-using OcrData = QSharedPointer<DocOcrData>;
-using ImageData = QSharedPointer<DocImageData>;
 
 class DocumentDataStore : public QObject
 {
@@ -120,19 +112,16 @@ public:
 
   static const QString FILENAME;
   static const QString PAGE_NUMBER;
-  static const QString INTERNAL_IMAGE;
+  //  static const QString INTERNAL_IMAGE;
   static const QString INVERTED;
   static const QString INTERNAL_IMAGE_NAME;
   static const QString TEXT_LIST;
+  static const QString IMAGE_LIST;
 
   static int m_highest_page;
 };
 
 Q_DECLARE_METATYPE(DocumentData)
-Q_DECLARE_METATYPE(DocOcrData)
-Q_DECLARE_METATYPE(DocImageData)
 Q_DECLARE_METATYPE(DocData)
-Q_DECLARE_METATYPE(OcrData)
-Q_DECLARE_METATYPE(ImageData)
 
 #endif // DOCUMENTDATA_H

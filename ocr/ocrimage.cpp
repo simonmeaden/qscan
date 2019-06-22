@@ -7,6 +7,8 @@
 
 using namespace cv;
 
+const qreal OcrImage::BASE_RESCALE = 1.0;
+
 OcrImage::OcrImage(QWidget *parent)
   : BaseScanImage(parent)
 /*, m_binarised(false)*/

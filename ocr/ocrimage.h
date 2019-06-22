@@ -44,9 +44,11 @@ public:
   void denoise();
   void deskew();
 
+  void dumpImageChanges();
+
   // 180 gives a good starter value.
   static const int BASE_THRESHOLD = 180;
-  static const int BASE_RESCALE = 1.0;
+  static const qreal BASE_RESCALE;
 
   bool isInverted() const;
   void setInverted(bool isInverted);
@@ -67,7 +69,6 @@ public:
 
   void paintEvent(QPaintEvent *event) override;
   //  double houghTransform(Mat &im /*, Mat& orig*/);
-  void dumpImageChanges();
 };
 
 #endif // OCRIMAGE_H

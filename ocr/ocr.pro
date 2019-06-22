@@ -25,7 +25,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    ocrdialog.cpp \
+    ocrframe.cpp \
     ocrimage.cpp \
     ocrtools.cpp \
     ocrworker.cpp \
@@ -33,7 +33,7 @@ SOURCES += \
 
 HEADERS += \
         ocr_global.h \
-        ocrdialog.h \
+        ocrframe.h \
         ocrimage.h \
         ocrtools.h \
         ocrworker.h \

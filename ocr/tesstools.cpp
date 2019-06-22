@@ -51,7 +51,7 @@
 
 namespace TessTools {
 
-void getStringFromPage(const QString &datapath, const QString &lang, const OcrData &doc_data)
+void getStringFromPage(const QString &datapath, const QString &lang, const DocumentData &doc_data)
 {
   setlocale(LC_ALL, "C");
   auto *api = new tesseract::TessBaseAPI();
@@ -75,7 +75,7 @@ void getStringFromPage(const QString &datapath, const QString &lang, const OcrDa
   // a Segmentation Fault without this.
   api->ClearAdaptiveClassifier();
   out_text = QString::fromUtf8(api->GetUTF8Text());
-  doc_data->setText(out_text);
+  doc_data->appendText(out_text);
 
   QApplication::restoreOverrideCursor();
 

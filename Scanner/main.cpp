@@ -48,11 +48,7 @@ int main(int argc, char* argv[])
   qRegisterMetaType<Image>();
   qRegisterMetaType<ScanOptions>();
   qRegisterMetaType<DocData>();
-  qRegisterMetaType<DocOcrData>();
-  qRegisterMetaType<DocImageData>();
   qRegisterMetaType<DocumentData>();
-  qRegisterMetaType<OcrData>();
-  qRegisterMetaType<ImageData>();
   qRegisterMetaType<LogLevel>();
 
 #if defined(LOGGER_ENABLE)

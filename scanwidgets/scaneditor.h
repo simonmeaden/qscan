@@ -35,6 +35,7 @@
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QScrollerProperties>
+#include <QStackedLayout>
 
 #include "logger.h"
 
@@ -46,7 +47,7 @@
 #include "scanwidgets_global.h"
 
 class QScan;
-class OcrDialog;
+class OcrFrame;
 class DocumentDataStore;
 
 class SCANWIDGETSSHARED_EXPORT ScanEditor : public QFrame
@@ -96,8 +97,6 @@ public:
   void moveBothPagesToDocument();
   void moveLeftPageToDocument();
   void moveRightPageToDocument();
-  void moveToImageDocument();
-  void moveToImageDocument(const QImage &image);
   void movePageToDocument();
 
   void loadCover(const QString& filename);
@@ -126,6 +125,11 @@ public:
 
 protected:
   Log4Qt::Logger* m_logger;
+
+  int m_main_stack_id, m_ocr_stack_id;
+  QStackedLayout *m_main_layout;
+  OcrFrame *m_ocr_frame;
+
   QString m_current_doc_name;
   QString m_options_file;
   QString m_data_filename;
@@ -139,13 +143,12 @@ protected:
   QString m_config_dir{};
   QString m_data_dir{};
   QString m_lang{};
-  OcrDialog* m_ocr_dlg{};
   QPushButton *m_crop_btn{};
   QPushButton *m_left_btn{};
   QPushButton *m_move_up_btn{};
   QPushButton *m_move_down_btn{};
   QPushButton *m_move_to_btn{};
-  QPushButton *m_move_to_doc_btn{};
+  //  QPushButton *m_move_to_doc_btn{};
   QPushButton *m_cover_btn{};
   QPushButton *m_right_btn{};
   QPushButton *m_both_btn{};
@@ -163,8 +166,7 @@ protected:
   QPixmapCache::Key move_up_key;
   QPixmapCache::Key move_down_key;
   QPixmapCache::Key move_to_key;
-  QPixmapCache::Key move_to_internal_key;
-  QPixmapCache::Key internal_key;
+  //  QPixmapCache::Key move_to_internal_key;
   QPixmapCache::Key cover_key;
   QPixmapCache::Key left_key;
   QPixmapCache::Key right_key;
@@ -182,24 +184,27 @@ protected:
   void makeConnections();
   void receiveImage(const QImage& image);
   void receiveImages(const QImage& left, const QImage& right);
-  void receiveString(int documentData, const QString& str);
+  //  void receiveString(int page_no, const QString &str);
   QString saveImage(int index, const QImage &image);
-  QString saveDocumentImage(int index, const QImage &image);
+  QString saveDocumentImage(int page_no,
+                            int image_index,
+                            const QImage &image,
+                            const DocumentData &doc_data);
   void saveModifiedImage(int index, const QImage &image);
   void makeCover();
   void receiveLoadText(int page_no);
   void receiveWorkOnRequest(int documentData);
   void receiveOcrPageRequest(int documentData);
   void receiveOcrImageRequest(int documentData, const QImage &image, const QRect &rect);
-  void receiveOcrPageResult(const OcrData &doc_data);
+  void receiveOcrPageResult(const DocumentData &doc_data);
   void receiveOcrImageResult(int documentData, const QString &text);
   void receiveOcrImageRectResult(int documentData, const QString &text);
-  void receiveOcrDialogFinished(int result);
+  void receiveOcrActionFinished();
   void receivePageMoved(int start_row, int dest_row);
   void removeBoth(int page_no = -1);
   void removeImage(int page_no = -1);
   void removeText(int page_no = -1);
-  void saveModifiedText(int page_no, const QStringList& text);
+  void saveModifiedData(const DocumentData &doc_data);
   QImage thumbnail(const QImage& image) const;
   void rescale();
   void moveSelectionToInternal();
@@ -223,6 +228,7 @@ protected:
   void initPageListBtns();
   void initImageEditBtns();
   void initTransferBtns();
+  void saveDataStore();
 };
 
 #endif // SCANEDITOR_H

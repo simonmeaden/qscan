@@ -314,7 +314,7 @@ QToolBar *MainWindow::initResolutionToolbar()
     m_max_res->setContentsMargins(0, 0, 0, 0);
     range_layout->addWidget(m_max_res, 0, 6);
 
-    m_stack_range = m_res_layout->addWidget(m_res_range);
+    m_stack_range_id = m_res_layout->addWidget(m_res_range);
   }
   {
     m_res_list = new QFrame(this);
@@ -336,7 +336,7 @@ QToolBar *MainWindow::initResolutionToolbar()
     spacer_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     list_layout->addWidget(spacer_widget, 0, 2);
 
-    m_stack_list = m_res_layout->addWidget(m_res_list);
+    m_stack_list_id = m_res_layout->addWidget(m_res_list);
   }
   toolbar->addWidget(stack_frame);
   return toolbar;
@@ -565,7 +565,7 @@ void MainWindow::receiveOptionsSet(ScanDevice* device)
     m_res_validator->setBottom(range.min);
     m_res_validator->setTop(range.max);
     m_res_edit->setText(QString::number(res));
-    m_res_layout->setCurrentIndex(m_stack_range);
+    m_res_layout->setCurrentIndex(m_stack_range_id);
 
   } else if (v.canConvert<QList<int>>()) {
     m_res_combo->clear();
@@ -574,7 +574,7 @@ void MainWindow::receiveOptionsSet(ScanDevice* device)
       m_res_combo->addItem(QString::number(value));
     }
 
-    m_res_layout->setCurrentIndex(m_stack_list);
+    m_res_layout->setCurrentIndex(m_stack_list_id);
   }
 
   m_curr_src->setText(options->source());

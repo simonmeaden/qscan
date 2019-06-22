@@ -15,10 +15,11 @@
 
 const QString DocumentDataStore::FILENAME = "filename";
 const QString DocumentDataStore::PAGE_NUMBER = "page number";
-const QString DocumentDataStore::INTERNAL_IMAGE = "internal image";
+//const QString DocumentDataStore::INTERNAL_IMAGE = "internal image";
 const QString DocumentDataStore::INVERTED = "inverted";
 const QString DocumentDataStore::INTERNAL_IMAGE_NAME = "internal name";
 const QString DocumentDataStore::TEXT_LIST = "text list";
+const QString DocumentDataStore::IMAGE_LIST = "image list";
 
 int DocumentDataStore::m_highest_page = -1;
 
@@ -74,15 +75,12 @@ void DocumentDataStore::load(const QString &filename)
           int page_number = it->first.as<int>();
           YAML::Node item = it->second;
           QString filename;
-          bool is_internal = false, inverted = false;
-          QStringList texts;
+          bool inverted = false;
+          QMap<int, QString> texts;
+          QMap<int, QString> images;
 
           if (item[FILENAME]) {
             filename = item[FILENAME].as<QString>();
-          }
-
-          if (item[INTERNAL_IMAGE]) {
-            is_internal = item[INTERNAL_IMAGE].as<bool>();
           }
 
           if (item[INVERTED]) {
@@ -92,25 +90,32 @@ void DocumentDataStore::load(const QString &filename)
           if (item[TEXT_LIST]) {
             YAML::Node text_list = item[TEXT_LIST];
 
-            if (text_list) {
-              for (auto &&text_node : text_list) {
-                QString text = text_node.as<QString>();
-                texts.append(text);
+            if (text_list.IsMap()) {
+              for (YAML::const_iterator it = text_list.begin(); it != text_list.end(); ++it) {
+                int key = it->first.as<int>();
+                QString text(it->second.as<std::string>().c_str());
+                texts.insert(key, Util::cleanText(text));
               }
             }
           }
 
-          if (is_internal) {
-            DocumentData data(new DocImageData(page_number, filename));
-            appendData(data);
+          if (item[IMAGE_LIST]) {
+            YAML::Node image_list = item[IMAGE_LIST];
 
-          } else {
-            DocumentData data(new DocOcrData(page_number, filename));
-            OcrData doc_data = data.dynamicCast<DocOcrData>();
-            doc_data->setInverted(inverted);
-            doc_data->setText(texts);
-            appendData(data);
+            if (image_list.IsMap()) {
+              for (YAML::const_iterator it = image_list.begin(); it != image_list.end(); ++it) {
+                int key = it->first.as<int>();
+                QString text(it->second.as<std::string>().c_str());
+                images.insert(key, Util::cleanText(text));
+              }
+            }
           }
+
+          DocumentData doc_data(new DocData(page_number, filename));
+          doc_data->setInverted(inverted);
+          doc_data->setText(texts);
+          doc_data->setImage(images);
+          appendData(doc_data);
         }
       }
     }
@@ -124,10 +129,11 @@ void DocumentDataStore::save(const QString &filename)
   if (file.open(QFile::WriteOnly | QFile::Truncate)) {
     YAML::Emitter emitter;
 
+    emitter << YAML::BeginDoc;
     emitter << YAML::BeginMap; // begin of document map
 
     for (int page_no : documentKeys()) {
-      DocumentData data = documentData(page_no);
+      DocumentData doc_data = documentData(page_no);
       emitter << YAML::Key << page_no; // page number as documant key
       emitter << YAML::Value;
       {
@@ -135,41 +141,49 @@ void DocumentDataStore::save(const QString &filename)
         emitter << YAML::BeginMap; // begin of document data map
         emitter << YAML::Key << FILENAME;
 
-        if (data->isRemoveImageLater()) {
+        if (doc_data->isRemoveImageLater()) {
           emitter << YAML::Value << QString();
 
         } else {
-          emitter << YAML::Value << data->filename();
+          emitter << YAML::Value << doc_data->filename();
         }
 
-        OcrData ocr_data = data.dynamicCast<DocOcrData>();
-
-        if (ocr_data) {
-          emitter << YAML::Key << INTERNAL_IMAGE;
-          emitter << YAML::Value << false;
-
+        if (doc_data) {
           emitter << YAML::Key << INVERTED;
-          emitter << YAML::Value << ocr_data->inverted();
+          emitter << YAML::Value << doc_data->inverted();
 
           emitter << YAML::Key << TEXT_LIST;
 
-          if (data->isRemoveTextLater()) {
+          if (doc_data->isRemoveTextLater()) {
             emitter << YAML::Value << QString();
 
           } else {
             emitter << YAML::Value;
-            emitter << YAML::BeginSeq; // begin of text sequance
+            emitter << YAML::BeginMap; // begin of text map
 
-            for (const QString &text : ocr_data->textList()) {
-              emitter << YAML::Value << text;
+            QMap<int, QString> map = doc_data->textList();
+
+            for (auto it = map.keyBegin(), end = map.keyEnd(); it != end; ++it) {
+              emitter << YAML::Key << *it;
+              emitter << YAML::Value << map.value(*it, QString());
             }
 
-            emitter << YAML::EndSeq; // end of text sequance
+            emitter << YAML::EndMap; // end of text map
           }
 
-        } else {
-          emitter << YAML::Key << INTERNAL_IMAGE;
-          emitter << YAML::Value << true;
+          emitter << YAML::Key << IMAGE_LIST;
+
+          emitter << YAML::Value;
+          emitter << YAML::BeginMap; // begin of image map
+
+          QMap<int, QString> map = doc_data->imageList();
+
+          for (auto it = map.keyBegin(), end = map.keyEnd(); it != end; ++it) {
+            emitter << YAML::Key << *it;
+            emitter << YAML::Value << map.value(*it, QString());
+          }
+
+          emitter << YAML::EndMap; // end of image map
         }
 
         emitter << YAML::EndMap; // end of document data map
@@ -177,6 +191,7 @@ void DocumentDataStore::save(const QString &filename)
     }
 
     emitter << YAML::EndMap; // end of document map
+    emitter << YAML::EndDoc;
 
     QTextStream out(&file);
     out << emitter.c_str();
@@ -232,16 +247,13 @@ void DocumentDataStore::cleanUpData()
 
   for (int page_no : keys) {
     DocumentData doc_data = m_data.value(page_no);
-    OcrData ocr_data = doc_data.dynamicCast<DocOcrData>();
 
-    if (ocr_data) {
-      if (ocr_data->isRemoveImageLater() && ocr_data->isRemoveTextLater()) {
-        m_data.remove(page_no);
+    if (doc_data->isRemoveImageLater() && doc_data->isRemoveTextLater()) {
+      m_data.remove(page_no);
 
-      } else {
-        if (ocr_data->isRemoveTextLater()) {
-          ocr_data->clearText();
-        }
+    } else {
+      if (doc_data->isRemoveTextLater()) {
+        doc_data->clearText();
       }
     }
   }
@@ -261,6 +273,9 @@ DocData::DocData()
   , m_remove_text_later(false)
   , m_filename(QString())
   , m_inverted(false)
+  , m_text_initialised(false)
+  , m_text_has_changed(false)
+  , m_images_changed(false)
 {}
 
 DocData::DocData(int page_no, QString filename)
@@ -269,9 +284,12 @@ DocData::DocData(int page_no, QString filename)
   , m_remove_text_later(false)
   , m_filename(std::move(filename))
   , m_inverted(false)
+  , m_text_initialised(false)
+  , m_text_has_changed(false)
+  , m_images_changed(false)
 {}
 
-DocData::~DocData() = default;
+//DocData::~DocData() = default;
 
 QString DocData::filename() const
 {
@@ -338,24 +356,7 @@ void DocData::setResolution(int resolution)
   m_resolution = resolution;
 }
 
-/* DocOcrData
-   ============================================================================*/
-
-DocOcrData::DocOcrData()
-  : DocData()
-  , m_text_initialised(false)
-  , m_text_has_changed(false)
-{}
-
-DocOcrData::DocOcrData(int page_no, const QString &filename)
-  : DocData(page_no, filename)
-  , m_text_initialised(false)
-  , m_text_has_changed(false)
-{}
-
-DocOcrData::~DocOcrData() = default;
-
-bool DocOcrData::hasText()
+bool DocData::hasText()
 {
   return (!m_text_list.isEmpty());
 }
@@ -365,7 +366,7 @@ bool DocOcrData::hasText()
 
   \return  true if text was loaded using setText(), otherwise false;
 */
-bool DocOcrData::textWasInitialised() const
+bool DocData::textWasInitialised() const
 {
   return m_text_initialised;
 }
@@ -375,68 +376,120 @@ bool DocOcrData::textWasInitialised() const
 
   \return  true if text has been modified, otherwise false;
 */
-bool DocOcrData::textHasChanged()
+bool DocData::textHasChanged()
 {
   return m_text_has_changed;
 }
 
-QString DocOcrData::text(int index) const
+QString DocData::text(int index) const
 {
-  return m_text_list.at(index);
+  return m_text_list.value(index);
 }
 
-QStringList DocOcrData::textList()
+QString DocData::image(int index) const
+{
+  return m_image_list.value(index);
+}
+
+QMap<int, QString> DocData::textList()
 {
   return m_text_list;
 }
 
-void DocOcrData::setText(const QString &text)
+QMap<int, QString> DocData::imageList()
 {
-  if (!m_text_list.isEmpty()) {
-    m_text_initialised = true;
-  }
-
-  m_text_list.clear();
-  appendText(text);
+  return m_image_list;
 }
 
-void DocOcrData::setText(const QStringList &text_list)
+void DocData::setText(int index, const QString &text)
 {
   if (!m_text_list.isEmpty()) {
     m_text_initialised = true;
   }
+
+  QString cleaned = Util::cleanText(text);
+  m_text_list.clear();
+  m_text_list.insert(index, cleaned);
+}
+
+void DocData::setText(const QMap<int, QString> &text_list)
+{
+  if (!m_text_list.isEmpty()) {
+    m_text_initialised = true;
+  }
+
+  // don't need to clean as this was already done.
 
   m_text_list = text_list;
 }
 
-void DocOcrData::appendText(const QString &text)
+void DocData::setImage(int index, const QString &text)
 {
-  m_text_list.append(text);
+  m_image_list.clear();
+  m_image_list.insert(index, text);
+}
+
+void DocData::setImage(const QMap<int, QString> &text_list)
+{
+  m_image_list = text_list;
+}
+
+int DocData::appendText(const QString &text)
+{
+  QList<int> page_nos = m_text_list.keys();
+  std::sort(page_nos.begin(), page_nos.end());
+  int max_page = page_nos.last();
+
+  m_text_list.insert(++max_page, text);
+  m_text_has_changed = true;
+  return max_page;
+}
+
+int DocData::appendImage(const QString &image)
+{
+  QList<int> page_nos = m_image_list.keys();
+  std::sort(page_nos.begin(), page_nos.end());
+  int max_page = page_nos.last();
+
+  m_text_list.insert(++max_page, image);
+  m_images_changed = true;
+  return max_page;
+}
+
+//void DocData::appendText(const QStringList& text_list)
+//{
+//  m_text_list.append(text_list);
+//  m_text_has_changed = true;
+//}
+
+void DocData::removeText(int index)
+{
+  m_text_list.remove(index);
   m_text_has_changed = true;
 }
 
-void DocOcrData::appendText(const QStringList &text_list)
+void DocData::removeImage(int index)
 {
-  m_text_list.append(text_list);
-  m_text_has_changed = true;
+  m_image_list.remove(index);
+  m_images_changed = true;
 }
 
-void DocOcrData::removeText(int index)
-{
-  m_text_list.removeAt(index);
-  m_text_has_changed = true;
-}
+//bool DocData::removeText(const QString& text)
+//{
+//  return m_text_list.removeOne(text);
+//  m_text_has_changed = true;
+//}
 
-bool DocOcrData::removeText(const QString &text)
-{
-  return m_text_list.removeOne(text);
-  m_text_has_changed = true;
-}
-
-void DocOcrData::insertText(int index, const QString &text)
+void DocData::insertText(int index, const QString &text)
 {
   m_text_list.insert(index, text);
   m_text_has_changed = true;
+}
+
+void DocData::insertImage(int index, const QString &text)
+{
+  m_image_list.insert(index, text);
+  m_images_changed = true;
 }
 
 /*!
@@ -444,29 +497,17 @@ void DocOcrData::insertText(int index, const QString &text)
 
   \return true if no text has been added, otherwise false.
 */
-bool DocOcrData::isEmpty()
+bool DocData::isEmpty()
 {
   return m_text_list.isEmpty();
 }
 
-void DocOcrData::clearText()
+void DocData::clearText()
 {
   m_text_list.clear();
 }
 
-/* DocImageData
-   ============================================================================*/
-DocImageData::DocImageData()
-  : DocData()
-{}
-
-DocImageData::DocImageData(int page_no, const QString &filename)
-  : DocData(page_no, filename)
-{}
-
-DocImageData::~DocImageData() = default;
-
-bool DocImageData::isDocImage() const
+void DocData::clearImages()
 {
-  return true;
+  m_image_list.clear();
 }
