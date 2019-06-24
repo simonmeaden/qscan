@@ -434,33 +434,29 @@ void DocData::setImage(const QMap<int, QString> &text_list)
   m_image_list = text_list;
 }
 
+int DocData::highestPage()
+{
+  QList<int> page_nos;
+  page_nos << m_text_list.keys() << m_image_list.keys();
+  std::sort(page_nos.begin(), page_nos.end());
+  return page_nos.last();
+}
+
 int DocData::appendText(const QString &text)
 {
-  QList<int> page_nos = m_text_list.keys();
-  std::sort(page_nos.begin(), page_nos.end());
-  int max_page = page_nos.last();
-
-  m_text_list.insert(++max_page, text);
+  int next_page = highestPage();
+  m_text_list.insert(++next_page, text);
   m_text_has_changed = true;
-  return max_page;
+  return next_page;
 }
 
 int DocData::appendImage(const QString &image)
 {
-  QList<int> page_nos = m_image_list.keys();
-  std::sort(page_nos.begin(), page_nos.end());
-  int max_page = page_nos.last();
-
-  m_text_list.insert(++max_page, image);
+  int next_page = highestPage();
+  m_text_list.insert(++next_page, image);
   m_images_changed = true;
-  return max_page;
+  return next_page;
 }
-
-//void DocData::appendText(const QStringList& text_list)
-//{
-//  m_text_list.append(text_list);
-//  m_text_has_changed = true;
-//}
 
 void DocData::removeText(int index)
 {
@@ -473,12 +469,6 @@ void DocData::removeImage(int index)
   m_image_list.remove(index);
   m_images_changed = true;
 }
-
-//bool DocData::removeText(const QString& text)
-//{
-//  return m_text_list.removeOne(text);
-//  m_text_has_changed = true;
-//}
 
 void DocData::insertText(int index, const QString &text)
 {

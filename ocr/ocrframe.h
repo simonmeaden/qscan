@@ -73,7 +73,7 @@ class OcrFrame : public QFrame
     Binarise,
     Rescale,
   };
-  ScanList *m_data_edit;
+  ScanList *m_scan_list;
   OcrImage *m_image_display;
   int m_page_no{}, m_item_count{};
   DocumentData m_doc_data;
@@ -84,7 +84,7 @@ class OcrFrame : public QFrame
   QPushButton *m_ocr_btn{};
   QPushButton *m_ocr_sel_btn{};
   QPushButton *denoise_btn{};
-  QPushButton *dewarp_btn{}, *m_save_txt_btn{}, *move_sel_to_doc_btn{};
+  QPushButton *dewarp_btn{}, *m_save_txt_btn{}, *move_sel_to_doc_btn{}, *rem_selection_btn{};
   QwtSlider *m_intvalue_slider{};
   QwtSlider *m_dblvalue_slider{};
   QLabel *m_intvalue_lbl{}, *m_dblvalue_lbl{};
@@ -120,13 +120,15 @@ class OcrFrame : public QFrame
   void rotateCW();
   void rotateCCW();
   void rescale();
-  void moveToDocument();
   void saveData();
   void saveCurrentStateImage();
   void discard();
   void acceptChanges();
   void undoChanges();
   void close();
+
+  void moveToDocument();
+  void removeItemFromDocument();
 
   void setIntValueLabel(qreal value);
   void setDoubleValueLabel(qreal value);
@@ -137,6 +139,9 @@ class OcrFrame : public QFrame
 
   void disableBinarise();
   void enableBinarise();
+
+  void scanListWasClicked(const QModelIndex &);
+  void scanListWasDoubleClicked(const QModelIndex &index);
 
   void enableCleanImageBtns(bool enable);
   void imageSizeHasChanged(int width, int height, int xres, int yres);

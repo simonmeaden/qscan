@@ -29,6 +29,7 @@ SOURCES += \
         documentdata.cpp \
         imageconverter.cpp \
         imagedelegate.cpp \
+        imageeditdialog.cpp \
         imagelistmodel.cpp \
         imageview.cpp \
         pageview.cpp \
@@ -42,6 +43,7 @@ HEADERS += \
         documentdata.h \
         imageconverter.h \
         imagedelegate.h \
+        imageeditdialog.h \
         imagelistmodel.h \
         imageview.h \
         pageview.h \
@@ -83,3 +85,6 @@ else:unix: LIBS += -L$$OUT_PWD/../qyaml-cpp/ -lqyaml-cpp
 
 INCLUDEPATH += $$PWD/../qyaml-cpp
 DEPENDPATH += $$PWD/../qyaml-cpp
+
+FORMS += \
+  imageeditdialog.ui

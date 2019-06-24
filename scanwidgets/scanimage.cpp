@@ -6,7 +6,13 @@
 /* ScanImage
  *****************************************************************************/
 
-ScanImage::ScanImage(QString  datadir, QWidget* parent)
+ScanImage::ScanImage(QWidget *parent)
+  : BaseScanImage(parent)
+  , m_datadir(QString())
+  , m_rotation(0)
+{}
+
+ScanImage::ScanImage(QString datadir, QWidget *parent)
   : BaseScanImage(parent)
   , m_datadir(std::move(datadir))
   , m_rotation(0)

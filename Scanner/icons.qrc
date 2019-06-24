@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/icons">
+    <qresource prefix="/qscan_icons">
         <file>Devices-scanner-icon16.png</file>
         <file>Devices-scanner-icon24.png</file>
         <file alias="scan">Devices-scanner-icon32.png</file>
@@ -53,5 +53,12 @@
         <file alias="del_image_text">delete_image_text.png</file>
         <file alias="del_text">delete_text.png</file>
         <file alias="move_to_images">move_to_images.png</file>
+        <file alias="centre_align">align-horizontal-center.png</file>
+        <file alias="left_align">align-horizontal-left.png</file>
+        <file alias="right_align">align-horizontal-right.png</file>
+        <file alias="doublequote">doublequote.png</file>
+        <file alias="bold">format-text-bold.png</file>
+        <file alias="italic">format-text-italic.png</file>
+        <file alias="underline">format-text-underline.png</file>
     </qresource>
 </RCC>

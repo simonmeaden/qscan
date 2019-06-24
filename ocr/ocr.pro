@@ -29,7 +29,8 @@ SOURCES += \
     ocrimage.cpp \
     ocrtools.cpp \
     ocrworker.cpp \
-    tesstools.cpp
+    tesstools.cpp \
+    texteditdialog.cpp
 
 HEADERS += \
         ocr_global.h \
@@ -37,7 +38,8 @@ HEADERS += \
         ocrimage.h \
         ocrtools.h \
         ocrworker.h \
-        tesstools.h
+        tesstools.h \
+        texteditdialog.h
 
 unix {
     target.path = /usr/lib
@@ -62,3 +64,6 @@ unix|win32: LIBS += -ltesseract
 unix|win32: LIBS += -lopencv_core
 unix|win32: LIBS += -lopencv_imgcodecs
 unix|win32: LIBS += -lqwt-qt5
+
+FORMS += \
+  texteditdialog.ui

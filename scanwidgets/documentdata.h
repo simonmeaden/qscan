@@ -74,6 +74,7 @@ class DocData
   QMap<int, QString> m_image_list;
   bool m_text_has_changed, m_images_changed;
   bool m_text_initialised;
+  int highestPage();
 };
 
 using DocumentData = QSharedPointer<DocData>;

@@ -1,11 +1,13 @@
 #include "ocrframe.h"
 
+#include "imageeditdialog.h"
 #include "ocrimage.h"
 #include "scanlist.h"
+#include "texteditdialog.h"
 
 OcrFrame::OcrFrame(QWidget *parent)
   : QFrame(parent)
-  , m_data_edit(nullptr)
+  , m_scan_list(nullptr)
   , m_image_display(nullptr)
   , m_image_changed(false)
   , m_change_type(None)
@@ -53,7 +55,7 @@ void OcrFrame::setData(int page_no, const QImage &image, const DocumentData &doc
   }
 
   if (!data.isEmpty()) {
-    m_data_edit->setData(data);
+    m_scan_list->setData(data);
   }
 
   QFileInfo info(m_doc_data->filename());
@@ -77,7 +79,7 @@ void OcrFrame::setOcrImage(int page_no, const QImage &image)
 void OcrFrame::setOcrText(int page_no, const QString &text)
 {
   if (page_no == m_page_no) {
-    m_data_edit->setText(text);
+    m_scan_list->setText(text);
     m_doc_data->appendText(text);
   }
 }
@@ -85,7 +87,7 @@ void OcrFrame::setOcrText(int page_no, const QString &text)
 void OcrFrame::appendOcrText(int page_no, const QString &text)
 {
   if (page_no == m_page_no) {
-    m_data_edit->appendText(text);
+    m_scan_list->appendText(text);
     m_doc_data->appendText(text);
     m_image_display->clearSelection();
   }
@@ -93,7 +95,7 @@ void OcrFrame::appendOcrText(int page_no, const QString &text)
 
 QStringList OcrFrame::texts()
 {
-  return m_data_edit->texts();
+  return m_scan_list->texts();
 }
 
 bool OcrFrame::imageChanged() const
@@ -212,8 +214,10 @@ void OcrFrame::initGui()
   auto *layout = new QGridLayout;
   setLayout(layout);
 
-  m_data_edit = new ScanList(this);
-  layout->addWidget(m_data_edit, 0, 0);
+  m_scan_list = new ScanList(this);
+  connect(m_scan_list, &ScanList::clicked, this, &OcrFrame::scanListWasClicked);
+  connect(m_scan_list, &ScanList::doubleClicked, this, &OcrFrame::scanListWasDoubleClicked);
+  layout->addWidget(m_scan_list, 0, 0);
 
   auto *stacked_frame = new QFrame(this);
   m_ctl_stack = new QStackedLayout;
@@ -351,11 +355,19 @@ void OcrFrame::initGui()
 
     btn_layout->addStretch(1);
 
-    move_sel_to_doc_btn = new QPushButton(tr("Set to Document"), this);
+    move_sel_to_doc_btn = new QPushButton(tr("Move to Document"), this);
     move_sel_to_doc_btn->setEnabled(false);
     move_sel_to_doc_btn->setToolTip(tr("Set as an internal Document Image."));
     connect(move_sel_to_doc_btn, &QPushButton::clicked, this, &OcrFrame::moveToDocument);
     btn_layout->addWidget(move_sel_to_doc_btn);
+
+    rem_selection_btn = new QPushButton(tr("Remove from Document"), this);
+    rem_selection_btn->setEnabled(false);
+    rem_selection_btn->setToolTip(tr("Remove Image/Text from Document."));
+    connect(rem_selection_btn, &QPushButton::clicked, this, &OcrFrame::removeItemFromDocument);
+    btn_layout->addWidget(rem_selection_btn);
+
+    btn_layout->addStretch(1);
 
     m_save_txt_btn = new QPushButton(tr("Save Text"), this);
     m_save_txt_btn->setEnabled(false);
@@ -503,9 +515,62 @@ void OcrFrame::rescale()
 void OcrFrame::moveToDocument()
 {
   QImage image = m_image_display->copySelection();
-  int image_index = m_data_edit->appendImage(image);
+  int image_index = m_scan_list->appendImage(image);
 
   emit saveSelectedDocumentImage(m_page_no, image_index, image, m_doc_data);
+}
+
+void OcrFrame::scanListWasClicked(const QModelIndex & /*index*/)
+{
+  if (!m_scan_list->selectionModel()->selection().empty()) {
+    rem_selection_btn->setEnabled(true);
+
+  } else {
+    rem_selection_btn->setEnabled(false);
+  }
+}
+
+void OcrFrame::scanListWasDoubleClicked(const QModelIndex &index)
+{
+  QVariant value = index.data();
+  int row = index.row();
+
+  if (value.type() == QVariant::String) {
+    auto *dlg = new TextEditDialog(this);
+    dlg->setText(value.toString());
+
+    if (dlg->exec() == QDialog::Accepted) {
+      QString text = dlg->text();
+      m_scan_list->replaceText(index.row(), text);
+    }
+  } else if (value.type() == QVariant::Image) {
+    auto *dlg = new ImageEditDialog(this);
+    dlg->setImage(value.value<QImage>());
+
+    if (dlg->exec() == QDialog::Accepted) {
+      QImage image = dlg->image();
+      m_scan_list->replaceImage(row, image);
+    }
+  }
+}
+
+void OcrFrame::removeItemFromDocument()
+{
+  auto answer = QMessageBox::warning(this,
+                                     tr("Remove Item From Document"),
+                                     tr("You are about to remove an item from the Document\n"
+                                        "This cannot be undone!"
+                                        "Ary you sure?"),
+                                     QMessageBox::Yes | QMessageBox::No,
+                                     QMessageBox::No);
+
+  if (answer == QMessageBox::Yes) {
+    auto index = m_scan_list->selectionModel()->currentIndex();
+
+    if (index.isValid()) {
+      m_scan_list->model()->removeRow(index.row());
+    }
+  }
 }
 
 void OcrFrame::saveData()

@@ -414,23 +414,23 @@ void MainWindow::initActions()
 
 void MainWindow::initPixmaps()
 {
-  help_key = QPixmapCache::insert(QPixmap(":/icons/help-contents"));
-  scan_key = QPixmapCache::insert(QPixmap(":/icons/scan"));
-  rot_left_key = QPixmapCache::insert(QPixmap(":/icons/rotate-left"));
-  rot_right_key = QPixmapCache::insert(QPixmap(":/icons/rotate-right"));
-  rot_angle_key = QPixmapCache::insert(QPixmap(":/icons/rotate-angle"));
-  rot_edge_key = QPixmapCache::insert(QPixmap(":/icons/rotate-edge"));
-  copy_key = QPixmapCache::insert(QPixmap(":/icons/copy"));
-  scale_key = QPixmapCache::insert(QPixmap(":/icons/scale"));
-  crop_key = QPixmapCache::insert(QPixmap(":/icons/crop"));
-  save_key = QPixmapCache::insert(QPixmap(":/icons/save"));
-  save_as_key = QPixmapCache::insert(QPixmap(":/icons/save-as"));
-  close_key = QPixmapCache::insert(QPixmap(":/icons/close"));
-  zoom_in_key = QPixmapCache::insert(QPixmap(":/icons/zoom-in"));
-  zoom_out_key = QPixmapCache::insert(QPixmap(":/icons/zoom-out"));
-  fit_best_key = QPixmapCache::insert(QPixmap(":/icons/fit-best"));
-  fit_width_key = QPixmapCache::insert(QPixmap(":/icons/fit-width"));
-  fit_height_key = QPixmapCache::insert(QPixmap(":/icons/fit-height"));
+  help_key = QPixmapCache::insert(QPixmap(":/qscan_icons/help-contents"));
+  scan_key = QPixmapCache::insert(QPixmap(":/qscan_icons/scan"));
+  rot_left_key = QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-left"));
+  rot_right_key = QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-right"));
+  rot_angle_key = QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-angle"));
+  rot_edge_key = QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-edge"));
+  copy_key = QPixmapCache::insert(QPixmap(":/qscan_icons/copy"));
+  scale_key = QPixmapCache::insert(QPixmap(":/qscan_icons/scale"));
+  crop_key = QPixmapCache::insert(QPixmap(":/qscan_icons/crop"));
+  save_key = QPixmapCache::insert(QPixmap(":/qscan_icons/save"));
+  save_as_key = QPixmapCache::insert(QPixmap(":/qscan_icons/save-as"));
+  close_key = QPixmapCache::insert(QPixmap(":/qscan_icons/close"));
+  zoom_in_key = QPixmapCache::insert(QPixmap(":/qscan_icons/zoom-in"));
+  zoom_out_key = QPixmapCache::insert(QPixmap(":/qscan_icons/zoom-out"));
+  fit_best_key = QPixmapCache::insert(QPixmap(":/qscan_icons/fit-best"));
+  fit_width_key = QPixmapCache::insert(QPixmap(":/qscan_icons/fit-width"));
+  fit_height_key = QPixmapCache::insert(QPixmap(":/qscan_icons/fit-height"));
 }
 
 void MainWindow::makeConnections()

@@ -6,8 +6,10 @@ ScanList::ScanList(QWidget *parent)
   : QListView(parent)
 {
   m_model = new ScanListModel(this);
-  //  setItemDelegate(new ScanItemDelegate(this));
   setModel(m_model);
+  setSelectionMode(QAbstractItemView::SingleSelection);
+  //  setEditTriggers(QAbstractItemView::DoubleClicked);
+  //  setItemDelegate(new ScanItemDelegate(this));
 }
 
 void ScanList::appendText(const QString &text)
@@ -31,6 +33,24 @@ int ScanList::appendImage(const QImage &image)
   }
 
   return -1;
+}
+
+void ScanList::replaceText(int row, const QString &text)
+{
+  QModelIndex index = m_model->index(row, 0);
+
+  if (index.isValid()) {
+    m_model->setData(index, text);
+  }
+}
+
+void ScanList::replaceImage(int row, const QImage &image)
+{
+  QModelIndex index = m_model->index(row, 0);
+
+  if (index.isValid()) {
+    m_model->setData(index, image);
+  }
 }
 
 void ScanList::setData(const QMap<int, QVariant> &data)
@@ -66,6 +86,14 @@ void ScanList::setText(const QStringList &list)
   }
 }
 
+int ScanList::setImage(const QImage &image)
+{
+  m_model->clearData();
+  m_model->insertRow(0);
+  const QModelIndex index = m_model->index(0, 0);
+  m_model->setData(index, image, Qt::EditRole);
+}
+
 QStringList ScanList::texts()
 {
   return m_model->textList();
@@ -83,55 +111,55 @@ void ScanList::contextMenuEvent(QContextMenuEvent * /*event*/)
 
 /* ScanItemDelegate
  **************************************************************************************/
-ScanItemDelegate::ScanItemDelegate(QObject* parent)
-  : QStyledItemDelegate(parent)
-{}
+//ScanItemDelegate::ScanItemDelegate(QObject* parent)
+//  : QStyledItemDelegate(parent)
+//{}
 
-QWidget* ScanItemDelegate::createEditor(QWidget* parent,
-                                        const QStyleOptionViewItem& /*option*/,
-                                        const QModelIndex& /*index*/) const
-{
-  auto *editor = new QTextEdit(parent);
-  editor->setFrameStyle(QFrame::NoFrame);
+//QWidget* ScanItemDelegate::createEditor(QWidget* parent,
+//                                        const QStyleOptionViewItem& option,
+//                                        const QModelIndex& index) const
+//{
+//  auto* editor = new QTextEdit(parent);
+//  editor->setFrameStyle(QFrame::NoFrame);
+//  return editor;
+//}
 
-  return editor;
-}
+//void ScanItemDelegate::setEditorData(QWidget* editor, const QModelIndex& index) const
+//{
+//  QVariant value = index.model()->data(index, Qt::EditRole);
 
-void ScanItemDelegate::setEditorData(QWidget* editor, const QModelIndex& index) const
-{
-  QVariant value = index.model()->data(index, Qt::EditRole);
+//  auto* text_edit = dynamic_cast<QTextEdit*>(editor);
 
-  auto *text_edit = dynamic_cast<QTextEdit *>(editor);
+//  if (value.type() == QVariant::String) {
+//    text_edit->setPlainText(value.toString());
 
-  if (value.type() == QVariant::String) {
-    text_edit->setPlainText(value.toString());
+//  } else if (value.type() == QVariant::Image) {
+//    QImage image = value.value<QImage>();
+//    QTextDocument* document = text_edit->document();
+//    document->addResource(QTextDocument::ImageResource, QUrl("data://image.png"), QVariant(image));
+//    QTextCursor cursor(document);
+//    QTextImageFormat imageFormat;
+//    imageFormat.setName("data://image.png");
+//    cursor.insertImage(imageFormat);
+//  }
+//}
 
-  } else if (value.type() == QVariant::Image) {
-    QImage image = value.value<QImage>();
-    QTextDocument *document = text_edit->document();
-    document->addResource(QTextDocument::ImageResource, QUrl("mydata://image.png"), QVariant(image));
-    QTextCursor cursor(document);
-    QTextImageFormat imageFormat;
-    imageFormat.setName("mydata://image.png");
-    cursor.insertImage(imageFormat);
-  }
-}
+//void ScanItemDelegate::setModelData(QWidget* editor,
+//                                    QAbstractItemModel* model,
+//                                    const QModelIndex& index) const
+//{
+//  auto* text_edit = qobject_cast<QTextEdit*>(editor);
+//  QString text = text_edit->toPlainText();
+//  QVariant value = index.model()->data(index, Qt::EditRole);
+//  model->setData(index, value, Qt::EditRole);
+//}
 
-void ScanItemDelegate::setModelData(QWidget* editor,
-                                    QAbstractItemModel* model,
-                                    const QModelIndex& index) const
-{
-  auto *text_edit = dynamic_cast<QTextEdit *>(editor);
-  QVariant value = index.model()->data(index, Qt::EditRole);
-  model->setData(index, value, Qt::EditRole);
-}
-
-void ScanItemDelegate::updateEditorGeometry(QWidget *editor,
-                                            const QStyleOptionViewItem &option,
-                                            const QModelIndex & /*index*/) const
-{
-  editor->setGeometry(option.rect);
-}
+//void ScanItemDelegate::updateEditorGeometry(QWidget* editor,
+//    const QStyleOptionViewItem& option,
+//    const QModelIndex& /*index*/) const
+//{
+//  editor->setGeometry(option.rect);
+//}
 
 /* ScanListModel
  **************************************************************************************/
@@ -153,12 +181,12 @@ void ScanListModel::clearData()
   m_data_list.clear();
 }
 
-QModelIndex ScanListModel::index(int row, int column, const QModelIndex &parent) const
+QModelIndex ScanListModel::index(int row, int column, const QModelIndex & /*parent*/) const
 {
   return createIndex(row, column);
 }
 
-QModelIndex ScanListModel::parent(const QModelIndex &index) const
+QModelIndex ScanListModel::parent(const QModelIndex & /*index*/) const
 {
   return {};
 }
@@ -241,7 +269,11 @@ bool ScanListModel::setData(const QModelIndex &index, const QVariant &value, int
         m_images.append(row);
       } // else already an image.
     }
+
+    return true;
   }
+
+  return false;
 }
 
 bool ScanListModel::removeRows(int row, int count, const QModelIndex &parent)

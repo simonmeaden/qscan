@@ -69,20 +69,20 @@ ScanEditor::ScanEditor(QScan *scan,
 {
   m_logger = Log4Qt::Logger::logger(tr("ScanEditor"));
 
-  crop_key = QPixmapCache::insert(QPixmap(":/icons/crop"));
-  move_up_key = QPixmapCache::insert(QPixmap(":/icons/up"));
-  move_down_key = QPixmapCache::insert(QPixmap(":/icons/down"));
-  move_to_key = QPixmapCache::insert(QPixmap(":/icons/move_to_edit"));
-  //  move_to_internal_key = QPixmapCache::insert(QPixmap(":/icons/move_to_images"));
-  cover_key = QPixmapCache::insert(QPixmap(":/icons/cover64"));
-  left_key = QPixmapCache::insert(QPixmap(":/icons/left64"));
-  right_key = QPixmapCache::insert(QPixmap(":/icons/right64"));
-  single_key = QPixmapCache::insert(QPixmap(":/icons/single64"));
-  both_key = QPixmapCache::insert(QPixmap(":/icons/both64"));
-  scale_key = QPixmapCache::insert(QPixmap(":/icons/scale"));
-  remove_text_key = QPixmapCache::insert(QPixmap(":/icons/del_text"));
-  remove_image_key = QPixmapCache::insert(QPixmap(":/icons/del_image"));
-  remove_both_key = QPixmapCache::insert(QPixmap(":/icons/del_image_text"));
+  crop_key = QPixmapCache::insert(QPixmap(":/qscan_icons/crop"));
+  move_up_key = QPixmapCache::insert(QPixmap(":/qscan_icons/up"));
+  move_down_key = QPixmapCache::insert(QPixmap(":/qscan_icons/down"));
+  move_to_key = QPixmapCache::insert(QPixmap(":/qscan_icons/move_to_edit"));
+  //  move_to_internal_key = QPixmapCache::insert(QPixmap(":/qscan_icons/move_to_images"));
+  cover_key = QPixmapCache::insert(QPixmap(":/qscan_icons/cover64"));
+  left_key = QPixmapCache::insert(QPixmap(":/qscan_icons/left64"));
+  right_key = QPixmapCache::insert(QPixmap(":/qscan_icons/right64"));
+  single_key = QPixmapCache::insert(QPixmap(":/qscan_icons/single64"));
+  both_key = QPixmapCache::insert(QPixmap(":/qscan_icons/both64"));
+  scale_key = QPixmapCache::insert(QPixmap(":/qscan_icons/scale"));
+  remove_text_key = QPixmapCache::insert(QPixmap(":/qscan_icons/del_text"));
+  remove_image_key = QPixmapCache::insert(QPixmap(":/qscan_icons/del_image"));
+  remove_both_key = QPixmapCache::insert(QPixmap(":/qscan_icons/del_image_text"));
 
   m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
 

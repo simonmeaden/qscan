@@ -12,22 +12,24 @@
 
 /* ScanItemDelegate
  **************************************************************************************/
-class ScanItemDelegate : public QStyledItemDelegate
-{
-  Q_OBJECT
+//class ScanItemDelegate : public QStyledItemDelegate
+//{
+//  Q_OBJECT
 
-  public:
-  ScanItemDelegate(QObject *parent = nullptr);
+//  public:
+//  ScanItemDelegate(QObject *parent = nullptr);
 
-  QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem&, const QModelIndex&) const override;
+//  QWidget *createEditor(QWidget *parent,
+//                        const QStyleOptionViewItem &option,
+//                        const QModelIndex &index) const override;
 
-  void setEditorData(QWidget* editor, const QModelIndex& index) const override;
-  void setModelData(QWidget* editor, QAbstractItemModel* model,
-                    const QModelIndex& index) const override;
+//  void setEditorData(QWidget* editor, const QModelIndex& index) const override;
+//  void setModelData(QWidget* editor, QAbstractItemModel* model,
+//                    const QModelIndex& index) const override;
 
-  void updateEditorGeometry(QWidget* editor,
-                            const QStyleOptionViewItem& option, const QModelIndex& index) const override;
-};
+//  void updateEditorGeometry(QWidget* editor,
+//                            const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+//};
 
 /* ScanListModel
  **************************************************************************************/
@@ -43,7 +45,7 @@ class ScanListModel : public QAbstractListModel
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
   int columnCount(const QModelIndex &parent = QModelIndex()) const override;
   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-  bool setData(const QModelIndex &index, const QVariant &value, int role) override;
+  bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::DisplayRole) override;
   QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
   QModelIndex parent(const QModelIndex &index = QModelIndex()) const override;
 
@@ -74,9 +76,14 @@ public:
 
   void appendText(const QString &texts);
   int appendImage(const QImage &image);
+
+  void replaceText(int row, const QString &text);
+  void replaceImage(int row, const QImage &image);
+
   void setData(const QMap<int, QVariant> &data);
   void setText(const QString &texts);
   void setText(const QStringList &list);
+  int setImage(const QImage &image);
 
   QStringList texts();
   QList<QImage> images();
