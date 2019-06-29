@@ -4,13 +4,15 @@
 #include <QObject>
 #include <QtMath>
 
+#include "style.h"
+
 namespace Util {
 
 qreal round(qreal value, quint8 places);
 int dpiToDpm(int value);
 int dpmToDpi(int value);
 
-QString cleanText(const QString &text);
+QString cleanText(const QString& text);
 
 static const QChar LF(0x000A);
 static const QChar CR(0x000D);

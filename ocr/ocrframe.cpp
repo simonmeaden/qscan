@@ -5,7 +5,7 @@
 #include "scanlist.h"
 #include "texteditdialog.h"
 
-OcrFrame::OcrFrame(QWidget *parent)
+OcrFrame::OcrFrame(QWidget* parent)
   : QFrame(parent)
   , m_scan_list(nullptr)
   , m_image_display(nullptr)
@@ -20,34 +20,34 @@ QImage OcrFrame::image()
   return m_image_display->image();
 }
 
-void OcrFrame::setResolution(const QImage &image)
+void OcrFrame::setResolution(const QImage& image)
 {
   int x_dpi = Util::dpmToDpi(image.dotsPerMeterX());
   int y_dpi = Util::dpmToDpi(image.dotsPerMeterY());
   setResLabel(x_dpi, y_dpi);
 }
 
-void OcrFrame::setData(int page_no, const QImage &image, const DocumentData &doc_data)
+void OcrFrame::setData(int page_no, const QImage& image, const DocumentData& doc_data)
 {
   m_page_no = page_no;
   m_doc_data = doc_data;
   m_image_display->setImage(image);
   m_image_display->setInverted(doc_data->inverted());
-  QMap<int, QString> in_data = doc_data->textList();
+  QMap<int, StyledString> text_data = doc_data->textList();
+  QMap<int, QString> image_data = doc_data->imageList();
   QMap<int, QVariant> data;
   m_item_count = 0;
 
-  for (auto it = in_data.keyBegin(), end = in_data.keyEnd(); it != end; ++it) {
+  for (auto it = text_data.keyBegin(), end = text_data.keyEnd(); it != end; ++it) {
     int key = *it;
-    data.insert(key, in_data.value(key));
+    StyledString styled_string(text_data.value(key));
+    data.insert(key, styled_string);
     m_item_count = (m_item_count >= *it ? m_item_count : *it);
   }
 
-  in_data = doc_data->imageList();
-
-  for (auto it = in_data.keyBegin(), end = in_data.keyEnd(); it != end; ++it) {
+  for (auto it = image_data.keyBegin(), end = image_data.keyEnd(); it != end; ++it) {
     int key = *it;
-    QString path = in_data.value(key);
+    QString path = image_data.value(key);
     QImage image;
     image.load(path, "PNG");
     data.insert(key, image);
@@ -71,12 +71,12 @@ void OcrFrame::setData(int page_no, const QImage &image, const DocumentData &doc
   enableCleanImageBtns(doc_data->inverted());
 }
 
-void OcrFrame::setOcrImage(int page_no, const QImage &image)
+void OcrFrame::setOcrImage(int page_no, const QImage& image)
 {
   m_page_no = page_no, m_image_display->setImage(image);
 }
 
-void OcrFrame::setOcrText(int page_no, const QString &text)
+void OcrFrame::setOcrText(int page_no, const QString& text)
 {
   if (page_no == m_page_no) {
     m_scan_list->setText(text);
@@ -84,7 +84,7 @@ void OcrFrame::setOcrText(int page_no, const QString &text)
   }
 }
 
-void OcrFrame::appendOcrText(int page_no, const QString &text)
+void OcrFrame::appendOcrText(int page_no, const QString& text)
 {
   if (page_no == m_page_no) {
     m_scan_list->appendText(text);
@@ -93,7 +93,7 @@ void OcrFrame::appendOcrText(int page_no, const QString &text)
   }
 }
 
-QStringList OcrFrame::texts()
+QList<StyledString> OcrFrame::texts()
 {
   return m_scan_list->texts();
 }
@@ -118,7 +118,7 @@ DocumentData OcrFrame::documentData() const
   return m_doc_data;
 }
 
-QFrame *OcrFrame::initIntSliderFrame()
+QFrame* OcrFrame::initIntSliderFrame()
 {
   auto* intvalue_frame = new QFrame(this);
   auto* intvalue_layout = new QGridLayout;
@@ -145,15 +145,15 @@ QFrame *OcrFrame::initIntSliderFrame()
   connect(apply_value_btn, &QPushButton::clicked, this, &OcrFrame::applyValue);
   intvalue_layout->addWidget(apply_value_btn, row++, 0, 1, 2);
 
-  auto *accept_value_btn = new QPushButton(tr("Accept Changes"), this);
+  auto* accept_value_btn = new QPushButton(tr("Accept Changes"), this);
   connect(accept_value_btn, &QPushButton::clicked, this, &OcrFrame::acceptChanges);
   intvalue_layout->addWidget(accept_value_btn, row++, 0, 1, 2);
 
-  auto *undo_last_btn = new QPushButton(tr("Undo Last Change"), this);
+  auto* undo_last_btn = new QPushButton(tr("Undo Last Change"), this);
   connect(undo_last_btn, &QPushButton::clicked, m_image_display, &OcrImage::undoLastChange);
   intvalue_layout->addWidget(undo_last_btn, row++, 0, 1, 2);
 
-  auto *cancel_change_btn = new QPushButton(tr("Cancel Current Changes"), this);
+  auto* cancel_change_btn = new QPushButton(tr("Cancel Current Changes"), this);
   connect(cancel_change_btn,
           &QPushButton::clicked,
           m_image_display,
@@ -164,7 +164,7 @@ QFrame *OcrFrame::initIntSliderFrame()
   return intvalue_frame;
 }
 
-QFrame *OcrFrame::initDoubleSliderFrame()
+QFrame* OcrFrame::initDoubleSliderFrame()
 {
   auto* dblvalue_frame = new QFrame();
   auto* dblvalue_layout = new QGridLayout;
@@ -191,15 +191,15 @@ QFrame *OcrFrame::initDoubleSliderFrame()
   connect(apply_value_btn, &QPushButton::clicked, this, &OcrFrame::applyValue);
   dblvalue_layout->addWidget(apply_value_btn, row++, 0, 1, 2);
 
-  auto *accept_value_btn = new QPushButton(tr("Accept Changes"), this);
+  auto* accept_value_btn = new QPushButton(tr("Accept Changes"), this);
   connect(accept_value_btn, &QPushButton::clicked, this, &OcrFrame::acceptChanges);
   dblvalue_layout->addWidget(accept_value_btn, row++, 0, 1, 2);
 
-  auto *undo_last_btn = new QPushButton(tr("Undo Last Change"), this);
+  auto* undo_last_btn = new QPushButton(tr("Undo Last Change"), this);
   connect(undo_last_btn, &QPushButton::clicked, m_image_display, &OcrImage::undoLastChange);
   dblvalue_layout->addWidget(undo_last_btn, row++, 0, 1, 2);
 
-  auto *cancel_change_btn = new QPushButton(tr("Cancel Current Changes"), this);
+  auto* cancel_change_btn = new QPushButton(tr("Cancel Current Changes"), this);
   connect(cancel_change_btn,
           &QPushButton::clicked,
           m_image_display,
@@ -211,7 +211,7 @@ QFrame *OcrFrame::initDoubleSliderFrame()
 
 void OcrFrame::initGui()
 {
-  auto *layout = new QGridLayout;
+  auto* layout = new QGridLayout;
   setLayout(layout);
 
   m_scan_list = new ScanList(this);
@@ -219,7 +219,7 @@ void OcrFrame::initGui()
   connect(m_scan_list, &ScanList::doubleClicked, this, &OcrFrame::scanListWasDoubleClicked);
   layout->addWidget(m_scan_list, 0, 0);
 
-  auto *stacked_frame = new QFrame(this);
+  auto* stacked_frame = new QFrame(this);
   m_ctl_stack = new QStackedLayout;
   stacked_frame->setLayout(m_ctl_stack);
   layout->addWidget(stacked_frame, 0, 1);
@@ -282,6 +282,20 @@ void OcrFrame::initGui()
     m_ocr_sel_btn->setToolTip(tr("Re run the OCR on part of the tweaked image."));
     connect(m_ocr_sel_btn, &QPushButton::clicked, this, &OcrFrame::requestOcrOnSelection);
     btn_layout->addWidget(m_ocr_sel_btn);
+
+    btn_layout->addStretch(1);
+
+    move_sel_to_doc_btn = new QPushButton(tr("Move to Document"), this);
+    move_sel_to_doc_btn->setEnabled(false);
+    move_sel_to_doc_btn->setToolTip(tr("Set as an internal Document Image."));
+    connect(move_sel_to_doc_btn, &QPushButton::clicked, this, &OcrFrame::moveToDocument);
+    btn_layout->addWidget(move_sel_to_doc_btn);
+
+    rem_selection_btn = new QPushButton(tr("Remove from Document"), this);
+    rem_selection_btn->setEnabled(false);
+    rem_selection_btn->setToolTip(tr("Remove Image/Text from Document."));
+    connect(rem_selection_btn, &QPushButton::clicked, this, &OcrFrame::removeItemFromDocument);
+    btn_layout->addWidget(rem_selection_btn);
 
     btn_layout->addStretch(1);
 
@@ -355,27 +369,13 @@ void OcrFrame::initGui()
 
     btn_layout->addStretch(1);
 
-    move_sel_to_doc_btn = new QPushButton(tr("Move to Document"), this);
-    move_sel_to_doc_btn->setEnabled(false);
-    move_sel_to_doc_btn->setToolTip(tr("Set as an internal Document Image."));
-    connect(move_sel_to_doc_btn, &QPushButton::clicked, this, &OcrFrame::moveToDocument);
-    btn_layout->addWidget(move_sel_to_doc_btn);
-
-    rem_selection_btn = new QPushButton(tr("Remove from Document"), this);
-    rem_selection_btn->setEnabled(false);
-    rem_selection_btn->setToolTip(tr("Remove Image/Text from Document."));
-    connect(rem_selection_btn, &QPushButton::clicked, this, &OcrFrame::removeItemFromDocument);
-    btn_layout->addWidget(rem_selection_btn);
-
-    btn_layout->addStretch(1);
-
     m_save_txt_btn = new QPushButton(tr("Save Text"), this);
     m_save_txt_btn->setEnabled(false);
     m_save_txt_btn->setToolTip(tr("Save the text."));
     connect(m_save_txt_btn, &QPushButton::clicked, this, &OcrFrame::saveData);
     btn_layout->addWidget(m_save_txt_btn);
 
-    auto *save_img_btn = new QPushButton(tr("Save Image"), this);
+    auto* save_img_btn = new QPushButton(tr("Save Image"), this);
     save_img_btn->setToolTip(tr("Save the image."));
     connect(save_img_btn, &QPushButton::clicked, this, &OcrFrame::saveCurrentStateImage);
     btn_layout->addWidget(save_img_btn);
@@ -520,7 +520,7 @@ void OcrFrame::moveToDocument()
   emit saveSelectedDocumentImage(m_page_no, image_index, image, m_doc_data);
 }
 
-void OcrFrame::scanListWasClicked(const QModelIndex & /*index*/)
+void OcrFrame::scanListWasClicked(const QModelIndex& /*index*/)
 {
   if (!m_scan_list->selectionModel()->selection().empty()) {
     rem_selection_btn->setEnabled(true);
@@ -530,21 +530,22 @@ void OcrFrame::scanListWasClicked(const QModelIndex & /*index*/)
   }
 }
 
-void OcrFrame::scanListWasDoubleClicked(const QModelIndex &index)
+void OcrFrame::scanListWasDoubleClicked(const QModelIndex& index)
 {
   QVariant value = index.data();
   int row = index.row();
 
   if (value.type() == QVariant::String) {
-    auto *dlg = new TextEditDialog(this);
+    auto* dlg = new TextEditDialog(this);
     dlg->setText(value.toString());
 
     if (dlg->exec() == QDialog::Accepted) {
-      QString text = dlg->text();
+      StyledString text = dlg->text();
       m_scan_list->replaceText(index.row(), text);
     }
+
   } else if (value.type() == QVariant::Image) {
-    auto *dlg = new ImageEditDialog(this);
+    auto* dlg = new ImageEditDialog(this);
     dlg->setImage(value.value<QImage>());
 
     if (dlg->exec() == QDialog::Accepted) {
@@ -586,17 +587,25 @@ void OcrFrame::saveCurrentStateImage()
 
 void OcrFrame::discard()
 {
-  int result = QMessageBox::warning(this,
-                                    tr("Discaring Changes"),
-                                    tr("You are about to discard any changes you have made\n"
-                                       "and quit the dialog.\n"
-                                       "This cannot be undone\n"
-                                       "Are you sure?"),
-                                    QMessageBox::Yes | QMessageBox::No,
-                                    QMessageBox::No);
+  if (m_image_display->hasChanges() || m_scan_list->hasChanges()) {
+    int result = QMessageBox::warning(this,
+                                      tr("Discaring Changes"),
+                                      tr("You are about to discard any changes you have made\n"
+                                         "and quit the dialog.\n"
+                                         "This cannot be undone\n"
+                                         "Are you sure?"),
+                                      QMessageBox::Yes | QMessageBox::No,
+                                      QMessageBox::No);
 
-  if (result == QMessageBox::Yes) {
+    if (result == QMessageBox::Yes) {
+      m_image_display->dumpImageChanges();
+      m_scan_list->dumpData();
+      emit reject();
+    }
+
+  } else {
     m_image_display->dumpImageChanges();
+    m_scan_list->dumpData();
     emit reject();
   }
 }
@@ -753,7 +762,7 @@ void OcrFrame::imageSizeHasChanged(int width, int height, int xres, int yres)
   setResLabel(xres, yres);
 }
 
-void OcrFrame::resizeEvent(QResizeEvent *event)
+void OcrFrame::resizeEvent(QResizeEvent* event)
 {
   QSize parent_size = qobject_cast<QWidget*>(parent())->frameSize();
   auto size = parent_size;
@@ -763,7 +772,7 @@ void OcrFrame::resizeEvent(QResizeEvent *event)
   QFrame::resizeEvent(e);
 }
 
-void OcrFrame::setMessageLabel(const QString &text)
+void OcrFrame::setMessageLabel(const QString& text)
 {
   m_message_lbl->setText(text);
 }

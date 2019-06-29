@@ -60,5 +60,21 @@
         <file alias="bold">format-text-bold.png</file>
         <file alias="italic">format-text-italic.png</file>
         <file alias="underline">format-text-underline.png</file>
+        <file alias="accept">task-accepted.png</file>
+        <file alias="reject">task-reject.png</file>
+        <file alias="font_smaller">format-font-size-less.png</file>
+        <file alias="font_larger">format-font-size-more.png</file>
+        <file alias="justify_centre">format-justify-center.png</file>
+        <file>format-justify-left.png</file>
+        <file alias="justify_right">format-justify-right.png</file>
+        <file alias="double_space">format-line-spacing-double.png</file>
+        <file alias="normal_space">format-line-spacing-normal.png</file>
+        <file alias="triple_space">format-line-spacing-triple.png</file>
+        <file alias="strikethrough">format-text-strikethrough.png</file>
+        <file alias="subscript">format-text-subscript.png</file>
+        <file alias="superscript">format-text-superscript.png</file>
+        <file alias="clear_edit">edit-clear.png</file>
+        <file alias="clear_history">edit-clear-history.png</file>
+        <file alias="clear_list">edit-clear-list.png</file>
     </qresource>
 </RCC>

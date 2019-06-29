@@ -9,9 +9,9 @@ using namespace cv;
 
 const qreal OcrImage::BASE_RESCALE = 1.0;
 
-OcrImage::OcrImage(QWidget *parent)
+OcrImage::OcrImage(QWidget* parent)
   : BaseScanImage(parent)
-/*, m_binarised(false)*/
+    /*, m_binarised(false)*/
 {
   //  setStyleSheet("border: 2px solid red;");
 }
@@ -90,6 +90,8 @@ void OcrImage::dumpImageChanges()
   }
 
   m_image_base = QImage();
+  m_modified_image = m_image_base;
+  scaleModifiedImage();
 }
 
 void OcrImage::acceptChanges()
@@ -197,18 +199,23 @@ void OcrImage::setInverted(bool inverted)
   m_inverted = inverted;
 }
 
-void OcrImage::paintEvent(QPaintEvent *event)
+bool OcrImage::hasChanges()
 {
-  BaseScanImage::paintEvent(event);
-
-  QPainter painter(this);
-  QPen pen(QColor("red"), 2);
-  painter.setPen(pen);
-
-  for (QLineF line : m_lines) {
-    painter.drawLine(line);
-  }
+  return (m_changes > 0);
 }
+
+//void OcrImage::paintEvent(QPaintEvent *event)
+//{
+//  BaseScanImage::paintEvent(event);
+
+////  QPainter painter(this);
+////  QPen pen(QColor("red"), 2);
+////  painter.setPen(pen);
+
+////  for (QLineF line : m_lines) {
+////    painter.drawLine(line);
+////  }
+//}
 
 // double OcrImage::houghTransform(Mat &im) {
 //  double skew;

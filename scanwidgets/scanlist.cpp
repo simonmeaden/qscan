@@ -2,8 +2,9 @@
 
 /* ScanEdit
  **************************************************************************************/
-ScanList::ScanList(QWidget *parent)
+ScanList::ScanList(QWidget* parent)
   : QListView(parent)
+  , m_changes(false)
 {
   m_model = new ScanListModel(this);
   setModel(m_model);
@@ -12,48 +13,63 @@ ScanList::ScanList(QWidget *parent)
   //  setItemDelegate(new ScanItemDelegate(this));
 }
 
-void ScanList::appendText(const QString &text)
+void ScanList::appendText(const QString& text)
+{
+  appendText(StyledString(text));
+}
+
+
+void ScanList::appendText(const StyledString& text)
 {
   int row = m_model->rowCount();
 
   if (m_model->insertRow(row)) {
     QModelIndex index = m_model->index(row, 0, QModelIndex());
     m_model->setData(index, QVariant::fromValue<QString>(text), Qt::EditRole);
+    m_changes = true;
   }
 }
 
-int ScanList::appendImage(const QImage &image)
+int ScanList::appendImage(const QImage& image)
 {
   int row = m_model->rowCount();
 
   if (m_model->insertRow(row)) {
     QModelIndex index = m_model->index(row, 0);
     m_model->setData(index, image, Qt::EditRole);
+    m_changes = true;
     return row;
   }
 
   return -1;
 }
 
-void ScanList::replaceText(int row, const QString &text)
+void ScanList::replaceText(int row, const QString& text)
+{
+  replaceText(row, StyledString(text));
+}
+
+void ScanList::replaceText(int row, const StyledString& text)
 {
   QModelIndex index = m_model->index(row, 0);
 
   if (index.isValid()) {
     m_model->setData(index, text);
+    m_changes = true;
   }
 }
 
-void ScanList::replaceImage(int row, const QImage &image)
+void ScanList::replaceImage(int row, const QImage& image)
 {
   QModelIndex index = m_model->index(row, 0);
 
   if (index.isValid()) {
     m_model->setData(index, image);
+    m_changes = true;
   }
 }
 
-void ScanList::setData(const QMap<int, QVariant> &data)
+void ScanList::setData(const QMap<int, QVariant>& data)
 {
   m_model->clearData();
 
@@ -63,19 +79,26 @@ void ScanList::setData(const QMap<int, QVariant> &data)
     if (m_model->insertRow(row)) {
       QModelIndex index = m_model->index(row, 0);
       m_model->setData(index, data.value(row), Qt::EditRole);
+      m_changes = false;
     }
   }
 }
 
-void ScanList::setText(const QString &text)
+void ScanList::setText(const QString& text)
+{
+  setText(StyledString(text));
+}
+
+void ScanList::setText(const StyledString& text)
 {
   m_model->clearData();
   m_model->insertRow(0);
   const QModelIndex index = m_model->index(0, 0);
   m_model->setData(index, text, Qt::EditRole);
+  m_changes = false;
 }
 
-void ScanList::setText(const QStringList &list)
+void ScanList::setText(const QStringList& list)
 {
   m_model->clearData();
   m_model->insertRows(0, list.size());
@@ -83,18 +106,32 @@ void ScanList::setText(const QStringList &list)
   for (int row = 0; row < list.size(); row++) {
     const QModelIndex index = m_model->index(row, 0);
     m_model->setData(index, list.at(row), Qt::EditRole);
+    m_changes = false;
   }
 }
 
-int ScanList::setImage(const QImage &image)
+int ScanList::setImage(const QImage& image)
 {
   m_model->clearData();
   m_model->insertRow(0);
   const QModelIndex index = m_model->index(0, 0);
   m_model->setData(index, image, Qt::EditRole);
+  m_changes = false;
+  return index.row();
 }
 
-QStringList ScanList::texts()
+void ScanList::dumpData()
+{
+  m_model->clearData();
+  m_changes = false;
+}
+
+bool ScanList::hasChanges()
+{
+  return m_changes;
+}
+
+QList<StyledString> ScanList::texts()
 {
   return m_model->textList();
 }
@@ -104,7 +141,7 @@ QList<QImage> ScanList::images()
   return m_model->imageList();
 }
 
-void ScanList::contextMenuEvent(QContextMenuEvent * /*event*/)
+void ScanList::contextMenuEvent(QContextMenuEvent* /*event*/)
 {
   //  auto *context_menu = new QMenu();
 }
@@ -163,7 +200,7 @@ void ScanList::contextMenuEvent(QContextMenuEvent * /*event*/)
 
 /* ScanListModel
  **************************************************************************************/
-ScanListModel::ScanListModel(QObject *parent)
+ScanListModel::ScanListModel(QObject* parent)
   : QAbstractListModel(parent)
   , m_current_image(-1)
 {}
@@ -181,22 +218,22 @@ void ScanListModel::clearData()
   m_data_list.clear();
 }
 
-QModelIndex ScanListModel::index(int row, int column, const QModelIndex & /*parent*/) const
+QModelIndex ScanListModel::index(int row, int column, const QModelIndex& /*parent*/) const
 {
   return createIndex(row, column);
 }
 
-QModelIndex ScanListModel::parent(const QModelIndex & /*index*/) const
+QModelIndex ScanListModel::parent(const QModelIndex& /*index*/) const
 {
   return {};
 }
 
-QStringList ScanListModel::textList()
+QList<StyledString> ScanListModel::textList()
 {
-  QStringList list;
+  QList<StyledString> list;
 
   for (auto key : m_strings) {
-    list << m_data_list.at(key).toString();
+    list << m_data_list.at(key).value<StyledString>();
   }
 
   return list;
@@ -213,17 +250,17 @@ QList<QImage> ScanListModel::imageList()
   return list;
 }
 
-int ScanListModel::rowCount(const QModelIndex & /*parent*/) const
+int ScanListModel::rowCount(const QModelIndex& /*parent*/) const
 {
   return m_data_list.size();
 }
 
-int ScanListModel::columnCount(const QModelIndex & /*parent*/) const
+int ScanListModel::columnCount(const QModelIndex& /*parent*/) const
 {
   return 1;
 }
 
-QVariant ScanListModel::data(const QModelIndex &index, int role) const
+QVariant ScanListModel::data(const QModelIndex& index, int role) const
 {
   if (index.isValid()) {
     int row = index.row();
@@ -238,7 +275,7 @@ QVariant ScanListModel::data(const QModelIndex &index, int role) const
   return QVariant();
 }
 
-bool ScanListModel::setData(const QModelIndex &index, const QVariant &value, int /*role*/)
+bool ScanListModel::setData(const QModelIndex& index, const QVariant& value, int /*role*/)
 {
   if (index.isValid()) {
     int row = index.row();
@@ -276,7 +313,7 @@ bool ScanListModel::setData(const QModelIndex &index, const QVariant &value, int
   return false;
 }
 
-bool ScanListModel::removeRows(int row, int count, const QModelIndex &parent)
+bool ScanListModel::removeRows(int row, int count, const QModelIndex& parent)
 {
   if (row == 0) {
     return false;
@@ -296,10 +333,10 @@ bool ScanListModel::removeRows(int row, int count, const QModelIndex &parent)
   return true;
 }
 
-bool ScanListModel::moveRows(const QModelIndex &sourceParent,
+bool ScanListModel::moveRows(const QModelIndex& sourceParent,
                              int source,
                              int count,
-                             const QModelIndex &destinationParent,
+                             const QModelIndex& destinationParent,
                              int destination)
 {
   if (source == -1) {
@@ -352,7 +389,7 @@ bool ScanListModel::moveRows(const QModelIndex &sourceParent,
   return true;
 }
 
-bool ScanListModel::insertRows(int row, int count, const QModelIndex &parent)
+bool ScanListModel::insertRows(int row, int count, const QModelIndex& parent)
 {
   if (parent.isValid()) {
     return false;

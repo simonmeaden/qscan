@@ -36,6 +36,7 @@ SOURCES += \
         scaneditor.cpp \
         scanimage.cpp \
         scanlist.cpp \
+        style.cpp \
         util.cpp
 
 HEADERS += \
@@ -51,6 +52,7 @@ HEADERS += \
         scanimage.h \
         scanlist.h \
         scanwidgets_global.h  \
+        style.h \
         util.h
 
 unix {

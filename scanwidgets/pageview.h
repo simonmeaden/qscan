@@ -18,10 +18,10 @@ class PageView : public QWidget
 public:
   explicit PageView(QWidget* parent = nullptr);
 
-  int appendOcrThumbnail(const QImage &thumbnail);
+  int appendOcrThumbnail(const QImage& thumbnail);
   void removeOcrThumbnail(int index);
-  void replaceOcrThumbnail(int index, const QImage &image);
-  void insertOcrThumbnail(int index, const QImage &thumbnail);
+  void replaceOcrThumbnail(int index, const QImage& image);
+  void insertOcrThumbnail(int index, const QImage& thumbnail);
   void removeOcrThumbnail();
 
   void setCover(const QImage& cover);
@@ -33,7 +33,7 @@ public:
 
   int currentPageNumber() const;
 
-  signals:
+signals:
   void ocrPageMoved(int from, int to);
   void sendOcrPage(int);
   void workOn(int);
@@ -43,8 +43,8 @@ public:
   void selected();
   void unselected();
 
-  protected:
-  ImageView *m_image_view;
+protected:
+  ImageView* m_image_view;
   QImage m_cover;
   int m_current_row{};
   int m_page_selected = -1;
@@ -52,13 +52,13 @@ public:
   QSize minimumSizeHint() const override;
   QSize sizeHint() const override;
 
-  void ocrSelectionChanged(const QItemSelection &selected_items, const QItemSelection &);
-  void ocrRowsMoved(const QModelIndex &, int start_row, int, const QModelIndex &, int dest_row);
+  void ocrSelectionChanged(const QItemSelection& selected_items, const QItemSelection&);
+  void ocrRowsMoved(const QModelIndex&, int start_row, int, const QModelIndex&, int dest_row);
 
   //  void nonOcrImage();
   void loadTextIntoEditor();
-  void itemClicked(const QModelIndex &index);
-  void itemDoubleClicked(const QModelIndex &index);
+  void itemClicked(const QModelIndex& index);
+  void itemDoubleClicked(const QModelIndex& index);
 
   static const QString HASTEXT;
   static const QString HASNOTEXT;

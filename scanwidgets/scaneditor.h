@@ -64,7 +64,7 @@ public:
   void loadOptions(const QString& filename = QString());
   void saveOptions(const QString& filename = QString());
 
-  void setImage(const QImage &image, const int resolution);
+  void setImage(const QImage& image, const int resolution);
   void setScanProgress(const int& progress);
   void scanningStarted();
   QString documentName() const;
@@ -115,7 +115,7 @@ public:
   int resolution() const;
   void setResolution(int resolution);
 
-  signals:
+signals:
   void scanCancelled();
   void selected();
   void unselected();
@@ -127,13 +127,13 @@ protected:
   Log4Qt::Logger* m_logger;
 
   int m_main_stack_id, m_ocr_stack_id;
-  QStackedLayout *m_main_layout;
-  OcrFrame *m_ocr_frame;
+  QStackedLayout* m_main_layout;
+  OcrFrame* m_ocr_frame;
 
   QString m_current_doc_name;
   QString m_options_file;
   QString m_data_filename;
-  DocumentDataStore *m_doc_data_store{};
+  DocumentDataStore* m_doc_data_store{};
   ScanImage* m_scan_display{};
   QProgressDialog* m_prog_dlg{};
   QScan* m_scan_lib{};
@@ -143,21 +143,21 @@ protected:
   QString m_config_dir{};
   QString m_data_dir{};
   QString m_lang{};
-  QPushButton *m_crop_btn{};
-  QPushButton *m_left_btn{};
-  QPushButton *m_move_up_btn{};
-  QPushButton *m_move_down_btn{};
-  QPushButton *m_move_to_btn{};
+  QPushButton* m_crop_btn{};
+  QPushButton* m_left_btn{};
+  QPushButton* m_move_up_btn{};
+  QPushButton* m_move_down_btn{};
+  QPushButton* m_move_to_btn{};
   //  QPushButton *m_move_to_doc_btn{};
-  QPushButton *m_cover_btn{};
-  QPushButton *m_right_btn{};
-  QPushButton *m_both_btn{};
-  QPushButton *m_single_btn{};
-  QPushButton *m_internal_btn{};
-  QPushButton *m_rem_txt_btn{};
-  QPushButton *m_rem_img_btn{};
-  QPushButton *m_rem_both_btn{};
-  QGroupBox *image_edit_group{}, *page_list_group{}, *image_transfer_group{};
+  QPushButton* m_cover_btn{};
+  QPushButton* m_right_btn{};
+  QPushButton* m_both_btn{};
+  QPushButton* m_single_btn{};
+  QPushButton* m_internal_btn{};
+  QPushButton* m_rem_txt_btn{};
+  QPushButton* m_rem_img_btn{};
+  QPushButton* m_rem_both_btn{};
+  QGroupBox* image_edit_group{}, *page_list_group{}, *image_transfer_group{};
 
   DocumentData m_cover;
   int m_resolution;
@@ -185,26 +185,27 @@ protected:
   void receiveImage(const QImage& image);
   void receiveImages(const QImage& left, const QImage& right);
   //  void receiveString(int page_no, const QString &str);
-  QString saveImage(int index, const QImage &image);
+  QString saveImage(int index, const QImage& image);
   QString saveDocumentImage(int page_no,
                             int image_index,
-                            const QImage &image,
-                            const DocumentData &doc_data);
-  void saveModifiedImage(int index, const QImage &image);
+                            const QImage& image,
+                            const DocumentData& doc_data);
+  void saveModifiedImage(int index, const QImage& image);
   void makeCover();
   void receiveLoadText(int page_no);
   void receiveWorkOnRequest(int documentData);
   void receiveOcrPageRequest(int documentData);
-  void receiveOcrImageRequest(int documentData, const QImage &image, const QRect &rect);
-  void receiveOcrPageResult(const DocumentData &doc_data);
-  void receiveOcrImageResult(int documentData, const QString &text);
-  void receiveOcrImageRectResult(int documentData, const QString &text);
+  void receiveOcrImageRequest(int documentData, const QImage& image, const QRect& rect);
+  void receiveOcrPageResult(const DocumentData& doc_data);
+  void receiveOcrImageResult(int documentData, const QString& text);
+  void receiveOcrImageRectResult(int documentData, const QString& text);
   void receiveOcrActionFinished();
+  void receiveOcrActionCancelled();
   void receivePageMoved(int start_row, int dest_row);
   void removeBoth(int page_no = -1);
   void removeImage(int page_no = -1);
   void removeText(int page_no = -1);
-  void saveModifiedData(const DocumentData &doc_data);
+  void saveModifiedData(const DocumentData& doc_data);
   QImage thumbnail(const QImage& image) const;
   void rescale();
   void moveSelectionToInternal();

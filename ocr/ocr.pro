@@ -65,5 +65,4 @@ unix|win32: LIBS += -lopencv_core
 unix|win32: LIBS += -lopencv_imgcodecs
 unix|win32: LIBS += -lqwt-qt5
 
-FORMS += \
-  texteditdialog.ui
+FORMS +=

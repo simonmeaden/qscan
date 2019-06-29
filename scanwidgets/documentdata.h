@@ -7,16 +7,17 @@
 #include <QMap>
 
 #include "util.h"
+#include "style.h"
 
 class DocData
 {
-  public:
+public:
   DocData();
   DocData(int page_no, QString filename);
   //  ~DocData();
 
   QString filename() const;
-  void setFilename(const QString &filename);
+  void setFilename(const QString& filename);
 
   int pageNumber() const;
   void setPageNumber(int pageNumber);
@@ -41,36 +42,36 @@ class DocData
   void clearText();
   void clearImages();
 
-  QString text(int index) const;
+  StyledString text(int index) const;
   QString image(int index) const;
 
-  QMap<int, QString> textList();
+  QMap<int, StyledString> textList();
   QMap<int, QString> imageList();
 
-  void setText(int index, const QString &text);
-  void setText(const QMap<int, QString> &text_list);
-  void setImage(int index, const QString &text);
-  void setImage(const QMap<int, QString> &text_list);
+  void setText(int index, const StyledString& text);
+  void setText(const QMap<int, StyledString>& text_list);
+  void setImage(int index, const QString& text);
+  void setImage(const QMap<int, QString>& text_list);
 
-  int appendText(const QString &text);
-  //  void appendText(const QStringList &text_list);
+  int appendText(const StyledString& text);
+  //  void appendText(const QList<StyledString> &text_list);
   void removeText(int index);
-  //  bool removeText(const QString &text);
-  void insertText(int index, const QString &text);
+  //  bool removeText(const StyledString &text);
+  void insertText(int index, const StyledString& text);
   bool isEmpty();
 
-  int appendImage(const QString &image);
+  int appendImage(const QString& image);
   void removeImage(int index);
-  void insertImage(int index, const QString &text);
+  void insertImage(int index, const QString& text);
 
-  protected:
+protected:
   int m_page_no{};
   QString m_filename;
   bool m_remove_image_later;
   bool m_remove_text_later;
   bool m_inverted;
   int m_resolution{};
-  QMap<int, QString> m_text_list;
+  QMap<int, StyledString> m_text_list;
   QMap<int, QString> m_image_list;
   bool m_text_has_changed, m_images_changed;
   bool m_text_initialised;
@@ -96,7 +97,7 @@ public:
 
   void remove(int index);
   void remove(const QString& filename);
-  void remove(const DocumentData &data);
+  void remove(const DocumentData& data);
 
   void moveKey(int old_page, int new_page);
 
@@ -108,7 +109,7 @@ public:
 
   static int nextPageNumber();
 
-  protected:
+protected:
   QMap<int, DocumentData> m_data;
 
   static const QString FILENAME;
@@ -117,6 +118,11 @@ public:
   static const QString INVERTED;
   static const QString INTERNAL_IMAGE_NAME;
   static const QString TEXT_LIST;
+  static const QString TEXT_STRING;
+  static const QString TEXT_STYLES;
+  static const QString TEXT_STYLE;
+  static const QString TEXT_START;
+  static const QString TEXT_LENGTH;
   static const QString IMAGE_LIST;
 
   static int m_highest_page;

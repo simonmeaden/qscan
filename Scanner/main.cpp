@@ -36,6 +36,7 @@
 //#include "scanpage.h"
 #include "documentdata.h"
 #include "logger.h"
+#include "style.h"
 
 using Image = QSharedPointer<QImage>;
 Q_DECLARE_METATYPE(Image)
@@ -50,6 +51,9 @@ int main(int argc, char* argv[])
   qRegisterMetaType<DocData>();
   qRegisterMetaType<DocumentData>();
   qRegisterMetaType<LogLevel>();
+  qRegisterMetaType<StyleData>();
+  qRegisterMetaType<Style>();
+  qRegisterMetaType<StyledString>();
 
 #if defined(LOGGER_ENABLE)
   LogManager::rootLogger();

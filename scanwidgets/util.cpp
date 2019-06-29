@@ -57,7 +57,7 @@ int dpmToDpi(int value)
   \param text - the string to clean.
   \return - the 'cleaned' text.
 */
-QString cleanText(const QString &text)
+QString cleanText(const QString& text)
 {
   if (text.contains(D_QUOTE) ||       // standard d-quote
       text.contains(S_QUOTE) ||       // standard s-quote

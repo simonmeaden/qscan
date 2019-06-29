@@ -53,21 +53,23 @@ public:
   bool isInverted() const;
   void setInverted(bool isInverted);
 
-  signals:
+  bool hasChanges();
+
+signals:
   void enableModification();
   void imageSizeChanged(int w, int h, int xres, int yres);
 
-  protected:
+protected:
   //  QImage m_temp_image;
   //  QList<Operations> m_operations;
   //  QList<QVariant> m_op_data;
   QImage m_image_base;
   int m_changes{};
-  QList<QLineF> m_lines;
-  qreal m_angle{};
+  //  QList<QLineF> m_lines;
+  //  qreal m_angle{};
   //  bool m_binarised;
 
-  void paintEvent(QPaintEvent *event) override;
+  //  void paintEvent(QPaintEvent *event) override;
   //  double houghTransform(Mat &im /*, Mat& orig*/);
 };
 

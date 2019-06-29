@@ -56,10 +56,10 @@ const QString ScanEditor::LANGUAGE = "language";
    \param lang - the tesseract language.
    \param parent - the parent QObject.
 */
-ScanEditor::ScanEditor(QScan *scan,
-                       const QString &configdir,
-                       const QString &datadir,
-                       QWidget *parent)
+ScanEditor::ScanEditor(QScan* scan,
+                       const QString& configdir,
+                       const QString& datadir,
+                       QWidget* parent)
   : QFrame(parent)
   , m_scan_lib(scan)
   , m_config_dir(configdir)
@@ -113,7 +113,7 @@ void ScanEditor::initPageListBtns()
 
   page_list_group = new QGroupBox(tr("Edit Document"), this);
   page_list_group->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  auto *group2_layout = new QVBoxLayout;
+  auto* group2_layout = new QVBoxLayout;
   page_list_group->setLayout(group2_layout);
 
   m_move_up_btn = new QPushButton(move_up_icon, "", this);
@@ -166,7 +166,7 @@ void ScanEditor::initImageEditBtns()
 
   image_edit_group = new QGroupBox(tr("Edit Image"), this);
   image_edit_group->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  auto *group1_layout = new QVBoxLayout;
+  auto* group1_layout = new QVBoxLayout;
   image_edit_group->setLayout(group1_layout);
 
   m_crop_btn = new QPushButton(crop_icon, "", this);
@@ -191,7 +191,7 @@ void ScanEditor::initTransferBtns()
 
   image_transfer_group = new QGroupBox(tr("Transfer Image"), this);
   image_transfer_group->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  auto *group3_layout = new QVBoxLayout;
+  auto* group3_layout = new QVBoxLayout;
   image_transfer_group->setLayout(group3_layout);
 
   m_cover_btn = new QPushButton(cover_icon, "", this);
@@ -245,8 +245,8 @@ void ScanEditor::initGui()
   m_main_layout = new QStackedLayout;
   setLayout(m_main_layout);
 
-  QFrame *main_frame = new QFrame(this);
-  auto *grid_layout = new QGridLayout(this);
+  QFrame* main_frame = new QFrame(this);
+  auto* grid_layout = new QGridLayout(this);
   grid_layout->setContentsMargins(0, 0, 0, 0);
   main_frame->setLayout(grid_layout);
 
@@ -258,6 +258,7 @@ void ScanEditor::initGui()
   connect(m_ocr_frame, &OcrFrame::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
   connect(m_ocr_frame, &OcrFrame::saveSelectedDocumentImage, this, &ScanEditor::saveDocumentImage);
   connect(m_ocr_frame, &OcrFrame::accept, this, &ScanEditor::receiveOcrActionFinished);
+  connect(m_ocr_frame, &OcrFrame::reject, this, &ScanEditor::receiveOcrActionCancelled);
   m_ocr_stack_id = m_main_layout->addWidget(m_ocr_frame);
 
   m_scroller = new QScrollArea(this);
@@ -275,19 +276,19 @@ void ScanEditor::initGui()
   m_page_view = new PageView(this);
   m_page_view->setContentsMargins(0, 0, 0, 0);
 
-  auto *btn_frame = new QFrame(this);
+  auto* btn_frame = new QFrame(this);
   btn_frame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-  auto *btn_layout = new QGridLayout;
+  auto* btn_layout = new QGridLayout;
   btn_frame->setLayout(btn_layout);
 
   initImageEditBtns();
   btn_layout->addWidget(image_edit_group, 0, 0);
 
-  initTransferBtns();
-  btn_layout->addWidget(image_transfer_group, 2, 0);
-
   initPageListBtns();
   btn_layout->addWidget(page_list_group, 1, 0);
+
+  initTransferBtns();
+  btn_layout->addWidget(image_transfer_group, 2, 0);
 
   enableMoveBtns(false);
   disableEditBtns();
@@ -329,7 +330,7 @@ void ScanEditor::makeConnections()
    Receives a single page image from the ScanImage object
    and stores it.
 */
-void ScanEditor::receiveImage(const QImage &image)
+void ScanEditor::receiveImage(const QImage& image)
 {
   int index = DocumentDataStore::nextPageNumber();
 
@@ -348,7 +349,7 @@ void ScanEditor::receiveImage(const QImage &image)
    Receives two split page images from the ScanImage object
    and stores them.
 */
-void ScanEditor::receiveImages(const QImage &left, const QImage &right)
+void ScanEditor::receiveImages(const QImage& left, const QImage& right)
 {
   receiveImage(left);
   receiveImage(right);
@@ -365,16 +366,16 @@ void ScanEditor::receiveImages(const QImage &left, const QImage &right)
 //  }
 //}
 
-QString ScanEditor::saveImage(int index, const QImage &image)
+QString ScanEditor::saveImage(int index, const QImage& image)
 {
   QString path;
 
   if (m_current_doc_name.isEmpty()) {
     QString doc_name = QInputDialog::getText(this,
-                                             tr("Get Document Name"),
-                                             tr("Please supply a name for this document.\n"
-                                                "Do not add file extension as this is\n"
-                                                "created internally."));
+                       tr("Get Document Name"),
+                       tr("Please supply a name for this document.\n"
+                          "Do not add file extension as this is\n"
+                          "created internally."));
 
     if (!doc_name.isEmpty()) {
       m_current_doc_name = doc_name;
@@ -406,17 +407,17 @@ void ScanEditor::saveDataStore()
 
 QString ScanEditor::saveDocumentImage(int index,
                                       int image_index,
-                                      const QImage &image,
-                                      const DocumentData &doc_data)
+                                      const QImage& image,
+                                      const DocumentData& doc_data)
 {
   QString path;
 
   if (m_current_doc_name.isEmpty()) {
     QString doc_name = QInputDialog::getText(this,
-                                             tr("Get Document Name"),
-                                             tr("Please supply a name for this document.\n"
-                                                "Do not add file extension as this is\n"
-                                                "created internally."));
+                       tr("Get Document Name"),
+                       tr("Please supply a name for this document.\n"
+                          "Do not add file extension as this is\n"
+                          "created internally."));
 
     if (!doc_name.isEmpty()) {
       m_current_doc_name = doc_name;
@@ -445,7 +446,7 @@ QString ScanEditor::saveDocumentImage(int index,
   return path;
 }
 
-void ScanEditor::saveModifiedImage(int page_no, const QImage &image)
+void ScanEditor::saveModifiedImage(int page_no, const QImage& image)
 {
   DocumentData doc_data = m_doc_data_store->documentData(page_no);
   QString path = doc_data->filename();
@@ -530,21 +531,21 @@ void ScanEditor::receiveOcrPageRequest(int page_no)
   }
 }
 
-void ScanEditor::receiveOcrImageRequest(int page_no, const QImage &image, const QRect &rect)
+void ScanEditor::receiveOcrImageRequest(int page_no, const QImage& image, const QRect& rect)
 {
   if (page_no > 0) {
     m_ocr_tools->convertImageToText(page_no, image, rect);
   }
 }
 
-void ScanEditor::saveModifiedData(const DocumentData &doc_data)
+void ScanEditor::saveModifiedData(const DocumentData& doc_data)
 {
   if (doc_data) {
     saveDataStore();
   }
 }
 
-void ScanEditor::receiveOcrPageResult(const DocumentData &doc_data)
+void ScanEditor::receiveOcrPageResult(const DocumentData& doc_data)
 {
   m_main_layout->setCurrentIndex(m_ocr_stack_id);
 
@@ -565,7 +566,7 @@ void ScanEditor::receiveOcrActionFinished()
                                          tr("Image text exists."),
                                          tr("The image %1 already has text.\n"
                                             "Do you want to overwrite this text?")
-                                           .arg(index),
+                                         .arg(index),
                                          QMessageBox::Yes | QMessageBox::No,
                                          QMessageBox::No);
 
@@ -588,6 +589,17 @@ void ScanEditor::receiveOcrActionFinished()
   }
 
   m_main_layout->setCurrentIndex(m_main_stack_id);
+  enableMoveBtns(false);
+  disableEditBtns();
+  disableListBtns();
+}
+
+void ScanEditor::receiveOcrActionCancelled()
+{
+  m_main_layout->setCurrentIndex(m_main_stack_id);
+  enableMoveBtns(false);
+  disableEditBtns();
+  disableListBtns();
 }
 
 void ScanEditor::receivePageMoved(int start_row, int dest_row)
@@ -707,14 +719,14 @@ void ScanEditor::removeText(int page_no)
   }
 }
 
-void ScanEditor::receiveOcrImageResult(int page_no, const QString &text)
+void ScanEditor::receiveOcrImageResult(int page_no, const QString& text)
 {
   if (m_ocr_frame) {
     m_ocr_frame->setOcrText(page_no, text);
   }
 }
 
-void ScanEditor::receiveOcrImageRectResult(int page_no, const QString &text)
+void ScanEditor::receiveOcrImageRectResult(int page_no, const QString& text)
 {
   if (m_ocr_frame) {
     m_ocr_frame->appendOcrText(page_no, text);
@@ -840,7 +852,7 @@ void ScanEditor::loadExistingFiles()
 
   \param filename - the optional options file name with path.
 */
-void ScanEditor::loadOptions(const QString &filename)
+void ScanEditor::loadOptions(const QString& filename)
 {
   QString fn;
 
@@ -887,7 +899,7 @@ void ScanEditor::loadOptions(const QString &filename)
 
   \param filename - the optional options file name with path.
 */
-void ScanEditor::saveOptions(const QString &filename)
+void ScanEditor::saveOptions(const QString& filename)
 {
   QString fn;
 
@@ -898,7 +910,7 @@ void ScanEditor::saveOptions(const QString &filename)
     fn = filename;
   }
 
-  QFile *file;
+  QFile* file;
   file = new QFile(fn);
 
   if (file->open((QFile::ReadWrite | QFile::Truncate))) {
@@ -919,7 +931,7 @@ void ScanEditor::saveOptions(const QString &filename)
   }
 }
 
-void ScanEditor::loadCover(const QString &filename)
+void ScanEditor::loadCover(const QString& filename)
 {
   QImage image = QImage(filename, "PNG");
   DocumentData data(new DocData());
@@ -928,7 +940,7 @@ void ScanEditor::loadCover(const QString &filename)
   m_page_view->setCover(thumbnail(image));
 }
 
-void ScanEditor::setImage(const QImage &image, const int resolution)
+void ScanEditor::setImage(const QImage& image, const int resolution)
 {
   if (m_prog_dlg) {
     m_prog_dlg->close();
@@ -940,7 +952,7 @@ void ScanEditor::setImage(const QImage &image, const int resolution)
   enableMoveBtns(true);
 }
 
-void ScanEditor::setScanProgress(const int &progress)
+void ScanEditor::setScanProgress(const int& progress)
 {
   if (m_prog_dlg) {
     m_prog_dlg->setValue(int(progress));
@@ -962,7 +974,7 @@ void ScanEditor::scanningStarted()
 
   \param name - the new document name.
 */
-void ScanEditor::setDocumentName(const QString &name)
+void ScanEditor::setDocumentName(const QString& name)
 {
   m_current_doc_name = name;
 }
@@ -974,7 +986,7 @@ void ScanEditor::setDocumentName(const QString &name)
 
   \param name - the new document path.
 */
-void ScanEditor::setDocumentPath(const QString &path)
+void ScanEditor::setDocumentPath(const QString& path)
 {
   m_data_dir = path;
 }
@@ -989,12 +1001,12 @@ QString ScanEditor::documentName() const
   return m_current_doc_name;
 }
 
-bool ScanEditor::eventFilter(QObject *obj, QEvent *event)
+bool ScanEditor::eventFilter(QObject* obj, QEvent* event)
 {
   bool result;
 
   if (event->type() == QEvent::KeyPress) {
-    auto *key_event = dynamic_cast<QKeyEvent *>(event);
+    auto* key_event = dynamic_cast<QKeyEvent*>(event);
 
     if (key_event) {
       //      bool is_keypad = ((key_event->modifiers()) & Qt::KeypadModifier);
@@ -1034,7 +1046,7 @@ bool ScanEditor::eventFilter(QObject *obj, QEvent *event)
 
 void ScanEditor::adjustScrollbar(qreal factor)
 {
-  QScrollBar *scrollbar = m_scroller->horizontalScrollBar();
+  QScrollBar* scrollbar = m_scroller->horizontalScrollBar();
   scrollbar->setValue(int(factor * scrollbar->value() + ((factor - 1) * scrollbar->pageStep() / 2)));
   scrollbar = m_scroller->verticalScrollBar();
   scrollbar->setValue(int(factor * scrollbar->value() + ((factor - 1) * scrollbar->pageStep() / 2)));
@@ -1168,7 +1180,7 @@ QString ScanEditor::optionsFile() const
 
    \param options_file - the new file name.
 */
-void ScanEditor::setOptionsFile(const QString &options_file)
+void ScanEditor::setOptionsFile(const QString& options_file)
 {
   m_options_file = options_file;
 }
@@ -1188,7 +1200,7 @@ QString ScanEditor::tesseractLanguage() const
 
    \param lang - tesseract language string.
 */
-void ScanEditor::setTesseractLanguage(const QString &lang)
+void ScanEditor::setTesseractLanguage(const QString& lang)
 {
   m_lang = lang;
 }
@@ -1283,7 +1295,7 @@ void ScanEditor::setResolution(int resolution)
   m_resolution = resolution;
 }
 
-QImage ScanEditor::thumbnail(const QImage &image) const
+QImage ScanEditor::thumbnail(const QImage& image) const
 {
   if (!image.isNull()) {
     int w = image.width();
