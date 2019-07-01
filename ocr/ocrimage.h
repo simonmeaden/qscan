@@ -25,7 +25,6 @@ public:
   //  void setImage(const QImage &image) override;
 
   void undoAllChanges();
-  void undoLastChange();
 
   void clearToBackground();
   void cropToSelection();
@@ -35,20 +34,27 @@ public:
   void applyThreshold(int value);
 
   void rescale();
-  void revertRescale();
+  //  void revertRescale();
   void applyRescale(double value);
 
   void acceptChanges();
-  void cancelCurrentChanges();
+  void cancelChanges();
 
   void denoise();
+  //  void revertDenoise();
+  void applyDenoise(int filter_value, int template_value, int search_value);
   void deskew();
-
-  void dumpImageChanges();
 
   // 180 gives a good starter value.
   static const int BASE_THRESHOLD = 180;
   static const qreal BASE_RESCALE;
+  static const int BASE_TEMPLATE = 7;
+  static const int BASE_SEARCH = 21;
+  static const int BASE_FILTER = 3;
+  static const QString BINARISE;
+  static const QString RESCALE;
+  static const QString DENOISE;
+  static const QString DESKEW;
 
   bool isInverted() const;
   void setInverted(bool isInverted);
@@ -60,17 +66,11 @@ signals:
   void imageSizeChanged(int w, int h, int xres, int yres);
 
 protected:
-  //  QImage m_temp_image;
-  //  QList<Operations> m_operations;
-  //  QList<QVariant> m_op_data;
-  QImage m_image_base;
-  int m_changes{};
-  //  QList<QLineF> m_lines;
-  //  qreal m_angle{};
-  //  bool m_binarised;
+  QImage m_temp_image; // temporary image for display purposes.
+  QMap<QString, QImage> m_undo_list;
 
-  //  void paintEvent(QPaintEvent *event) override;
-  //  double houghTransform(Mat &im /*, Mat& orig*/);
+
+  void scaleTemporaryImage();
 };
 
 #endif // OCRIMAGE_H

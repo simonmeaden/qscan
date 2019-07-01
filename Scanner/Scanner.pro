@@ -78,6 +78,7 @@ unix|win32: LIBS += -lyaml-cpp
 #unix|win32: LIBS += -lqyaml-cpp
 unix|win32: LIBS += -ltesseract
 unix|win32: LIBS += -lopencv_core
+unix|win32: LIBS += -lopencv_photo
 unix|win32: LIBS += -lqwt-qt5
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qyaml-cpp/release/ -lqyaml-cpp
@@ -86,3 +87,4 @@ else:unix: LIBS += -L$$OUT_PWD/../qyaml-cpp/ -lqyaml-cpp
 
 INCLUDEPATH += $$PWD/../qyaml-cpp
 DEPENDPATH += $$PWD/../qyaml-cpp
+

@@ -149,15 +149,11 @@ QFrame* OcrFrame::initIntSliderFrame()
   connect(accept_value_btn, &QPushButton::clicked, this, &OcrFrame::acceptChanges);
   intvalue_layout->addWidget(accept_value_btn, row++, 0, 1, 2);
 
-  auto* undo_last_btn = new QPushButton(tr("Undo Last Change"), this);
-  connect(undo_last_btn, &QPushButton::clicked, m_image_display, &OcrImage::undoLastChange);
-  intvalue_layout->addWidget(undo_last_btn, row++, 0, 1, 2);
-
-  auto* cancel_change_btn = new QPushButton(tr("Cancel Current Changes"), this);
+  auto* cancel_change_btn = new QPushButton(tr("Cancel Changes"), this);
   connect(cancel_change_btn,
           &QPushButton::clicked,
           m_image_display,
-          &OcrImage::cancelCurrentChanges);
+          &OcrImage::cancelChanges);
   connect(cancel_change_btn, &QPushButton::clicked, this, &OcrFrame::reject);
   intvalue_layout->addWidget(cancel_change_btn, row++, 0, 1, 2);
 
@@ -195,18 +191,82 @@ QFrame* OcrFrame::initDoubleSliderFrame()
   connect(accept_value_btn, &QPushButton::clicked, this, &OcrFrame::acceptChanges);
   dblvalue_layout->addWidget(accept_value_btn, row++, 0, 1, 2);
 
-  auto* undo_last_btn = new QPushButton(tr("Undo Last Change"), this);
-  connect(undo_last_btn, &QPushButton::clicked, m_image_display, &OcrImage::undoLastChange);
-  dblvalue_layout->addWidget(undo_last_btn, row++, 0, 1, 2);
-
-  auto* cancel_change_btn = new QPushButton(tr("Cancel Current Changes"), this);
+  auto* cancel_change_btn = new QPushButton(tr("Cancel Changes"), this);
   connect(cancel_change_btn,
           &QPushButton::clicked,
           m_image_display,
-          &OcrImage::cancelCurrentChanges);
+          &OcrImage::cancelChanges);
   dblvalue_layout->addWidget(cancel_change_btn, row++, 0, 1, 2);
 
   return dblvalue_frame;
+}
+
+QFrame* OcrFrame::initDenoiseSliderFrame()
+{
+  auto* denoisevalue_frame = new QFrame();
+  auto* denoisevalue_layout = new QGridLayout;
+  denoisevalue_frame->setLayout(denoisevalue_layout);
+
+  // initialise threshold frame
+  int row = 0;
+  m_denoise_filter_slider = new QwtSlider(Qt::Vertical, this);
+  m_denoise_filter_slider->setScalePosition(QwtSlider::LeadingScale);
+  m_denoise_filter_slider->setTrough(true);
+  m_denoise_filter_slider->setGroove(true);
+  connect(m_denoise_filter_slider, &QwtSlider::valueChanged, this, &OcrFrame::setDenoiseFilterLabel);
+  denoisevalue_layout->addWidget(m_denoise_filter_slider, row, 0, Qt::AlignHCenter);
+
+  m_denoise_filter_lbl = new QLabel(QString::number(m_intvalue_slider->value()), this);
+  QFont font;
+  font.setWeight(QFont::Bold);
+  font.setPixelSize(40);
+  m_denoise_filter_lbl->setFont(font);
+  m_denoise_filter_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignCenter);
+  denoisevalue_layout->addWidget(m_denoise_filter_lbl, row + 1, 0);
+  row++;
+
+  m_denoise_template_slider = new QwtSlider(Qt::Vertical, this);
+  m_denoise_template_slider->setScalePosition(QwtSlider::LeadingScale);
+  m_denoise_template_slider->setTrough(true);
+  m_denoise_template_slider->setGroove(true);
+  connect(m_denoise_template_slider, &QwtSlider::valueChanged, this, &OcrFrame::setDenoiseTemplateLabel);
+  denoisevalue_layout->addWidget(m_denoise_template_slider, row, 0, Qt::AlignHCenter);
+
+  m_denoise_template_lbl = new QLabel(QString::number(m_denoise_template_slider->value()), this);
+  m_denoise_template_lbl->setFont(font);
+  m_denoise_template_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignCenter);
+  denoisevalue_layout->addWidget(m_denoise_template_lbl, row + 1, 0);
+  row++;
+
+  m_denoise_search_slider = new QwtSlider(Qt::Vertical, this);
+  m_denoise_search_slider->setScalePosition(QwtSlider::LeadingScale);
+  m_denoise_search_slider->setTrough(true);
+  m_denoise_search_slider->setGroove(true);
+  connect(m_denoise_search_slider, &QwtSlider::valueChanged, this, &OcrFrame::setDenoiseSearchLabel);
+  denoisevalue_layout->addWidget(m_denoise_search_slider, row, 0, Qt::AlignHCenter);
+
+  m_denoise_search_lbl = new QLabel(QString::number(m_denoise_search_slider->value()), this);
+  m_denoise_search_lbl->setFont(font);
+  m_denoise_search_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignCenter);
+  denoisevalue_layout->addWidget(m_denoise_search_lbl, row + 1, 0);
+  row++;
+
+  auto* apply_value_btn = new QPushButton(tr("Apply"), this);
+  connect(apply_value_btn, &QPushButton::clicked, this, &OcrFrame::applyValue);
+  denoisevalue_layout->addWidget(apply_value_btn, row++, 0, 1, 2);
+
+  auto* accept_value_btn = new QPushButton(tr("Accept Changes"), this);
+  connect(accept_value_btn, &QPushButton::clicked, this, &OcrFrame::acceptChanges);
+  denoisevalue_layout->addWidget(accept_value_btn, row++, 0, 1, 2);
+
+  auto* cancel_change_btn = new QPushButton(tr("Cancel Changes"), this);
+  connect(cancel_change_btn,
+          &QPushButton::clicked,
+          m_image_display,
+          &OcrImage::cancelChanges);
+  denoisevalue_layout->addWidget(cancel_change_btn, row++, 0, 1, 2);
+
+  return denoisevalue_frame;
 }
 
 void OcrFrame::initGui()
@@ -265,6 +325,9 @@ void OcrFrame::initGui()
 
   QFrame* dblvalue_frame = initDoubleSliderFrame();
   m_dblvalue_stack = m_ctl_stack->addWidget(dblvalue_frame);
+
+  QFrame* denoisevalue_frame = initDoubleSliderFrame();
+  m_denoise_stack = m_ctl_stack->addWidget(denoisevalue_frame);
 
   auto* btn_box = new QFrame(this);
   auto* btn_layout = new QVBoxLayout;
@@ -472,8 +535,9 @@ void OcrFrame::invert()
 
 void OcrFrame::denoise()
 {
+  m_change_type = Denoise;
+  setCurrentChangeState();
   m_image_display->denoise();
-  m_image_changed = true;
 }
 
 void OcrFrame::dewarp()
@@ -598,13 +662,11 @@ void OcrFrame::discard()
                                       QMessageBox::No);
 
     if (result == QMessageBox::Yes) {
-      m_image_display->dumpImageChanges();
       m_scan_list->dumpData();
       emit reject();
     }
 
   } else {
-    m_image_display->dumpImageChanges();
     m_scan_list->dumpData();
     emit reject();
   }
@@ -665,6 +727,17 @@ void OcrFrame::applyValue()
     m_image_display->applyRescale(value);
     break;
   }
+
+  case Denoise: {
+    int filter_value = int(m_denoise_filter_slider->value());
+    int template_value = int(m_denoise_template_slider->value());
+    int search_value = int(m_denoise_search_slider->value());
+    m_image_display->applyDenoise(filter_value, template_value, search_value);
+
+  }
+
+  default:
+    break;
   }
 }
 void OcrFrame::setCurrentChangeState()
@@ -720,6 +793,26 @@ void OcrFrame::setCurrentChangeState()
     m_ctl_stack->setCurrentIndex(m_dblvalue_stack);
     setMessageLabel(tr("Rescaling image"));
     break;
+
+  case Denoise:
+
+    //    m_denoise_template_slider->setScaleEngine(new QwtLinearScaleEngine());
+    //    m_denoise_template_slider->setScale(QwtScaleDiv(0, 255, minor_ticks, medium_ticks, major_ticks));
+    m_denoise_filter_slider->setValid(OcrImage::BASE_FILTER);
+    m_denoise_filter_slider->setSingleSteps(1);
+    m_denoise_filter_slider->setPageSteps(1);
+
+    m_denoise_template_slider->setValue(OcrImage::BASE_TEMPLATE);
+    m_denoise_template_slider->setSingleSteps(2);
+    m_denoise_template_slider->setPageSteps(2);
+
+    m_denoise_search_slider->setValid(OcrImage::BASE_SEARCH);
+    m_denoise_search_slider->setSingleSteps(2);
+    m_denoise_search_slider->setPageSteps(2);
+
+    m_ctl_stack->setCurrentIndex(m_denoise_stack);
+    setMessageLabel(tr("Denoising image"));
+    break;
   }
 }
 
@@ -731,6 +824,21 @@ void OcrFrame::setIntValueLabel(qreal value)
 void OcrFrame::setDoubleValueLabel(qreal value)
 {
   m_dblvalue_lbl->setText(QString("%1").arg(value, 0, 'g', 2));
+}
+
+void OcrFrame::setDenoiseTemplateLabel(qreal value)
+{
+  m_denoise_template_lbl->setText(QString::number(int(value)));
+}
+
+void OcrFrame::setDenoiseSearchLabel(qreal value)
+{
+  m_denoise_search_lbl->setText(QString::number(int(value)));
+}
+
+void OcrFrame::setDenoiseFilterLabel(qreal value)
+{
+  m_denoise_filter_lbl->setText(QString::number(int(value)));
 }
 
 void OcrFrame::valueAccepted()

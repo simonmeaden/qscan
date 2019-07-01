@@ -73,6 +73,7 @@ protected:
     None,
     Binarise,
     Rescale,
+    Denoise,
   };
   ScanList* m_scan_list;
   OcrImage* m_image_display;
@@ -85,17 +86,30 @@ protected:
   QPushButton* m_ocr_btn{};
   QPushButton* m_ocr_sel_btn{};
   QPushButton* denoise_btn{};
-  QPushButton* dewarp_btn{}, *m_save_txt_btn{}, *move_sel_to_doc_btn{}, *rem_selection_btn{};
+  QPushButton* dewarp_btn{};
+  QPushButton* m_save_txt_btn{};
+  QPushButton* move_sel_to_doc_btn{};
+  QPushButton* rem_selection_btn{};
   QwtSlider* m_intvalue_slider{};
+  QwtSlider* m_denoise_template_slider{};
+  QwtSlider* m_denoise_search_slider{};
+  QwtSlider* m_denoise_filter_slider{};
   QwtSlider* m_dblvalue_slider{};
-  QLabel* m_intvalue_lbl{}, *m_dblvalue_lbl{};
-  QLabel* m_image_name_lbl{}, *m_image_size_lbl{}, *m_message_lbl{}, *m_res_lbl{};
+  QLabel* m_intvalue_lbl{};
+  QLabel* m_dblvalue_lbl{};
+  QLabel* m_denoise_filter_lbl{};
+  QLabel* m_denoise_template_lbl{};
+  QLabel* m_denoise_search_lbl{};
+  QLabel* m_image_name_lbl{};
+  QLabel* m_image_size_lbl{};
+  QLabel* m_message_lbl{};
+  QLabel* m_res_lbl{};
   QStackedLayout* m_ctl_stack{};
   QStatusBar* m_status_bar{};
 
   QString m_image_name, m_image_size, m_message, m_resolution;
   int m_btn_stack{};
-  int m_intvalue_stack{}, m_dblvalue_stack{};
+  int m_intvalue_stack{}, m_dblvalue_stack{}, m_denoise_stack{};
   ChangeType m_change_type;
 
   void resizeEvent(QResizeEvent* event) override;
@@ -133,6 +147,9 @@ protected:
 
   void setIntValueLabel(qreal value);
   void setDoubleValueLabel(qreal value);
+  void setDenoiseTemplateLabel(qreal value);
+  void setDenoiseSearchLabel(qreal value);
+  void setDenoiseFilterLabel(qreal value);
   void valueAccepted();
   void applyValue();
 
@@ -149,6 +166,7 @@ protected:
 
   QFrame* initIntSliderFrame();
   QFrame* initDoubleSliderFrame();
+  QFrame* initDenoiseSliderFrame();
   void setResolution(const QImage& image);
 };
 

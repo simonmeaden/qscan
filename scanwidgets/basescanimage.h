@@ -38,7 +38,7 @@ public:
   void rotateBy(qreal angle);
   void invert();
 
-  virtual void setImage(const QImage &image, const int resolution = 0);
+  virtual void setImage(const QImage& image, const int resolution = 0);
   QImage image();
   QImage modifiedImage();
   QImage selectedSubImage();
@@ -52,7 +52,7 @@ public:
   int resolution() const;
   void setResolution(int resolution);
 
-  signals:
+signals:
   void imageIsLoaded();
   void adjustScrollbar(qreal);
   void selected();
@@ -96,8 +96,8 @@ protected:
   FitType m_fit_type;
   QImage m_image; // original unmodified image.
   //  QImage m_scaled_image;
-  QImage m_modified_image;
-  QImage m_scaled_image;
+  QImage m_modified_image; // image that has been modified and accepted.
+  QImage m_display_image; // scaled image for display purposes.
   QRect m_rubber_band;
   QRect m_stretched_band;
   //  QRect m_contents_rect;
@@ -125,7 +125,7 @@ protected:
   //  void resizeEvent(QResizeEvent* event) override;
 
   void scaleModifiedImage();
-  //  void updateImage();
+
   void rotateUsingEdge();
   void paintRubberBand(QPainter* painter);
 

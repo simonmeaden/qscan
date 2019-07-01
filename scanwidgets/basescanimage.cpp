@@ -8,7 +8,7 @@ const QBrush BaseScanImage::RUBBERBAND_BRUSH = QBrush(QColor(128, 128, 255, 128)
 const qreal BaseScanImage::ZOOM_IN_FACTOR = 1.1;
 const qreal BaseScanImage::ZOOM_OUT_FACTOR = 0.9;
 
-BaseScanImage::BaseScanImage(QWidget *parent)
+BaseScanImage::BaseScanImage(QWidget* parent)
   : QLabel(parent)
   , m_state(DOING_NOTHING)
   , m_fit_type(FIT_BEST)
@@ -33,7 +33,7 @@ bool BaseScanImage::hasSelection()
   return (m_state == RUBBERBAND_COMPLETE);
 }
 
-void BaseScanImage::setImage(const QImage &image, const int resolution)
+void BaseScanImage::setImage(const QImage& image, const int resolution)
 {
   m_image = image;
   m_modified_image = image;
@@ -133,7 +133,7 @@ void BaseScanImage::scaleModifiedImage()
 {
   int w = int(m_modified_image.width() * m_scale_by);
   int h = int(m_modified_image.height() * m_scale_by);
-  m_scaled_image = m_modified_image.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  m_display_image = m_modified_image.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
   update();
 }
 
@@ -232,7 +232,7 @@ void BaseScanImage::setResolution(int resolution)
   m_resolution = resolution;
 }
 
-void BaseScanImage::mousePressEvent(QMouseEvent *event)
+void BaseScanImage::mousePressEvent(QMouseEvent* event)
 {
   if (!m_modified_image.isNull()) {
     m_mouse_moved = false;
@@ -308,7 +308,7 @@ void BaseScanImage::mousePressEvent(QMouseEvent *event)
   }       // end m_image check
 }
 
-void BaseScanImage::mouseMoveEvent(QMouseEvent *event)
+void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
 {
   if (!m_modified_image.isNull()) {
     int e_x = event->x();
@@ -466,7 +466,7 @@ void BaseScanImage::mouseMoveEvent(QMouseEvent *event)
   }
 }
 
-void BaseScanImage::mouseReleaseEvent(QMouseEvent *event)
+void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
 {
   if (!m_modified_image.isNull()) {
     int e_x = event->x();
@@ -516,10 +516,10 @@ void BaseScanImage::mouseReleaseEvent(QMouseEvent *event)
         (m_rb_start_y < m_rb_end_y ? m_rb_end_y - m_rb_start_y : m_rb_start_y - m_rb_end_y));
       m_stretched_band = m_rubber_band;
       m_logger->debug(tr("x:%1, y:%2, width:%3, height:%4")
-                        .arg(m_rubber_band.x())
-                        .arg(m_rubber_band.y())
-                        .arg(m_rubber_band.width())
-                        .arg(m_rubber_band.height()));
+                      .arg(m_rubber_band.x())
+                      .arg(m_rubber_band.y())
+                      .arg(m_rubber_band.width())
+                      .arg(m_rubber_band.height()));
       m_state = RUBBERBAND_COMPLETE;
       emit selected();
       update();
@@ -563,18 +563,18 @@ void BaseScanImage::mouseReleaseEvent(QMouseEvent *event)
     } // end of switch.
   }
 }
-void BaseScanImage::paintEvent(QPaintEvent *event)
+void BaseScanImage::paintEvent(QPaintEvent* event)
 {
   if (!m_modified_image.isNull()) {
     QLabel::paintEvent(event);
     QPainter painter(this);
-    painter.drawImage(m_scaled_image.rect().topLeft(), m_scaled_image);
+    painter.drawImage(m_display_image.rect().topLeft(), m_display_image);
     paintRubberBand(&painter);
     painter.end();
   }
 }
 
-void BaseScanImage::paintRubberBand(QPainter *painter)
+void BaseScanImage::paintRubberBand(QPainter* painter)
 {
   QPen pen;
   QBrush brush;
@@ -659,17 +659,17 @@ void BaseScanImage::paintRubberBand(QPainter *painter)
   } // end of switch
 }
 
-void BaseScanImage::enterEvent(QEvent *)
+void BaseScanImage::enterEvent(QEvent*)
 {
   m_is_inside = true;
 }
 
-void BaseScanImage::leaveEvent(QEvent *)
+void BaseScanImage::leaveEvent(QEvent*)
 {
   m_is_inside = false;
 }
 
-void BaseScanImage::wheelEvent(QWheelEvent *event)
+void BaseScanImage::wheelEvent(QWheelEvent* event)
 {
   int delta = event->delta();
 
@@ -756,7 +756,8 @@ void BaseScanImage::rotateBy(qreal angle)
     matrix.translate(center.x(), center.y());
     matrix.rotate(angle);
     return matrix;
-  }(m_modified_image.rect().center()));
+  }
+  (m_modified_image.rect().center()));
   setImage(rotated);
   fitBest();
   update();
