@@ -199,8 +199,8 @@ protected:
   void receiveOcrPageResult(const DocumentData& doc_data);
   void receiveOcrImageResult(int documentData, const QString& text);
   void receiveOcrImageRectResult(int documentData, const QString& text);
-  void receiveOcrActionFinished();
-  void receiveOcrActionCancelled();
+  void receiveModifyActionFinished();
+  void receiveModificationCancelled();
   void receivePageMoved(int start_row, int dest_row);
   void removeBoth(int page_no = -1);
   void removeImage(int page_no = -1);

@@ -16,8 +16,18 @@ namespace ImageConverter {
   \see matToImage
   \see isEquals
 */
-cv::Mat imageToMat(const QImage& image, bool clone_image_data)
+cv::Mat imageToMat(const QImage& image_in, bool clone_image_data)
 {
+  QImage image;
+
+  // hack to handle mono images.
+  if (image_in.format() == QImage::Format_Mono) {
+    image = image_in.convertToFormat(QImage::Format::Format_Grayscale8);
+
+  } else {
+    image = image_in;
+  }
+
   // Not all cases are covered.
   switch (image.format()) {
   // 8-bit, 4 channel
@@ -35,8 +45,8 @@ cv::Mat imageToMat(const QImage& image, bool clone_image_data)
   // 8-bit, 3 channel
   case QImage::Format_RGB32: {
     if (!clone_image_data) {
-      qWarning() << QString("ImageConverter::imageToMat() - Conversion requires cloning so we "
-                            "don't modify the original QImage data");
+      qWarning() << QObject::tr("ImageConverter::imageToMat() - Conversion requires cloning so we "
+                                "don't modify the original QImage data");
     }
 
     cv::Mat mat(image.height(),
@@ -55,8 +65,8 @@ cv::Mat imageToMat(const QImage& image, bool clone_image_data)
   // 8-bit, 3 channel
   case QImage::Format_RGB888: {
     if (!clone_image_data) {
-      qWarning() << QString("ImageConverter::imageToMat() - Conversion requires cloning so we "
-                            "don't modify the original QImage data");
+      qWarning() << QObject::tr("ImageConverter::imageToMat() - Conversion requires cloning so we "
+                                "don't modify the original QImage data");
     }
 
     QImage swapped = image.rgbSwapped();
@@ -70,6 +80,7 @@ cv::Mat imageToMat(const QImage& image, bool clone_image_data)
   }
 
   // 8-bit, 1 channel
+  //  case QImage::Format_Mono:
   case QImage::Format_Grayscale8:
   case QImage::Format_Indexed8: {
     cv::Mat mat(image.height(),
@@ -81,15 +92,15 @@ cv::Mat imageToMat(const QImage& image, bool clone_image_data)
     return (clone_image_data ? mat.clone() : mat);
   }
 
-    //  case QImage::Format_Grayscale8:
-    //    cv::Mat mat(image.height(),
-    //                image.width(),
-    //                CV_8UC1,)
+  //  case QImage::Format_Grayscale8:
+  //    cv::Mat mat(image.height(),
+  //                image.width(),
+  //                CV_8UC1,)
 
   default:
-    qWarning() << QString("ImageConverter::imageToMat() - QImage format not "
-                          "handled in switch : %1")
-                    .arg(image.format());
+    qWarning() << QObject::tr("ImageConverter::imageToMat() - QImage format not "
+                              "handled in switch : %1")
+               .arg(image.format());
     break;
   }
 
@@ -124,7 +135,7 @@ cv::Mat pixmapToMat(const QPixmap& pixmap, bool clone_image_data)
    \param pixmap - the OpenCV Mat to convert.
    \return a QImage object.
 */
-QImage matToImage(const cv::Mat &mat)
+QImage matToImage(const cv::Mat& mat)
 {
   switch (mat.type()) {
   // 8-bit, 4 channel
@@ -168,9 +179,9 @@ QImage matToImage(const cv::Mat &mat)
   }
 
   default:
-    qWarning() << QString("ASM::cvMatToQImage() - cv::Mat image type not "
-                          "handled in switch: %1")
-                    .arg(mat.type());
+    qWarning() << QObject::tr("ASM::cvMatToQImage() - cv::Mat image type not "
+                              "handled in switch: %1")
+               .arg(mat.type());
     break;
   }
 
@@ -187,15 +198,15 @@ QImage matToImage(const cv::Mat &mat)
    \param pixmap - the OpenCV Mat to convert.
    \return a QImage object.
 */
-QPixmap matToPixmap(const cv::Mat &mat)
+QPixmap matToPixmap(const cv::Mat& mat)
 {
   return QPixmap::fromImage(matToImage(mat));
 }
 
-PIX *imageToPix(const QImage &image)
+PIX* imageToPix(const QImage& image)
 {
-  PIX *pixs;
-  quint32 *lines;
+  PIX* pixs;
+  quint32* lines;
 
   QImage swapped = image.rgbSwapped();
   int height = swapped.height();
@@ -214,28 +225,28 @@ PIX *imageToPix(const QImage &image)
   pixSetXRes(pixs, Util::dpmToDpi(image.dotsPerMeterX()));
   pixSetYRes(pixs, Util::dpmToDpi(image.dotsPerMeterY()));
 
-  quint32 *datas = pixs->data;
+  quint32* datas = pixs->data;
 
   for (int y = 0; y < height; y++) {
     lines = datas + y * words_per_line;
-    QByteArray a((const char *) swapped.scanLine(y), bytes_per_line);
+    QByteArray a((const char*) swapped.scanLine(y), bytes_per_line);
 
     for (int j = 0; j < a.size(); j++) {
-      *((quint8 *) (lines) + j) = a[j];
+      *((quint8*)(lines) + j) = a[j];
     }
   }
 
   return pixEndianByteSwapNew(pixs);
 }
 
-QImage pixToImage(PIX *pixImage)
+QImage pixToImage(PIX* pixImage)
 {
   int width = pixGetWidth(pixImage);
   int height = pixGetHeight(pixImage);
   int depth = pixGetDepth(pixImage);
   int bytesPerLine = pixGetWpl(pixImage) * 4;
-  quint32 *s_data = pixGetData(pixEndianByteSwapNew(pixImage));
-  PixColormap *pix_color_map = pixImage->colormap;
+  quint32* s_data = pixGetData(pixEndianByteSwapNew(pixImage));
+  PixColormap* pix_color_map = pixImage->colormap;
 
   QImage::Format format;
 
@@ -249,14 +260,14 @@ QImage pixToImage(PIX *pixImage)
     format = QImage::Format_RGB32;
   }
 
-  QImage result((uchar *) s_data, width, height, bytesPerLine, format);
+  QImage result((uchar*) s_data, width, height, bytesPerLine, format);
 
   result.setDotsPerMeterX(Util::dpiToDpm(pixImage->xres));
   result.setDotsPerMeterY(Util::dpiToDpm(pixImage->yres));
 
   if (pix_color_map != nullptr) {
     qint32 colors_allocated = pix_color_map->nalloc;
-    auto *pix_ct_array = static_cast<RGBA_QUAD *>(pix_color_map->array);
+    auto* pix_ct_array = static_cast<RGBA_QUAD*>(pix_color_map->array);
 
     QVector<QRgb> color_table(colors_allocated);
 
@@ -337,7 +348,7 @@ bool isEqual(const QImage& img1, const QImage& img2)
    \param pix2 - a Leptonica PIX object.
    \return true if both images are the same, otherwise false.
 */
-bool isEqual(PIX *pix1, PIX *pix2)
+bool isEqual(PIX* pix1, PIX* pix2)
 {
   int same;
   int result;

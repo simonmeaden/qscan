@@ -9,7 +9,6 @@ OcrFrame::OcrFrame(QWidget* parent)
   : QFrame(parent)
   , m_scan_list(nullptr)
   , m_image_display(nullptr)
-  , m_image_changed(false)
   , m_change_type(None)
 {
   initGui();
@@ -66,9 +65,8 @@ void OcrFrame::setData(int page_no, const QImage& image, const DocumentData& doc
 
   if (image.format() == QImage::Format_Mono || image.format() == QImage::Format_Grayscale8) {
     m_binarise_btn->setEnabled(false);
+    enableCleanImageBtns(true);
   }
-
-  enableCleanImageBtns(doc_data->inverted());
 }
 
 void OcrFrame::setOcrImage(int page_no, const QImage& image)
@@ -100,12 +98,17 @@ QList<StyledString> OcrFrame::texts()
 
 bool OcrFrame::imageChanged() const
 {
-  return m_image_changed;
+  return m_image_display->imageChanged();
+}
+
+bool OcrFrame::hasText()
+{
+  return (m_scan_list->size() > 0);
 }
 
 QImage OcrFrame::modifiedImage()
 {
-  return m_image_display->modifiedImage();
+  return m_image_display->currentImage();
 }
 
 int OcrFrame::pageNumber()
@@ -222,8 +225,7 @@ QFrame* OcrFrame::initDenoiseSliderFrame()
   font.setPixelSize(40);
   m_denoise_filter_lbl->setFont(font);
   m_denoise_filter_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignCenter);
-  denoisevalue_layout->addWidget(m_denoise_filter_lbl, row + 1, 0);
-  row++;
+  denoisevalue_layout->addWidget(m_denoise_filter_lbl, row++, 1);
 
   m_denoise_template_slider = new QwtSlider(Qt::Vertical, this);
   m_denoise_template_slider->setScalePosition(QwtSlider::LeadingScale);
@@ -235,8 +237,7 @@ QFrame* OcrFrame::initDenoiseSliderFrame()
   m_denoise_template_lbl = new QLabel(QString::number(m_denoise_template_slider->value()), this);
   m_denoise_template_lbl->setFont(font);
   m_denoise_template_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignCenter);
-  denoisevalue_layout->addWidget(m_denoise_template_lbl, row + 1, 0);
-  row++;
+  denoisevalue_layout->addWidget(m_denoise_template_lbl, row++, 1);
 
   m_denoise_search_slider = new QwtSlider(Qt::Vertical, this);
   m_denoise_search_slider->setScalePosition(QwtSlider::LeadingScale);
@@ -248,8 +249,7 @@ QFrame* OcrFrame::initDenoiseSliderFrame()
   m_denoise_search_lbl = new QLabel(QString::number(m_denoise_search_slider->value()), this);
   m_denoise_search_lbl->setFont(font);
   m_denoise_search_lbl->setAlignment(Qt::AlignHCenter | Qt::AlignCenter);
-  denoisevalue_layout->addWidget(m_denoise_search_lbl, row + 1, 0);
-  row++;
+  denoisevalue_layout->addWidget(m_denoise_search_lbl, row++, 1);
 
   auto* apply_value_btn = new QPushButton(tr("Apply"), this);
   connect(apply_value_btn, &QPushButton::clicked, this, &OcrFrame::applyValue);
@@ -277,6 +277,8 @@ void OcrFrame::initGui()
   m_scan_list = new ScanList(this);
   connect(m_scan_list, &ScanList::clicked, this, &OcrFrame::scanListWasClicked);
   connect(m_scan_list, &ScanList::doubleClicked, this, &OcrFrame::scanListWasDoubleClicked);
+  connect(m_scan_list, &ScanList::dataHasChanged, this, &OcrFrame::scanListDataChanged);
+  connect(m_scan_list, &ScanList::imageHasChanged, this, &OcrFrame::scanListDataChanged);
   layout->addWidget(m_scan_list, 0, 0);
 
   auto* stacked_frame = new QFrame(this);
@@ -326,7 +328,7 @@ void OcrFrame::initGui()
   QFrame* dblvalue_frame = initDoubleSliderFrame();
   m_dblvalue_stack = m_ctl_stack->addWidget(dblvalue_frame);
 
-  QFrame* denoisevalue_frame = initDoubleSliderFrame();
+  QFrame* denoisevalue_frame = initDenoiseSliderFrame();
   m_denoise_stack = m_ctl_stack->addWidget(denoisevalue_frame);
 
   auto* btn_box = new QFrame(this);
@@ -348,17 +350,18 @@ void OcrFrame::initGui()
 
     btn_layout->addStretch(1);
 
-    move_sel_to_doc_btn = new QPushButton(tr("Move to Document"), this);
-    move_sel_to_doc_btn->setEnabled(false);
-    move_sel_to_doc_btn->setToolTip(tr("Set as an internal Document Image."));
-    connect(move_sel_to_doc_btn, &QPushButton::clicked, this, &OcrFrame::moveToDocument);
-    btn_layout->addWidget(move_sel_to_doc_btn);
+    m_move_sel_to_doc_btn = new QPushButton(tr("Move to Document"), this);
+    m_move_sel_to_doc_btn->setEnabled(false);
+    m_move_sel_to_doc_btn->setToolTip(tr("Set as an internal Document Image,\n"
+                                         "rather than an OCR image."));
+    connect(m_move_sel_to_doc_btn, &QPushButton::clicked, this, &OcrFrame::moveToDocument);
+    btn_layout->addWidget(m_move_sel_to_doc_btn);
 
-    rem_selection_btn = new QPushButton(tr("Remove from Document"), this);
-    rem_selection_btn->setEnabled(false);
-    rem_selection_btn->setToolTip(tr("Remove Image/Text from Document."));
-    connect(rem_selection_btn, &QPushButton::clicked, this, &OcrFrame::removeItemFromDocument);
-    btn_layout->addWidget(rem_selection_btn);
+    m_rem_selection_btn = new QPushButton(tr("Remove from Document"), this);
+    m_rem_selection_btn->setEnabled(false);
+    m_rem_selection_btn->setToolTip(tr("Remove Image/Text from Document."));
+    connect(m_rem_selection_btn, &QPushButton::clicked, this, &OcrFrame::removeItemFromDocument);
+    btn_layout->addWidget(m_rem_selection_btn);
 
     btn_layout->addStretch(1);
 
@@ -374,26 +377,27 @@ void OcrFrame::initGui()
     connect(m_crop_btn, &QPushButton::clicked, m_image_display, &OcrImage::cropToSelection);
     btn_layout->addWidget(m_crop_btn);
 
-    m_binarise_btn = new QPushButton(tr("Binarise"), this);
+    m_binarise_btn = new QPushButton(tr("Convert to Greyscale"), this);
     m_binarise_btn->setToolTip(tr("Binarisation turns the image to blackl and white.\n"
                                   "OCR text is generally better on black and white images."));
     connect(m_binarise_btn, &QPushButton::clicked, this, &OcrFrame::binarise);
     btn_layout->addWidget(m_binarise_btn);
 
-    auto* invert_btn = new QPushButton(tr("Invert Image"), this);
-    invert_btn->setToolTip(tr("Converts from black text on white to white on black and back."));
-    connect(invert_btn, &QPushButton::clicked, this, &OcrFrame::invert);
-    btn_layout->addWidget(invert_btn);
+    m_invert_btn = new QPushButton(tr("Invert Image"), this);
+    m_invert_btn->setEnabled(false);
+    m_invert_btn->setToolTip(tr("Converts from black text on white to white on black and back."));
+    connect(m_invert_btn, &QPushButton::clicked, this, &OcrFrame::invert);
+    btn_layout->addWidget(m_invert_btn);
 
-    denoise_btn = new QPushButton(tr("De-noise"), this);
-    denoise_btn->setToolTip(tr("Noise removal attempts to clean up the image."));
-    connect(denoise_btn, &QPushButton::clicked, this, &OcrFrame::denoise);
-    btn_layout->addWidget(denoise_btn);
+    m_denoise_btn = new QPushButton(tr("De-noise"), this);
+    m_denoise_btn->setToolTip(tr("Noise removal attempts to clean up the image."));
+    connect(m_denoise_btn, &QPushButton::clicked, this, &OcrFrame::denoise);
+    btn_layout->addWidget(m_denoise_btn);
 
-    dewarp_btn = new QPushButton(tr("De-warp"), this);
-    dewarp_btn->setToolTip(tr("Straigntens lines that are curved."));
-    connect(dewarp_btn, &QPushButton::clicked, this, &OcrFrame::dewarp);
-    btn_layout->addWidget(dewarp_btn);
+    m_dewarp_btn = new QPushButton(tr("De-warp"), this);
+    m_dewarp_btn->setToolTip(tr("Straigntens lines that are curved."));
+    connect(m_dewarp_btn, &QPushButton::clicked, this, &OcrFrame::dewarp);
+    btn_layout->addWidget(m_dewarp_btn);
 
     auto* rotate_cw_btn = new QPushButton(tr("Rotate CW by 90°"), this);
     rotate_cw_btn->setToolTip(tr("Rotate image clockwise by 90°."));
@@ -410,15 +414,15 @@ void OcrFrame::initGui()
     connect(rotate_by_180_btn, &QPushButton::clicked, this, &OcrFrame::rotate180);
     btn_layout->addWidget(rotate_by_180_btn);
 
-    auto* deskew_btn = new QPushButton(tr("De-skew"), this);
-    deskew_btn->setToolTip(tr("Allows rotation non-horizontal lines.\n"
-                              "To use click deskew button, select a start point\n"
-                              "using your mouse, then drag a line parallel\n"
-                              "to the skewed text, holding down the left mouse button.\n"
-                              "The text will automatically be rotated by the\n"
-                              "correct amount."));
-    connect(deskew_btn, &QPushButton::clicked, this, &OcrFrame::deskew);
-    btn_layout->addWidget(deskew_btn);
+    m_deskew_btn = new QPushButton(tr("De-skew"), this);
+    m_deskew_btn->setToolTip(tr("Allows rotation non-horizontal lines.\n"
+                                "To use click deskew button, select a start point\n"
+                                "using your mouse, then drag a line parallel\n"
+                                "to the skewed text, holding down the left mouse button.\n"
+                                "The text will automatically be rotated by the\n"
+                                "correct amount."));
+    connect(m_deskew_btn, &QPushButton::clicked, this, &OcrFrame::deskew);
+    btn_layout->addWidget(m_deskew_btn);
 
     auto* rescale_btn = new QPushButton(tr("Rescale"), this);
     rescale_btn->setToolTip(tr("Increase the DPI of the image."));
@@ -432,26 +436,34 @@ void OcrFrame::initGui()
 
     btn_layout->addStretch(1);
 
-    m_save_txt_btn = new QPushButton(tr("Save Text"), this);
+    m_save_txt_btn = new QPushButton(tr("Save Data"), this);
     m_save_txt_btn->setEnabled(false);
-    m_save_txt_btn->setToolTip(tr("Save the text."));
+    m_save_txt_btn->setToolTip(tr("Save the text and document images."));
     connect(m_save_txt_btn, &QPushButton::clicked, this, &OcrFrame::saveData);
     btn_layout->addWidget(m_save_txt_btn);
 
-    auto* save_img_btn = new QPushButton(tr("Save Image"), this);
-    save_img_btn->setToolTip(tr("Save the image."));
-    connect(save_img_btn, &QPushButton::clicked, this, &OcrFrame::saveCurrentStateImage);
-    btn_layout->addWidget(save_img_btn);
+    m_save_img_btn = new QPushButton(tr("Save OCR Image"), this);
+    m_save_img_btn->setToolTip(tr("Save the OCR image for later."));
+    connect(m_save_img_btn, &QPushButton::clicked, this, &OcrFrame::saveCurrentStateImage);
+    btn_layout->addWidget(m_save_img_btn);
 
-    auto* discard_btn = new QPushButton(tr("Discard changes"), this);
-    discard_btn->setToolTip(tr("Closes the dialog, discarding any changes."));
-    connect(discard_btn, &QPushButton::clicked, this, &OcrFrame::discard);
-    btn_layout->addWidget(discard_btn);
+    m_close_and_save_btn = new QPushButton(tr("Close and Save"), this);
+    m_close_and_save_btn->setToolTip(tr("Closes the dialog, saving any changes."));
+    connect(m_close_and_save_btn, &QPushButton::clicked, this, &OcrFrame::saveData);
+    connect(m_close_and_save_btn, &QPushButton::clicked, this, &OcrFrame::saveCurrentStateImage);
+    connect(m_close_and_save_btn, &QPushButton::clicked, this, &OcrFrame::close);
+    btn_layout->addWidget(m_close_and_save_btn);
 
-    auto* close_btn = new QPushButton(tr("Close and Save"), this);
-    close_btn->setToolTip(tr("Closes the dialog, discarding any changes."));
+    auto* close_btn = new QPushButton(tr("Close without save"), this);
+    close_btn->setToolTip(tr("Closes the modification page but doesn't save data."));
     connect(close_btn, &QPushButton::clicked, this, &OcrFrame::close);
     btn_layout->addWidget(close_btn);
+
+    auto* completed_btn = new QPushButton(tr("OCR Image is complete"), this);
+    completed_btn->setToolTip(tr("You have finished work on the OCR image\n"
+                                 "and you can delete the image."));
+    connect(completed_btn, &QPushButton::clicked, this, &OcrFrame::close);
+    btn_layout->addWidget(completed_btn);
 
     btn_layout->addStretch(1);
 
@@ -472,14 +484,14 @@ void OcrFrame::initGui()
 
 void OcrFrame::requestOcr()
 {
-  QImage image = m_image_display->modifiedImage();
+  QImage image = m_image_display->currentImage();
   emit sendOcrRequest(m_page_no, image);
 }
 
 void OcrFrame::requestOcrOnSelection()
 {
   QRect copy_rect = m_image_display->selection();
-  QImage image = m_image_display->modifiedImage();
+  QImage image = m_image_display->currentImage();
   QImage cropped = image.copy(copy_rect);
   QFileInfo info("rect_image.png");
   cropped.save(info.filePath(), "PNG");
@@ -498,24 +510,21 @@ void OcrFrame::setSelected()
 {
   m_crop_btn->setEnabled(true);
   m_clr_to_back_btn->setEnabled(true);
-  m_save_txt_btn->setEnabled(true);
   m_ocr_sel_btn->setEnabled(true);
-  move_sel_to_doc_btn->setEnabled(true);
+  m_move_sel_to_doc_btn->setEnabled(true);
 }
 
 void OcrFrame::setUnselected()
 {
   m_crop_btn->setEnabled(false);
   m_clr_to_back_btn->setEnabled(false);
-  m_save_txt_btn->setEnabled(false);
   m_ocr_sel_btn->setEnabled(false);
-  move_sel_to_doc_btn->setEnabled(false);
+  m_move_sel_to_doc_btn->setEnabled(false);
 }
 
 void OcrFrame::crop()
 {
   m_image_display->cropToSelection();
-  m_image_changed = true;
 }
 
 void OcrFrame::binarise()
@@ -528,7 +537,6 @@ void OcrFrame::binarise()
 void OcrFrame::invert()
 {
   m_image_display->invert();
-  m_image_changed = true;
   enableCleanImageBtns(true);
   m_doc_data->setInverted(m_image_display->isInverted());
 }
@@ -548,25 +556,21 @@ void OcrFrame::dewarp()
 void OcrFrame::deskew()
 {
   m_image_display->deskew();
-  m_image_changed = true;
 }
 
 void OcrFrame::rotate180()
 {
   m_image_display->rotate180();
-  m_image_changed = true;
 }
 
 void OcrFrame::rotateCW()
 {
   m_image_display->rotateCW();
-  m_image_changed = true;
 }
 
 void OcrFrame::rotateCCW()
 {
   m_image_display->rotateCCW();
-  m_image_changed = true;
 }
 
 void OcrFrame::rescale()
@@ -587,10 +591,10 @@ void OcrFrame::moveToDocument()
 void OcrFrame::scanListWasClicked(const QModelIndex& /*index*/)
 {
   if (!m_scan_list->selectionModel()->selection().empty()) {
-    rem_selection_btn->setEnabled(true);
+    m_rem_selection_btn->setEnabled(true);
 
   } else {
-    rem_selection_btn->setEnabled(false);
+    m_rem_selection_btn->setEnabled(false);
   }
 }
 
@@ -633,7 +637,7 @@ void OcrFrame::removeItemFromDocument()
     auto index = m_scan_list->selectionModel()->currentIndex();
 
     if (index.isValid()) {
-      m_scan_list->model()->removeRow(index.row());
+      m_scan_list->removeDataRow(index);
     }
   }
 }
@@ -645,36 +649,40 @@ void OcrFrame::saveData()
 
 void OcrFrame::saveCurrentStateImage()
 {
-  emit saveModifiedImage(m_page_no, m_image_display->modifiedImage());
-  m_image_changed = false;
+  //  emit saveModifiedImage(m_page_no, m_image_display->currentImage());
+  m_image_display->setImageChanged(false);
+  emit reject();
 }
 
-void OcrFrame::discard()
-{
-  if (m_image_display->hasChanges() || m_scan_list->hasChanges()) {
-    int result = QMessageBox::warning(this,
-                                      tr("Discaring Changes"),
-                                      tr("You are about to discard any changes you have made\n"
-                                         "and quit the dialog.\n"
-                                         "This cannot be undone\n"
-                                         "Are you sure?"),
-                                      QMessageBox::Yes | QMessageBox::No,
-                                      QMessageBox::No);
+//void OcrFrame::discard()
+//{
+//  if (m_image_display->hasImageChanges() || m_scan_list->hasDataChanges()) {
+//    int result = QMessageBox::warning(this,
+//                                      tr("Discaring Changes"),
+//                                      tr("You are about to discard any changes you have made\n"
+//                                         "and quit the dialog.\n"
+//                                         "This cannot be undone\n"
+//                                         "Are you sure?"),
+//                                      QMessageBox::Yes | QMessageBox::No,
+//                                      QMessageBox::No);
 
-    if (result == QMessageBox::Yes) {
-      m_scan_list->dumpData();
-      emit reject();
-    }
+//    if (result == QMessageBox::Yes) {
+//      m_image_display->setImageChanged(false);
+//      m_scan_list->dumpData();
+//      emit reject();
+//    }
 
-  } else {
-    m_scan_list->dumpData();
-    emit reject();
-  }
-}
+//  } else {
+//    m_image_display->setImageChanged(false);
+//    m_scan_list->dumpData();
+//    emit reject();
+//  }
+//}
 
 void OcrFrame::acceptChanges()
 {
   m_image_display->acceptChanges();
+  m_ctl_stack->setCurrentIndex(m_btn_stack);
   emit accept();
 }
 
@@ -696,20 +704,48 @@ void OcrFrame::undoChanges()
 
 void OcrFrame::close()
 {
-  int result = QMessageBox::warning(this,
-                                    tr("Save and Update"),
-                                    tr("You are about to save any changes you have made\n"
-                                       "including modified images and text."
-                                       "This cannot be undone\n"
-                                       "Are you sure?"),
-                                    QMessageBox::Yes | QMessageBox::No,
-                                    QMessageBox::No);
+  if (m_scan_list->hasDataChanges()) {
+    int result = QMessageBox::warning(this,
+                                      tr("Close the modification page"),
+                                      tr("You are about to leave the modification page.\n"
+                                         "THERE ARE UNSAVED CHANGES. THIS CANNOT BE UNDONE.\n"
+                                         "Are you sure?"),
+                                      QMessageBox::Yes | QMessageBox::No,
+                                      QMessageBox::No);
 
-  if (result == QMessageBox::Yes) {
-    saveCurrentStateImage();
-    saveData();
-    m_doc_data->setInverted(m_image_display->isInverted());
-    emit accept();
+    if (result == QMessageBox::Yes) {
+      //      saveCurrentStateImage();
+      //      saveData();
+      //      m_doc_data->setInverted(m_image_display->isInverted());
+      emit reject();
+      return;
+    }
+  }
+
+  emit reject();
+}
+
+void OcrFrame::scanListDataChanged()
+{
+  if (m_scan_list->hasDataChanges()) {
+    m_save_txt_btn->setEnabled(true);
+    m_close_and_save_btn->setEnabled(true);
+
+  } else {
+    m_save_txt_btn->setEnabled(false);
+
+    if (!m_image_display->hasImageChanges()) {
+      m_close_and_save_btn->setEnabled(false);
+    }
+  }
+}
+
+void OcrFrame::ocrImageChanged(bool changed)
+{
+  m_save_img_btn->setEnabled(changed);
+
+  if (!m_scan_list->hasDataChanges()) {
+    m_close_and_save_btn->setEnabled(changed);
   }
 }
 
@@ -730,8 +766,8 @@ void OcrFrame::applyValue()
 
   case Denoise: {
     int filter_value = int(m_denoise_filter_slider->value());
-    int template_value = int(m_denoise_template_slider->value());
-    int search_value = int(m_denoise_search_slider->value());
+    int template_value = Util::makeOdd(m_denoise_template_slider->value());
+    int search_value = Util::makeOdd(m_denoise_search_slider->value());
     m_image_display->applyDenoise(filter_value, template_value, search_value);
 
   }
@@ -796,19 +832,20 @@ void OcrFrame::setCurrentChangeState()
 
   case Denoise:
 
-    //    m_denoise_template_slider->setScaleEngine(new QwtLinearScaleEngine());
+    m_denoise_filter_slider->setScaleEngine(new QwtLinearScaleEngine());
     //    m_denoise_template_slider->setScale(QwtScaleDiv(0, 255, minor_ticks, medium_ticks, major_ticks));
-    m_denoise_filter_slider->setValid(OcrImage::BASE_FILTER);
+    m_denoise_filter_slider->setValue(OcrImage::BASE_FILTER);
+    m_denoise_filter_slider->setScale(1, 29);
     m_denoise_filter_slider->setSingleSteps(1);
     m_denoise_filter_slider->setPageSteps(1);
 
     m_denoise_template_slider->setValue(OcrImage::BASE_TEMPLATE);
     m_denoise_template_slider->setSingleSteps(2);
-    m_denoise_template_slider->setPageSteps(2);
+    m_denoise_template_slider->setPageSteps(10);
 
-    m_denoise_search_slider->setValid(OcrImage::BASE_SEARCH);
+    m_denoise_search_slider->setValue(OcrImage::BASE_SEARCH);
     m_denoise_search_slider->setSingleSteps(2);
-    m_denoise_search_slider->setPageSteps(2);
+    m_denoise_search_slider->setPageSteps(10);
 
     m_ctl_stack->setCurrentIndex(m_denoise_stack);
     setMessageLabel(tr("Denoising image"));
@@ -823,17 +860,17 @@ void OcrFrame::setIntValueLabel(qreal value)
 
 void OcrFrame::setDoubleValueLabel(qreal value)
 {
-  m_dblvalue_lbl->setText(QString("%1").arg(value, 0, 'g', 2));
+  m_dblvalue_lbl->setText(tr("%1").arg(value, 0, 'g', 2));
 }
 
 void OcrFrame::setDenoiseTemplateLabel(qreal value)
 {
-  m_denoise_template_lbl->setText(QString::number(int(value)));
+  m_denoise_template_lbl->setText(QString::number(Util::makeOdd(value)));
 }
 
 void OcrFrame::setDenoiseSearchLabel(qreal value)
 {
-  m_denoise_search_lbl->setText(QString::number(int(value)));
+  m_denoise_search_lbl->setText(QString::number(Util::makeOdd(value)));
 }
 
 void OcrFrame::setDenoiseFilterLabel(qreal value)
@@ -859,9 +896,10 @@ void OcrFrame::enableBinarise()
 
 void OcrFrame::enableCleanImageBtns(bool enable)
 {
-  denoise_btn->setEnabled(enable);
-  dewarp_btn->setEnabled(enable);
-  //  deskew_btn->setEnabled(enable);
+  m_invert_btn->setEnabled(enable);
+  m_denoise_btn->setEnabled(enable);
+  m_dewarp_btn->setEnabled(enable);
+  m_deskew_btn->setEnabled(enable);
 }
 
 void OcrFrame::imageSizeHasChanged(int width, int height, int xres, int yres)

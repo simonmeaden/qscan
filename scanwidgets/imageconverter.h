@@ -56,18 +56,18 @@
 */
 namespace ImageConverter {
 
-cv::Mat imageToMat(const QImage& image, bool clone_image_data = true);
-QImage matToImage(const cv::Mat &mat);
+cv::Mat imageToMat(const QImage& image_in, bool clone_image_data = true);
+QImage matToImage(const cv::Mat& mat);
 
-cv::Mat pixmapToMat(const QPixmap &pixmap, bool clone_image_data = true);
-QPixmap matToPixmap(const cv::Mat &mat);
+cv::Mat pixmapToMat(const QPixmap& pixmap, bool clone_image_data = true);
+QPixmap matToPixmap(const cv::Mat& mat);
 
-PIX *imageToPix(const QImage &image);
-QImage pixToImage(PIX *pixImage);
+PIX* imageToPix(const QImage& image);
+QImage pixToImage(PIX* pixImage);
 
 bool isEqual(const cv::Mat& mat1, const cv::Mat& mat2);
-bool isEqual(const QImage &img1, const QImage &img2);
-bool isEqual(PIX *img1, PIX *img2);
+bool isEqual(const QImage& img1, const QImage& img2);
+bool isEqual(PIX* img1, PIX* img2);
 
 // QImage fromIplImage(const IplImage* iplImg);
 // IplImage* toIplImage(const QImage& image);

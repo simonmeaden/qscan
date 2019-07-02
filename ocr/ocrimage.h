@@ -32,6 +32,7 @@ public:
 
   void binarise();
   void applyThreshold(int value);
+  void invert();
 
   void rescale();
   //  void revertRescale();
@@ -55,11 +56,16 @@ public:
   static const QString RESCALE;
   static const QString DENOISE;
   static const QString DESKEW;
+  static const QString CLEAR;
+  static const QString CROP;
 
   bool isInverted() const;
   void setInverted(bool isInverted);
 
-  bool hasChanges();
+  bool hasImageChanges();
+
+  bool imageChanged() const;
+  void setImageChanged(bool image_changed);
 
 signals:
   void enableModification();
@@ -68,6 +74,7 @@ signals:
 protected:
   QImage m_temp_image; // temporary image for display purposes.
   QMap<QString, QImage> m_undo_list;
+  bool m_image_changed{};
 
 
   void scaleTemporaryImage();

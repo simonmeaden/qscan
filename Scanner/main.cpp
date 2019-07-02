@@ -84,18 +84,22 @@ int main(int argc, char* argv[])
 
   MainWindow w;
 
-  //#if defined(LOGGER_ENABLE)
-  //  w.setLogTextEdit(text_edit);
-  //#endif
+  QTranslator translator_gb, translator_us;
+
+  translator_us.load("Scanner_en_US");
+  translator_us.load("ocr_en_US");
+  translator_us.load("scanwidgets_en_US");
+  translator_us.load("qscan_en_US");
+  a.installTranslator(&translator_us);
+
+  translator_gb.load("Scanner_en_GB");
+  translator_gb.load("ocr_en_GB");
+  translator_gb.load("scanwidgets_en_GB");
+  translator_gb.load("qscan_en_GB");
+  a.installTranslator(&translator_gb);
 
   w.show();
   int res = QApplication::exec();
 
-  //#if defined(LOGGER_ENABLE)
-  //  Logger::rootLogger()->removeAppender(p_writer);
-  //  delete log_io_device;
-  //  delete stream;
-  //  delete text_edit;
-  //#endif
   return res;
 }

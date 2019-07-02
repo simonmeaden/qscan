@@ -27,6 +27,7 @@ void ScanList::appendText(const StyledString& text)
     QModelIndex index = m_model->index(row, 0, QModelIndex());
     m_model->setData(index, QVariant::fromValue<QString>(text), Qt::EditRole);
     m_changes = true;
+    emit dataHasChanged();
   }
 }
 
@@ -38,6 +39,7 @@ int ScanList::appendImage(const QImage& image)
     QModelIndex index = m_model->index(row, 0);
     m_model->setData(index, image, Qt::EditRole);
     m_changes = true;
+    emit dataHasChanged();
     return row;
   }
 
@@ -56,6 +58,7 @@ void ScanList::replaceText(int row, const StyledString& text)
   if (index.isValid()) {
     m_model->setData(index, text);
     m_changes = true;
+    emit dataHasChanged();
   }
 }
 
@@ -66,6 +69,16 @@ void ScanList::replaceImage(int row, const QImage& image)
   if (index.isValid()) {
     m_model->setData(index, image);
     m_changes = true;
+    emit dataHasChanged();
+  }
+}
+
+void ScanList::removeDataRow(const QModelIndex index)
+{
+  if (index.isValid()) {
+    m_model->removeRows(index.row(), 1);
+    m_changes = true;
+    emit dataHasChanged();
   }
 }
 
@@ -96,6 +109,7 @@ void ScanList::setText(const StyledString& text)
   const QModelIndex index = m_model->index(0, 0);
   m_model->setData(index, text, Qt::EditRole);
   m_changes = false;
+  emit dataHasChanged();
 }
 
 void ScanList::setText(const QStringList& list)
@@ -107,6 +121,7 @@ void ScanList::setText(const QStringList& list)
     const QModelIndex index = m_model->index(row, 0);
     m_model->setData(index, list.at(row), Qt::EditRole);
     m_changes = false;
+    emit dataHasChanged();
   }
 }
 
@@ -117,6 +132,7 @@ int ScanList::setImage(const QImage& image)
   const QModelIndex index = m_model->index(0, 0);
   m_model->setData(index, image, Qt::EditRole);
   m_changes = false;
+  emit dataHasChanged();
   return index.row();
 }
 
@@ -124,9 +140,10 @@ void ScanList::dumpData()
 {
   m_model->clearData();
   m_changes = false;
+  emit dataHasChanged();
 }
 
-bool ScanList::hasChanges()
+bool ScanList::hasDataChanges()
 {
   return m_changes;
 }
@@ -139,6 +156,11 @@ QList<StyledString> ScanList::texts()
 QList<QImage> ScanList::images()
 {
   return m_model->imageList();
+}
+
+int ScanList::size()
+{
+  return m_model->rowCount();
 }
 
 void ScanList::contextMenuEvent(QContextMenuEvent* /*event*/)

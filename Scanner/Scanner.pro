@@ -35,6 +35,11 @@ HEADERS += \
 
 FORMS +=
 
+TRANSLATIONS += \
+  ../translations/Scanner_en-GB.ts \
+  ../translations/Scanner_en-US.ts
+
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin

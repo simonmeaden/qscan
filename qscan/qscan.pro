@@ -63,6 +63,11 @@ win32:win64 {
         win/twainlibrary.h
 }
 
+TRANSLATIONS += \
+  ../translations/qscan_en-GB.ts \
+  ../translations/qscan_en-US.ts
+
+
 unix|win32: LIBS += -llog4qt
 
 DISTFILES += \

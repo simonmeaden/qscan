@@ -105,7 +105,7 @@ void SaneWorker::scan(ScanDevice* device)
 
     case SANE_FRAME_GRAY:
       if (parameters.depth == 1) {
-        format = QImage::Format_Mono;
+        format = QImage::Format_Grayscale8;
 
         //          if (parameters.lines < 0) {
         //            must_buffer = true;

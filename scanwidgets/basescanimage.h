@@ -36,11 +36,10 @@ public:
   void rotateByAngle();
   void rotateByEdge();
   void rotateBy(qreal angle);
-  void invert();
 
   virtual void setImage(const QImage& image, const int resolution = 0);
   QImage image();
-  QImage modifiedImage();
+  QImage currentImage();
   QImage selectedSubImage();
 
   void zoomIn();
@@ -54,6 +53,7 @@ public:
 
 signals:
   void imageIsLoaded();
+  void imageHasChanged(bool);
   void adjustScrollbar(qreal);
   void selected();
   void unselected();
@@ -96,7 +96,7 @@ protected:
   FitType m_fit_type;
   QImage m_image; // original unmodified image.
   //  QImage m_scaled_image;
-  QImage m_modified_image; // image that has been modified and accepted.
+  QImage m_current_image; // image that has been modified and accepted.
   QImage m_display_image; // scaled image for display purposes.
   QRect m_rubber_band;
   QRect m_stretched_band;
@@ -114,6 +114,7 @@ protected:
   bool m_def_crop_set;
   bool m_is_inside;
   bool m_inverted;
+  bool m_image_changed;
 
   void mousePressEvent(QMouseEvent* event) override;
   void mouseReleaseEvent(QMouseEvent* event) override;

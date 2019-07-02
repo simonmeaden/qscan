@@ -131,4 +131,14 @@ QString cleanText(const QString& text)
   return text;
 }
 
+int makeOdd(qreal value)
+{
+  return ((int((int(value) - 1) / 2.0) * 2) + 1);
+}
+
+int makeEven(qreal value)
+{
+  return int(int(int(value) / 2.0) * 2.0);
+}
+
 } // namespace Util

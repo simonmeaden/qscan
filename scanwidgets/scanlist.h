@@ -84,6 +84,8 @@ public:
   void replaceText(int row, const StyledString& text);
   void replaceImage(int row, const QImage& image);
 
+  void removeDataRow(const QModelIndex index);
+
   void setData(const QMap<int, QVariant>& data);
   void setText(const QString& texts);
   void setText(const StyledString& texts);
@@ -92,10 +94,16 @@ public:
 
   void dumpData();
 
-  bool hasChanges();
+  bool hasDataChanges();
 
   QList<StyledString> texts();
   QList<QImage> images();
+
+  int size();
+
+signals:
+  void dataHasChanged();
+  void imageHasChanged();
 
 protected:
   ScanListModel* m_model;

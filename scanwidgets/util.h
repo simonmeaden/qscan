@@ -12,6 +12,9 @@ qreal round(qreal value, quint8 places);
 int dpiToDpm(int value);
 int dpmToDpi(int value);
 
+int makeOdd(qreal value);
+int makeEven(qreal value);
+
 QString cleanText(const QString& text);
 
 static const QChar LF(0x000A);

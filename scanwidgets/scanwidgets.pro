@@ -55,6 +55,10 @@ HEADERS += \
         style.h \
         util.h
 
+TRANSLATIONS += \
+  ../translations/scanwidgets_en-GB.ts \
+  ../translations/scanwidgets_en-US.ts
+
 unix {
     target.path = /usr/lib
     INSTALLS += target

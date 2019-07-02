@@ -41,6 +41,10 @@ HEADERS += \
         tesstools.h \
         texteditdialog.h
 
+TRANSLATIONS += \
+  ../translations/ocr_en-GB.ts \
+  ../translations/ocr_en-US.ts
+
 unix {
     target.path = /usr/lib
     INSTALLS += target

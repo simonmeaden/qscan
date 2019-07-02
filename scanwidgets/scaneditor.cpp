@@ -257,8 +257,8 @@ void ScanEditor::initGui()
   connect(m_ocr_frame, &OcrFrame::saveModifiedData, this, &ScanEditor::saveModifiedData);
   connect(m_ocr_frame, &OcrFrame::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
   connect(m_ocr_frame, &OcrFrame::saveSelectedDocumentImage, this, &ScanEditor::saveDocumentImage);
-  connect(m_ocr_frame, &OcrFrame::accept, this, &ScanEditor::receiveOcrActionFinished);
-  connect(m_ocr_frame, &OcrFrame::reject, this, &ScanEditor::receiveOcrActionCancelled);
+  connect(m_ocr_frame, &OcrFrame::accept, this, &ScanEditor::receiveModifyActionFinished);
+  connect(m_ocr_frame, &OcrFrame::reject, this, &ScanEditor::receiveModificationCancelled);
   m_ocr_stack_id = m_main_layout->addWidget(m_ocr_frame);
 
   m_scroller = new QScrollArea(this);
@@ -554,7 +554,7 @@ void ScanEditor::receiveOcrPageResult(const DocumentData& doc_data)
   m_ocr_frame->setData(page_no, image, doc_data);
 }
 
-void ScanEditor::receiveOcrActionFinished()
+void ScanEditor::receiveModifyActionFinished()
 {
   DocumentData doc_data = m_ocr_frame->documentData();
 
@@ -588,13 +588,13 @@ void ScanEditor::receiveOcrActionFinished()
     saveModifiedImage(page_no, image);
   }
 
-  m_main_layout->setCurrentIndex(m_main_stack_id);
+  //  m_main_layout->setCurrentIndex(m_main_stack_id);
   enableMoveBtns(false);
   disableEditBtns();
   disableListBtns();
 }
 
-void ScanEditor::receiveOcrActionCancelled()
+void ScanEditor::receiveModificationCancelled()
 {
   m_main_layout->setCurrentIndex(m_main_stack_id);
   enableMoveBtns(false);

@@ -22,6 +22,7 @@ BaseScanImage::BaseScanImage(QWidget* parent)
   , m_def_crop_set(false)
   , m_is_inside(false)
   , m_inverted(false)
+  , m_image_changed(false)
 {
   m_logger = Log4Qt::Logger::logger(tr("ScanImage"));
 
@@ -36,7 +37,7 @@ bool BaseScanImage::hasSelection()
 void BaseScanImage::setImage(const QImage& image, const int resolution)
 {
   m_image = image;
-  m_modified_image = image;
+  m_current_image = image;
 
   if (resolution > 0) {
     m_resolution = resolution;
@@ -50,9 +51,9 @@ QImage BaseScanImage::image()
   return m_image;
 }
 
-QImage BaseScanImage::modifiedImage()
+QImage BaseScanImage::currentImage()
 {
-  return m_modified_image;
+  return m_current_image;
 }
 
 QImage BaseScanImage::selectedSubImage()
@@ -64,7 +65,7 @@ QImage BaseScanImage::selectedSubImage()
     selected_rect.setWidth(int(m_rubber_band.width() / m_scale_by));
     selected_rect.setHeight(int(m_rubber_band.height() / m_scale_by));
 
-    QImage copied_selection = m_modified_image.copy(selected_rect);
+    QImage copied_selection = m_current_image.copy(selected_rect);
     return copied_selection;
   }
 
@@ -86,7 +87,7 @@ void BaseScanImage::clearToBackground()
       fill_color = QColor(Qt::black);
     }
 
-    QPainter painter(&m_modified_image);
+    QPainter painter(&m_current_image);
     QPen pen(fill_color);
     painter.setPen(pen);
     painter.setBrush(fill_color);
@@ -98,18 +99,6 @@ void BaseScanImage::clearToBackground()
   }
 }
 
-void BaseScanImage::invert()
-{
-  m_op_images.append(m_modified_image);
-
-  // create a modifiable image.
-  cv::Mat modified = ImageConverter::imageToMat(m_modified_image);
-  cv::bitwise_not(modified, modified);
-  QImage image = ImageConverter::matToImage(modified);
-  m_modified_image = image;
-  m_inverted = !m_inverted;
-  scaleModifiedImage();
-}
 
 void BaseScanImage::cropToSelection()
 {
@@ -120,9 +109,9 @@ void BaseScanImage::cropToSelection()
     crop_rect.setWidth(int(m_rubber_band.width() / m_scale_by));
     crop_rect.setHeight(int(m_rubber_band.height() / m_scale_by));
 
-    QImage cropped = m_modified_image.copy(crop_rect);
+    QImage cropped = m_current_image.copy(crop_rect);
 
-    m_modified_image = cropped;
+    m_current_image = cropped;
     //    updateImage(/*cropped*/);
     scaleModifiedImage();
     clearSelection();
@@ -131,9 +120,9 @@ void BaseScanImage::cropToSelection()
 
 void BaseScanImage::scaleModifiedImage()
 {
-  int w = int(m_modified_image.width() * m_scale_by);
-  int h = int(m_modified_image.height() * m_scale_by);
-  m_display_image = m_modified_image.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+  int w = int(m_current_image.width() * m_scale_by);
+  int h = int(m_current_image.height() * m_scale_by);
+  m_display_image = m_current_image.scaled(w, h, Qt::KeepAspectRatio, Qt::SmoothTransformation);
   update();
 }
 
@@ -186,24 +175,24 @@ void BaseScanImage::fitByType()
 {
   QSize size = frameSize();
 
-  if (!m_modified_image.isNull()) {
+  if (!m_current_image.isNull()) {
     int w = size.width();
     int h = size.height();
 
     switch (m_fit_type) {
     case FIT_BEST: {
-      auto scale_w = qreal(qreal(qreal(w) / qreal(m_modified_image.width())));
-      auto scale_h = qreal(qreal(qreal(h) / qreal(m_modified_image.height())));
+      auto scale_w = qreal(qreal(qreal(w) / qreal(m_current_image.width())));
+      auto scale_h = qreal(qreal(qreal(h) / qreal(m_current_image.height())));
       m_scale_by = (scale_w < scale_h ? scale_w : scale_h);
       break;
     }
 
     case FIT_WIDTH:
-      m_scale_by = qreal(qreal(qreal(w) / qreal(m_modified_image.width())));
+      m_scale_by = qreal(qreal(qreal(w) / qreal(m_current_image.width())));
       break;
 
     case FIT_HEIGHT:
-      m_scale_by = qreal(qreal(qreal(h) / qreal(m_modified_image.height())));
+      m_scale_by = qreal(qreal(qreal(h) / qreal(m_current_image.height())));
       break;
 
     case ZOOM:
@@ -219,7 +208,7 @@ void BaseScanImage::fitByType()
 
 void BaseScanImage::undoAllChanges()
 {
-  m_modified_image = m_image;
+  m_current_image = m_image;
 }
 
 int BaseScanImage::resolution() const
@@ -234,7 +223,7 @@ void BaseScanImage::setResolution(int resolution)
 
 void BaseScanImage::mousePressEvent(QMouseEvent* event)
 {
-  if (!m_modified_image.isNull()) {
+  if (!m_current_image.isNull()) {
     m_mouse_moved = false;
     int e_x = event->x();
     int e_y = event->y();
@@ -310,7 +299,7 @@ void BaseScanImage::mousePressEvent(QMouseEvent* event)
 
 void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
 {
-  if (!m_modified_image.isNull()) {
+  if (!m_current_image.isNull()) {
     int e_x = event->x();
     int e_y = event->y();
 
@@ -468,7 +457,7 @@ void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
 
 void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
 {
-  if (!m_modified_image.isNull()) {
+  if (!m_current_image.isNull()) {
     int e_x = event->x();
     int e_y = event->y();
 
@@ -565,7 +554,7 @@ void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
 }
 void BaseScanImage::paintEvent(QPaintEvent* event)
 {
-  if (!m_modified_image.isNull()) {
+  if (!m_current_image.isNull()) {
     QLabel::paintEvent(event);
     QPainter painter(this);
     painter.drawImage(m_display_image.rect().topLeft(), m_display_image);
@@ -732,33 +721,41 @@ void BaseScanImage::rotateByAngle()
 
 void BaseScanImage::rotate180()
 {
-  m_op_images.append(m_modified_image);
+  m_op_images.append(m_current_image);
+  m_image_changed = true;
+  emit imageHasChanged(m_image_changed);
   rotateBy(180);
 }
 
 void BaseScanImage::rotateCW()
 {
-  m_op_images.append(m_modified_image);
+  m_op_images.append(m_current_image);
+  m_image_changed = true;
+  emit imageHasChanged(m_image_changed);
   rotateBy(90.0);
 }
 
 void BaseScanImage::rotateCCW()
 {
-  m_op_images.append(m_modified_image);
+  m_op_images.append(m_current_image);
+  m_image_changed = true;
+  emit imageHasChanged(m_image_changed);
   rotateBy(-90.0);
 }
 
 void BaseScanImage::rotateBy(qreal angle)
 {
   m_logger->info(tr("Rotating by %1°").arg(angle));
-  QImage rotated = m_modified_image.transformed([&angle](QPoint center) {
+  QImage rotated = m_current_image.transformed([&angle](QPoint center) {
     QMatrix matrix;
     matrix.translate(center.x(), center.y());
     matrix.rotate(angle);
     return matrix;
   }
-  (m_modified_image.rect().center()));
+  (m_current_image.rect().center()));
   setImage(rotated);
+  m_image_changed = true;
+  emit imageHasChanged(m_image_changed);
   fitBest();
   update();
 }
@@ -780,5 +777,7 @@ void BaseScanImage::rotateUsingEdge()
     rotateBy(angle);
   }
 
+  m_image_changed = true;
+  emit imageHasChanged(m_image_changed);
   clearSelection();
 }

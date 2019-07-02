@@ -49,7 +49,8 @@ public:
   QList<StyledString> texts();
 
   bool imageChanged() const;
-  //  QSize sizeHint() const override;
+
+  bool hasText();
 
   QImage modifiedImage();
   int pageNumber();
@@ -77,19 +78,23 @@ protected:
   };
   ScanList* m_scan_list;
   OcrImage* m_image_display;
-  int m_page_no{}, m_item_count{};
+  int m_page_no{};
+  int m_item_count{};
   DocumentData m_doc_data;
-  bool m_image_changed;
   QPushButton* m_crop_btn{};
   QPushButton* m_clr_to_back_btn{};
   QPushButton* m_binarise_btn{};
   QPushButton* m_ocr_btn{};
   QPushButton* m_ocr_sel_btn{};
-  QPushButton* denoise_btn{};
-  QPushButton* dewarp_btn{};
+  QPushButton* m_invert_btn{};
+  QPushButton* m_denoise_btn{};
+  QPushButton* m_dewarp_btn{};
+  QPushButton* m_deskew_btn{};
   QPushButton* m_save_txt_btn{};
-  QPushButton* move_sel_to_doc_btn{};
-  QPushButton* rem_selection_btn{};
+  QPushButton* m_save_img_btn;
+  QPushButton* m_close_and_save_btn;
+  QPushButton* m_move_sel_to_doc_btn{};
+  QPushButton* m_rem_selection_btn{};
   QwtSlider* m_intvalue_slider{};
   QwtSlider* m_denoise_template_slider{};
   QwtSlider* m_denoise_search_slider{};
@@ -107,9 +112,14 @@ protected:
   QStackedLayout* m_ctl_stack{};
   QStatusBar* m_status_bar{};
 
-  QString m_image_name, m_image_size, m_message, m_resolution;
+  QString m_image_name;
+  QString m_image_size;
+  QString m_message;
+  QString m_resolution;
   int m_btn_stack{};
-  int m_intvalue_stack{}, m_dblvalue_stack{}, m_denoise_stack{};
+  int m_intvalue_stack{};
+  int m_dblvalue_stack{};
+  int m_denoise_stack{};
   ChangeType m_change_type;
 
   void resizeEvent(QResizeEvent* event) override;
@@ -137,10 +147,13 @@ protected:
   void rescale();
   void saveData();
   void saveCurrentStateImage();
-  void discard();
+  //  void discard();
   void acceptChanges();
   void undoChanges();
   void close();
+
+  void scanListDataChanged();
+  void ocrImageChanged(bool changed);
 
   void moveToDocument();
   void removeItemFromDocument();
