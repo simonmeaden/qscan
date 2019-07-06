@@ -9,8 +9,6 @@ OcrTools::OcrTools(const QString& datapath,
   : QObject(parent)
 {
 
-  m_logger = Log4Qt::Logger::logger(tr("OcrTools"));
-
   auto* thread = new QThread;
 
   m_ocr_worker = new OcrWorker(datapath, lang);
@@ -24,8 +22,8 @@ OcrTools::OcrTools(const QString& datapath,
   connect(m_ocr_worker, &OcrWorker::pageConverted, this, &OcrTools::convertedPage);
   connect(m_ocr_worker, &OcrWorker::imageConverted, this, &OcrTools::convertedImage);
   connect(m_ocr_worker, &OcrWorker::imageConvertedRect, this, &OcrTools::convertedImageRect);
-  connect(m_ocr_worker, &OcrWorker::log, this, &OcrTools::log);
-  m_logger->info(tr("Starting OCR Thread"));
+
+  qInfo() << tr("Starting OCR Thread");
 
   m_ocr_worker->moveToThread(thread);
   thread->start();
@@ -46,39 +44,4 @@ void OcrTools::convertImageToText(int page_no, const QImage& image, const QRect&
   m_ocr_worker->convertImage(page_no, image, rect);
 }
 
-void OcrTools::log(LogLevel level, const QString& msg)
-{
-  switch (level) {
-  case TRACE:
-    m_logger->trace(msg);
-    break;
 
-  case DEBUG:
-    m_logger->debug(msg);
-    break;
-
-  case INFO:
-    m_logger->info(msg);
-    break;
-
-  case WARN:
-    m_logger->warn(msg);
-    break;
-
-  case ERROR:
-    m_logger->error(msg);
-    break;
-
-  case FATAL:
-    m_logger->fatal(msg);
-    break;
-
-  case OFF:
-    break;
-  }
-}
-
-//void OcrTools::converted(const Page& page)
-//{
-//  emit converted(page);
-//}

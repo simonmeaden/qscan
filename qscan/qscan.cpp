@@ -28,7 +28,6 @@
 QScan::QScan(QObject* parent)
   : QObject(parent)
 {
-  m_logger = Log4Qt::Logger::logger(tr("Scan"));
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
   m_scan_lib = new SaneLibrary(this);
 #elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
@@ -66,7 +65,7 @@ bool QScan::openDevice(const QString& device_name)
   bool open = m_scan_lib->detectAvailableOptions(device_name);
 
   if (open) {
-    m_logger->info(tr("Scanner %1 open.").arg(device_name));
+    qInfo() << tr("Scanner %1 open.").arg(device_name);
     m_scan_lib->getAvailableScannerOptions(device_name);
   }
 
@@ -77,13 +76,13 @@ bool QScan::startScanning(const QString& device_name)
 {
   bool open = m_scan_lib->detectAvailableOptions(device_name);
 
-  m_logger->info(tr("Starting scan"));
+  qInfo() << tr("Starting scan");
   return m_scan_lib->startScan(device_name);
 }
 
 void QScan::cancelScan(/*const QString& device_name*/)
 {
-  m_logger->info(tr("Cancelled scan"));
+  qInfo() << tr("Cancelled scan");
   m_scan_lib->cancelScan(/*device_name*/);
 }
 

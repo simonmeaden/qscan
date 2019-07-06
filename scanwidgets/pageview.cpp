@@ -1,11 +1,11 @@
 #include "pageview.h"
 
-const QString PageView::HASTEXT
-  = "border: 2px solid green; border-radius: 3px; margin: 2px; padding: 2px;";
-const QString PageView::HASNOTEXT
-  = "border: 2px solid red; border-radius: 3px;; margin: 2px; padding: 2px;";
+//const QString PageView::IS_COMPLETED
+//  = "border: 2px solid green; border-radius: 3px; margin: 2px; padding: 2px;";
+//const QString PageView::NOT_COMPLETED
+//  = "border: 2px solid red; border-radius: 3px;; margin: 2px; padding: 2px;";
 
-PageView::PageView(QWidget *parent)
+PageView::PageView(QWidget* parent)
   : QWidget(parent)
 {
   auto* layout = new QHBoxLayout;
@@ -23,9 +23,14 @@ PageView::PageView(QWidget *parent)
   layout->addWidget(m_image_view);
 }
 
-int PageView::appendOcrThumbnail(const QImage &thumbnail)
+int PageView::appendOcrThumbnail(const QImage& thumbnail)
 {
   return m_image_view->appendThumbnail(thumbnail);
+}
+
+int PageView::appendOcrCompleted(const bool completed)
+{
+  return m_image_view->appendCompleted(completed);
 }
 
 void PageView::removeOcrThumbnail()
@@ -45,17 +50,17 @@ void PageView::removeOcrThumbnail(int index)
   m_image_view->removeThumbnail(index);
 }
 
-void PageView::replaceOcrThumbnail(int index, const QImage &image)
+void PageView::replaceOcrThumbnail(int index, const QImage& image)
 {
   m_image_view->replaceThumbnail(index, image);
 }
 
-void PageView::insertOcrThumbnail(int row, const QImage &thumbnail)
+void PageView::insertOcrThumbnail(int row, const QImage& thumbnail)
 {
   m_image_view->insertThumbnail(row, thumbnail);
 }
 
-void PageView::setCover(const QImage &cover)
+void PageView::setCover(const QImage& cover)
 {
   m_image_view->setCover(cover);
 }
@@ -70,8 +75,8 @@ QSize PageView::sizeHint() const
   return {120, 200};
 }
 
-void PageView::ocrSelectionChanged(const QItemSelection &selected_items,
-                                   const QItemSelection & /*deselected_items*/)
+void PageView::ocrSelectionChanged(const QItemSelection& selected_items,
+                                   const QItemSelection& /*deselected_items*/)
 {
   if (selected_items.count() != 0) {
     emit selected();
@@ -83,10 +88,10 @@ void PageView::ocrSelectionChanged(const QItemSelection &selected_items,
   }
 }
 
-void PageView::ocrRowsMoved(const QModelIndex & /*parent*/,
+void PageView::ocrRowsMoved(const QModelIndex& /*parent*/,
                             int start_row,
                             int /*end*/,
-                            const QModelIndex & /*destination*/,
+                            const QModelIndex& /*destination*/,
                             int dest_row)
 {
   emit ocrPageMoved(start_row, dest_row);
@@ -141,13 +146,13 @@ void PageView::loadTextIntoEditor()
   emit loadText(m_image_view->currentIndex().row());
 }
 
-void PageView::itemClicked(const QModelIndex &index)
+void PageView::itemClicked(const QModelIndex& index)
 {
   m_current_row = index.row();
   emit loadText(m_current_row);
 }
 
-void PageView::itemDoubleClicked(const QModelIndex &index)
+void PageView::itemDoubleClicked(const QModelIndex& index)
 {
   m_current_row = index.row();
   emit workOn(m_current_row);

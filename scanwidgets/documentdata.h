@@ -44,14 +44,17 @@ public:
 
   StyledString text(int index) const;
   QString image(int index) const;
+  QString imageName(int index) const;
 
   QMap<int, StyledString> textList();
   QMap<int, QString> imageList();
+  QMap<int, QString> imageNames();
 
   void setText(int index, const StyledString& text);
   void setText(const QMap<int, StyledString>& text_list);
-  void setImage(int index, const QString& text);
-  void setImage(const QMap<int, QString>& text_list);
+  void setImage(int index, const QString& text, const QString& name = QString());
+  void setImage(const QMap<int, QString>& image_paths);
+  void setImageNames(const QMap<int, QString>& image_names);
 
   int appendText(const StyledString& text);
   //  void appendText(const QList<StyledString> &text_list);
@@ -64,15 +67,20 @@ public:
   void removeImage(int index);
   void insertImage(int index, const QString& text);
 
+  bool isCompleted() const;
+  void setCompleted(bool isCompleted);
+
 protected:
   int m_page_no{};
   QString m_filename;
   bool m_remove_image_later;
   bool m_remove_text_later;
   bool m_inverted;
+  bool m_completed;
   int m_resolution{};
   QMap<int, StyledString> m_text_list;
   QMap<int, QString> m_image_list;
+  QMap<int, QString> m_image_names;
   bool m_text_has_changed, m_images_changed;
   bool m_text_initialised;
   int highestPage();
@@ -116,6 +124,7 @@ protected:
   static const QString PAGE_NUMBER;
   //  static const QString INTERNAL_IMAGE;
   static const QString INVERTED;
+  static const QString COMPLETED;
   static const QString INTERNAL_IMAGE_NAME;
   static const QString TEXT_LIST;
   static const QString TEXT_STRING;
@@ -124,6 +133,7 @@ protected:
   static const QString TEXT_START;
   static const QString TEXT_LENGTH;
   static const QString IMAGE_LIST;
+  static const QString IMAGE_NAMES;
 
   static int m_highest_page;
 };

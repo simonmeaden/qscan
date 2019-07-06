@@ -36,7 +36,6 @@ MainWindow::MainWindow(QWidget* parent)
   : QMainWindow(parent)
   , m_selected(false)
 {
-  m_logger = Log4Qt::Logger::logger(tr("Scanner"));
   m_scan_lib = new QScan(this);
 
   initPixmaps();
@@ -78,7 +77,7 @@ MainWindow::MainWindow(QWidget* parent)
       }
 
     } else {
-      m_logger->debug(tr("Unable to open %1").arg(m_selected_name));
+      qDebug() << tr("Unable to open %1").arg(m_selected_name);
     }
   }
 
@@ -104,13 +103,6 @@ void MainWindow::loadExistingFiles()
 {
   m_image_editor->loadExistingFiles();
 }
-
-// void MainWindow::setLogTextEdit(QPlainTextEdit* log_edit)
-//{
-//  m_log_edit = log_edit;
-//  m_main_layout->replaceWidget(m_empty_edit, m_log_edit);
-//  m_empty_edit->deleteLater();
-//}
 
 bool MainWindow::close()
 {
@@ -263,7 +255,7 @@ QToolBar* MainWindow::initModeToolbar()
   return toolbar;
 }
 
-QToolBar *MainWindow::initResolutionToolbar()
+QToolBar* MainWindow::initResolutionToolbar()
 {
   auto* toolbar = addToolBar("mode bar");
 
@@ -507,7 +499,7 @@ void MainWindow::scannerSelectionChanged(int index)
         m_scan_act->setEnabled(true);
 
       } else {
-        m_logger->debug(tr("Unable to open %1").arg(m_selected_name));
+        qDebug() << tr("Unable to open %1").arg(m_selected_name);
       }
     }
   }

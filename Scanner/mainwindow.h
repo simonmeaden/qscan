@@ -62,13 +62,10 @@ public:
   explicit MainWindow(QWidget* parent = nullptr);
   ~MainWindow() override;
 
-  //  void setLogTextEdit(QPlainTextEdit* log_edit);
-
   QToolBar* initRightToolbar();
   QToolBar* initModeToolbar();
 
 protected:
-  Log4Qt::Logger* m_logger;
   QScan* m_scan_lib;
 
   QGridLayout* m_main_layout{};

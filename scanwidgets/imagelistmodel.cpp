@@ -5,26 +5,23 @@ const QString ImageListModel::MIMETYPE = QStringLiteral("application/x-imagelist
 ImageListModel::ImageListModel(QObject* parent)
   : QAbstractListModel(parent)
 {
-  m_logger = Log4Qt::Logger::logger(tr("ImageListModel"));
   m_headers << tr("Pages");
-  appendThumbnail(QImage() /*, false*/); // this will be the cover
+  appendThumbnail(QImage());  // this will be used for the cover
 }
 
 void ImageListModel::setCover(const QImage& image)
 {
   m_images.replace(0, image);
-  //  m_has_text.replace(0, false);
-  //  m_internal_image.replace(0, true);
+  m_is_completed.replace(0, !image.isNull());
 }
 
-int ImageListModel::appendThumbnail(const QImage& image/*, bool has_text,
-                                    bool internal_image*/)
+int ImageListModel::appendThumbnail(const QImage& image)
 {
   int row = rowCount();
 
   if (insertRows(row, 1)) {
     m_images.replace(row, image);
-    //    m_has_text.replace(row, has_text);
+    m_is_completed.replace(row, false);
     //    m_internal_image.replace(row, internal_image);
     return row;
   }
@@ -32,12 +29,25 @@ int ImageListModel::appendThumbnail(const QImage& image/*, bool has_text,
   return -1;
 }
 
-bool ImageListModel::insertThumbnail(int row, const QImage &image)
+int ImageListModel::appendCompleted(const bool completed)
+{
+  int row = rowCount();
+
+  if (insertRows(row, 1)) {
+    m_images.replace(row, QImage());
+    m_is_completed.replace(row, completed);
+    return row;
+  }
+
+  return -1;
+}
+
+bool ImageListModel::insertThumbnail(int row, const QImage& image)
 {
   if (row > 0) {
     if (insertRows(row, 1)) {
       m_images.replace(row, image);
-      //      m_has_text.replace(row, has_text);
+      m_is_completed.replace(row, false);
       //      m_internal_image.replace(row, is_internal_image);
       return true;
     }
@@ -55,11 +65,11 @@ bool ImageListModel::removeThumbnail(int row)
   return false;
 }
 
-void ImageListModel::replaceThumbnail(int row, const QImage &image)
+void ImageListModel::replaceThumbnail(int row, const QImage& image)
 {
   if (row > 0) {
     m_images.replace(row, image);
-    //    m_has_text.replace(row, has_text);
+    m_is_completed.replace(row, false);
     //    m_internal_image.replace(row, is_internal_image);
   }
 }
@@ -74,17 +84,17 @@ QImage ImageListModel::thumbnail(int row)
   return QImage();
 }
 
-//void ImageListModel::setHasText(int row, bool has_text)
-//{
-//  if (row >= 0 && row < m_has_text.size()) {
-//    m_has_text.replace(row, has_text);
-//  }
-//}
+void ImageListModel::setCompleted(int row, bool has_text)
+{
+  if (row >= 0 && row < m_is_completed.size()) {
+    m_is_completed.replace(row, has_text);
+  }
+}
 
-//bool ImageListModel::hasText(int row)
-//{
-//  return m_has_text.at(row);
-//}
+bool ImageListModel::isCompleted(int row)
+{
+  return m_is_completed.at(row);
+}
 
 bool ImageListModel::isEmpty()
 {
@@ -114,10 +124,10 @@ QString ImageListModel::tooltip(int row)
 
     text = tr("Page %1 : Internal non-OCR image").arg(row);
 
-  } else if (hasText(row)) {
+  }*/ else if (isCompleted(row)) {
     text = tr("Page %1 : Text exists for this image").arg(row);
 
-  }*/
+  }
 
   else {
     text = tr("Page %1 : No text exists for this image").arg(row);
@@ -152,7 +162,7 @@ bool ImageListModel::removeRows(int row, int count, const QModelIndex& parent)
 
   for (int r = row; r < row + count; r++) {
     m_images.removeAt(r);
-    //    m_has_text.removeAt(r);
+    m_is_completed.removeAt(r);
     //    m_internal_image.removeAt(r);
   }
 
@@ -195,17 +205,17 @@ bool ImageListModel::moveRows(const QModelIndex& sourceParent,
     if (source < destination) {
       for (int s = 0; s < count; s++) {
         QImage src_image = m_images.takeAt(source + s);
-        //        bool src_has_text = m_has_text.takeAt(source + s);
+        bool src_is_completed = m_is_completed.takeAt(source + s);
         m_images.insert(destination, src_image);
-        //        m_has_text.insert(destination, src_has_text);
+        m_is_completed.insert(destination, src_is_completed);
       }
 
     } else {
       for (int s = 0; s < count; s++) {
         QImage src_image = m_images.takeAt(source + s);
-        //        bool src_has_text = m_has_text.takeAt(source + s);
+        bool src_is_completed = m_is_completed.takeAt(source + s);
         m_images.insert(destination + s, src_image);
-        //        m_has_text.insert(destination + s, src_has_text);
+        m_is_completed.insert(destination + s, src_is_completed);
       }
     }
 
@@ -231,12 +241,17 @@ bool ImageListModel::insertRows(int row, int count, const QModelIndex& parent)
 
   for (int index = row, end = row + count; index < end; ++index) {
     m_images.insert(index, QImage());
-    //    m_has_text.insert(index, false);
+    m_is_completed.insert(index, false);
     //    m_internal_image.insert(index, false);
   }
 
   endInsertRows();
   return true;
+}
+
+void ImageListModel::setFont(const QFont& font)
+{
+  m_font = font;
 }
 
 int ImageListModel::rowCount(const QModelIndex& /*parent*/) const
@@ -252,17 +267,24 @@ int ImageListModel::columnCount(const QModelIndex& /*parent*/) const
 QVariant ImageListModel::data(const QModelIndex& index, int role) const
 {
   if (index.isValid()) {
-    if (role == Qt::DecorationRole) {
+
+    switch (role) {
+    case Qt::DecorationRole:
       switch (index.column()) {
       case 0:
+        if (index.row() > 0 && m_is_completed.at(index.row())) {
+          QString text = tr("Page %1 : OCR completed").arg(index.row());
+          return text;
+        }
+
         return m_images.at(index.row());
 
-        //      case 1:
-        //        return m_has_text.at(index.row());
-
-        //      case 2:
-        //        return m_internal_image.at(index.row());
+      case 1:
+        return m_is_completed.at(index.row());
       }
+
+      break;
+
     }
   }
 
@@ -280,12 +302,9 @@ bool ImageListModel::setData(const QModelIndex& index, const QVariant& value, in
         m_images.replace(index.row(), img);
         return true;
 
-        //      case 1:
-        //        m_has_text.replace(index.row(), false);
-        //        return true;
-
-        //      case 2:
-        //        return m_internal_image.at(index.row());
+      case 1:
+        m_is_completed.replace(index.row(), false);
+        return true;
       }
     }
   }
@@ -312,7 +331,7 @@ QMimeData* ImageListModel::mimeData(const QModelIndexList& indexes) const
     if (index.isValid()) {
       int row = index.row();
       QDataStream data_stream(&encoded_data, QIODevice::WriteOnly);
-      data_stream << row << m_images.at(row) /* << m_has_text.at(row)*/;
+      data_stream << row << m_images.at(row)  << m_is_completed.at(row);
     }
   }
 
@@ -368,7 +387,7 @@ bool ImageListModel::canDropMimeData(const QMimeData* data,
     format += f + ", ";
   }
 
-  m_logger->debug(tr("Row : %1, Col : %2 Formats : %3").arg(row, column).arg(format));
+  qDebug() << tr("Row : %1, Col : %2 Formats : %3").arg(row, column).arg(format);
 
   return (data->hasFormat(MIMETYPE) && (column == 0 || (column == -1 && parent.column() == 0)));
 }

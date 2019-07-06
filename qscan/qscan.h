@@ -21,8 +21,7 @@
 #define SCAN_H
 
 #include <QObject>
-
-#include "logger.h"
+#include <QtDebug>
 
 #include "qscan_global.h"
 #include "scaninterface.h"
@@ -67,15 +66,14 @@ public:
   void setSource(ScanDevice* device, const QString& source);
 
 signals:
-    void scanCompleted(const QImage &, const int resolution);
-    void scanFailed();
-    void scanProgress(const int &);
-    void optionsSet(ScanDevice *);
-    void sourceChanged(ScanDevice *);
-    void modeChanged(ScanDevice *);
+  void scanCompleted(const QImage&, const int resolution);
+  void scanFailed();
+  void scanProgress(const int&);
+  void optionsSet(ScanDevice*);
+  void sourceChanged(ScanDevice*);
+  void modeChanged(ScanDevice*);
 
 protected:
-  Log4Qt::Logger* m_logger;
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
   ScanInterface* m_scan_lib;
 

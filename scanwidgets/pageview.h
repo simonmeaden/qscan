@@ -19,6 +19,7 @@ public:
   explicit PageView(QWidget* parent = nullptr);
 
   int appendOcrThumbnail(const QImage& thumbnail);
+  int appendOcrCompleted(const bool completed);
   void removeOcrThumbnail(int index);
   void replaceOcrThumbnail(int index, const QImage& image);
   void insertOcrThumbnail(int index, const QImage& thumbnail);
@@ -60,8 +61,8 @@ protected:
   void itemClicked(const QModelIndex& index);
   void itemDoubleClicked(const QModelIndex& index);
 
-  static const QString HASTEXT;
-  static const QString HASNOTEXT;
+  //  static const QString IS_COMPLETED;
+  //  static const QString NOT_COMPLETED;
 };
 
 #endif // PAGEVIEW_H

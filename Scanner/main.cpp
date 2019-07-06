@@ -22,6 +22,7 @@
 #include <QLoggingCategory>
 #include <QPlainTextEdit>
 #include <QTextStream>
+#include <QtDebug>
 
 #if defined(LOGGER_ENABLE)
   //  #include "texteditiodevice.h"
@@ -55,32 +56,7 @@ int main(int argc, char* argv[])
   qRegisterMetaType<Style>();
   qRegisterMetaType<StyledString>();
 
-#if defined(LOGGER_ENABLE)
-  LogManager::rootLogger();
-  auto* p_layout = new TTCCLayout();
-  p_layout->setName(QStringLiteral("Logger"));
-  p_layout->activateOptions();
-  // Create an appender
-  ConsoleAppender* p_appender =
-    new ConsoleAppender(p_layout, ConsoleAppender::STDOUT_TARGET);
-  p_appender->setName(QStringLiteral("Console"));
-  p_appender->activateOptions();
-  //
-  //  auto* text_edit = new QPlainTextEdit();
-  //  auto* log_io_device = new TextEditIoDevice(text_edit);
-  //  auto* stream = new QTextStream(log_io_device);
-  //  WriterAppender* p_writer = new WriterAppender(p_layout, stream);
-  //  p_writer->setName("StreamWriter");
-  //  p_writer->activateOptions();
-  // Set appender on root logger
-  Logger::rootLogger()->addAppender(p_appender);
-  //  Logger::rootLogger()->addAppender(p_writer);
-  Logger::rootLogger()->setLevel(Level::DEBUG_INT);
-  //  auto* object = new LoggerObject(&a);
-  QLoggingCategory::setFilterRules("*.debug=false\n"
-                                   "virus.debug=true");
-
-#endif
+  //  qSetMessagePattern("%{file}(%{line}): %{message}");
 
   MainWindow w;
 

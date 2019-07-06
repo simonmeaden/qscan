@@ -3,7 +3,7 @@
 /* ImageView
   ===============================================================================*/
 
-ImageView::ImageView(QWidget *parent)
+ImageView::ImageView(QWidget* parent)
   : QListView(parent)
   , m_drag_state(DragStopped)
   , m_drag_start_x(-1)
@@ -22,10 +22,10 @@ ImageView::ImageView(QWidget *parent)
   setDragDropOverwriteMode(false);
   setDefaultDropAction(Qt::MoveAction);
 
-  //  setStyle(new DropIndicatorProxyStyle);
+  m_model->setFont(font());
 }
 
-void ImageView::mousePressEvent(QMouseEvent *event)
+void ImageView::mousePressEvent(QMouseEvent* event)
 {
   if (event->button() == Qt::LeftButton) {
     m_drag_state = DragStarted;
@@ -37,7 +37,7 @@ void ImageView::mousePressEvent(QMouseEvent *event)
   //  }
 }
 
-void ImageView::mouseReleaseEvent(QMouseEvent *event)
+void ImageView::mouseReleaseEvent(QMouseEvent* event)
 {
   if (m_drag_state) {
     m_drag_state = DragStopped;
@@ -48,7 +48,7 @@ void ImageView::mouseReleaseEvent(QMouseEvent *event)
   QListView::mouseReleaseEvent(event);
 }
 
-void ImageView::mouseMoveEvent(QMouseEvent *event)
+void ImageView::mouseMoveEvent(QMouseEvent* event)
 {
   QPoint pos = event->localPos().toPoint();
 
@@ -56,12 +56,12 @@ void ImageView::mouseMoveEvent(QMouseEvent *event)
     const int mouse_position = int(pos.x());
     const int mouse_distance = qAbs(m_drag_start_x - mouse_position);
     DragDirection drag_direction = (mouse_distance < 10
-                                      ? Drag_Up
-                                      : (mouse_distance > 10 ? Drag_Down : Drag_None));
+                                    ? Drag_Up
+                                    : (mouse_distance > 10 ? Drag_Down : Drag_None));
 
     if (drag_direction != Drag_None) { // mouse has moved significantly
-      QScrollBar *scroll_bar = verticalScrollBar();
-      QWidget *viewport = qobject_cast<QAbstractScrollArea *>(this)->viewport();
+      QScrollBar* scroll_bar = verticalScrollBar();
+      QWidget* viewport = qobject_cast<QAbstractScrollArea*>(this)->viewport();
 
       const int view_x = viewport->x();
       const int view_height = viewport->height();
@@ -86,17 +86,22 @@ void ImageView::mouseMoveEvent(QMouseEvent *event)
   QListView::mouseMoveEvent(event);
 }
 
-void ImageView::setCover(const QImage &image)
+void ImageView::setCover(const QImage& image)
 {
   m_model->setCover(image);
 }
 
-int ImageView::appendThumbnail(const QImage &image)
+int ImageView::appendThumbnail(const QImage& image)
 {
   return m_model->appendThumbnail(image);
 }
 
-void ImageView::insertThumbnail(int row, const QImage &image)
+int ImageView::appendCompleted(const bool completed)
+{
+  return m_model->appendCompleted(completed);
+}
+
+void ImageView::insertThumbnail(int row, const QImage& image)
 {
   m_model->insertThumbnail(row, image);
 }
@@ -113,7 +118,7 @@ bool ImageView::moveThumbnail(int source, int destination)
   return m_model->moveThumbnail(source, destination);
 }
 
-void ImageView::replaceThumbnail(int row, const QImage &image)
+void ImageView::replaceThumbnail(int row, const QImage& image)
 {
   m_model->replaceThumbnail(row, image);
 }
@@ -130,13 +135,19 @@ void ImageView::setCurrentRow(int row)
   m_selection_model->setCurrentIndex(index, QItemSelectionModel::Select);
 }
 
-void ImageView::setSelectionModel(QItemSelectionModel *selectionModel)
+void ImageView::setFont(const QFont& font)
+{
+  m_model->setFont(font);
+  QListView::setFont(font);
+}
+
+void ImageView::setSelectionModel(QItemSelectionModel* selectionModel)
 {
   m_selection_model = selectionModel;
   QListView::setSelectionModel(selectionModel);
 }
 
-void ImageView::dropEvent(QDropEvent *event)
+void ImageView::dropEvent(QDropEvent* event)
 {
   // This is needed because of a bug in QListView which removes the
   // destination image when moved.
@@ -146,7 +157,7 @@ void ImageView::dropEvent(QDropEvent *event)
   }
 }
 
-bool ImageView::isIndexHidden(const QModelIndex &index) const
+bool ImageView::isIndexHidden(const QModelIndex& index) const
 {
   int column = index.column();
 
@@ -157,10 +168,10 @@ bool ImageView::isIndexHidden(const QModelIndex &index) const
   return QListView::isIndexHidden(index);
 }
 
-bool ImageView::event(QEvent *event)
+bool ImageView::event(QEvent* event)
 {
   if (event->type() == QEvent::ToolTip) {
-    auto *helpEvent = dynamic_cast<QHelpEvent *>(event);
+    auto* helpEvent = dynamic_cast<QHelpEvent*>(event);
     QModelIndex index = indexAt(helpEvent->pos());
 
     if (index.isValid()) {
@@ -180,9 +191,9 @@ bool ImageView::event(QEvent *event)
 /* DropIndicatorProxyStyle
   ===============================================================================*/
 void DropIndicatorProxyStyle::drawPrimitive(QStyle::PrimitiveElement element,
-                                            const QStyleOption *option,
-                                            QPainter *painter,
-                                            const QWidget *widget) const
+    const QStyleOption* option,
+    QPainter* painter,
+    const QWidget* widget) const
 {
   if (element == QStyle::PE_IndicatorItemViewItemDrop) {
     painter->setRenderHint(QPainter::Antialiasing, true);

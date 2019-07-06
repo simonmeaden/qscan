@@ -64,7 +64,6 @@ ScanEditor::ScanEditor(QScan* scan,
   , m_scan_lib(scan)
   , m_config_dir(configdir)
   , m_data_dir(datadir)
-  , m_cover(DocumentData(new DocData()))
   , m_lang("eng") // default language is english
 {
   m_logger = Log4Qt::Logger::logger(tr("ScanEditor"));
@@ -385,7 +384,7 @@ QString ScanEditor::saveImage(int index, const QImage& image)
       path += QDir::separator() + OCR_IMAGE_NAME.arg(index);
 
       if (!image.save(path, "PNG", 100)) {
-        m_logger->info(tr("Failed to save image %1").arg(path));
+        qInfo() << tr("Failed to save image %1").arg(path);
       }
     }
 
@@ -393,7 +392,7 @@ QString ScanEditor::saveImage(int index, const QImage& image)
     path = m_data_dir + OCR_IMAGE_NAME.arg(index);
 
     if (!image.save(path, "PNG", 100)) {
-      m_logger->info(tr("Failed to save image %1").arg(path));
+      qInfo() << tr("Failed to save image %1").arg(path);
     }
   }
 
@@ -429,7 +428,7 @@ QString ScanEditor::saveDocumentImage(int index,
       saveDataStore();
 
       if (!image.save(path, "PNG", 100)) {
-        m_logger->info(tr("Failed to save image %1").arg(path));
+        qInfo() << tr("Failed to save image %1").arg(path);
       }
     }
 
@@ -439,7 +438,7 @@ QString ScanEditor::saveDocumentImage(int index,
     saveDataStore();
 
     if (!image.save(path, "PNG", 100)) {
-      m_logger->info(tr("Failed to save image %1").arg(path));
+      qInfo() << tr("Failed to save image %1").arg(path);
     }
   }
 
@@ -452,7 +451,7 @@ void ScanEditor::saveModifiedImage(int page_no, const QImage& image)
   QString path = doc_data->filename();
 
   if (!image.save(path, "PNG", 100)) {
-    m_logger->info(tr("Failed to save image %1").arg(path));
+    qInfo() << tr("Failed to save image %1").arg(path);
     return;
   }
 
@@ -473,11 +472,9 @@ void ScanEditor::makeCover()
                    + "cover.png";
 
     if (!image.save(path, "PNG", 100)) {
-      m_logger->info(tr("failed to save file path"));
+      qInfo() << tr("failed to save file path");
       return;
     }
-
-    m_cover->setFilename(path);
   }
 }
 
@@ -814,21 +811,36 @@ void ScanEditor::loadExistingFiles()
 
     if (key == 0) {
       loadCover(filename);
-      m_logger->info(tr("Cover file loaded)"));
+      qInfo() << tr("Cover file loaded)");
 
     } else {
-      image = QImage(filename, "PNG");
-      int page_no = m_page_view->appendOcrThumbnail(thumbnail(image));
+      if (!doc_data->isCompleted()) {
+        image = QImage(filename, "PNG");
+        int page_no = m_page_view->appendOcrThumbnail(thumbnail(image));
 
-      if (page_no >= 0) {
-        doc_data->setPageNumber(page_no);
+        if (page_no >= 0) {
+          doc_data->setPageNumber(page_no);
 
-        if (key != page_no) {
-          m_doc_data_store->moveKey(key, page_no);
+          if (key != page_no) {
+            m_doc_data_store->moveKey(key, page_no);
+          }
         }
-      }
 
-      m_logger->info(tr("Image file %1 loaded)").arg(doc_data->filename()));
+        qInfo() << tr("Image file %1 loaded.").arg(doc_data->filename());
+
+      } else {
+        int page_no = m_page_view->appendOcrCompleted(true);
+
+        if (page_no >= 0) {
+          doc_data->setPageNumber(page_no);
+
+          if (key != page_no) {
+            m_doc_data_store->moveKey(key, page_no);
+          }
+        }
+
+        qInfo() << tr("File %1 is completed.").arg(doc_data->filename());
+      }
     }
   }
 }
@@ -936,7 +948,7 @@ void ScanEditor::loadCover(const QString& filename)
   QImage image = QImage(filename, "PNG");
   DocumentData data(new DocData());
   data->setFilename(filename);
-  m_cover = data;
+  data->setCompleted(!image.isNull());
   m_page_view->setCover(thumbnail(image));
 }
 

@@ -159,7 +159,6 @@ protected:
   QPushButton* m_rem_both_btn{};
   QGroupBox* image_edit_group{}, *page_list_group{}, *image_transfer_group{};
 
-  DocumentData m_cover;
   int m_resolution;
 
   QPixmapCache::Key crop_key;

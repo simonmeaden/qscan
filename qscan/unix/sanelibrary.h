@@ -25,6 +25,7 @@
 #include <QImage>
 #include <QMutexLocker>
 #include <QThread>
+#include <QtDebug>
 
 #include <sane/sane.h>
 #include <sane/saneopts.h>
@@ -37,7 +38,7 @@
 #include "version.h"
 
 #ifndef PATH_MAX
-#define PATH_MAX 1024
+  #define PATH_MAX 1024
 #endif
 
 class SaneLibrary final : public ScanLibrary
@@ -95,10 +96,7 @@ signals:
   void cancelScanning();
 
 protected:
-  //  SANE_Status doScan(const char* fileName);
-  Log4Qt::Logger* m_logger;
   DeviceMap m_scanners;
-  //  OptionsMap m_options;
   QImage* m_image{};
   Version m_version;
   bool m_scanning;
@@ -112,8 +110,6 @@ protected:
   static void callbackWrapper(SANE_String_Const resource,
                               SANE_Char* name,
                               SANE_Char* password);
-
-  void log(LogLevel level, const QString&);
 
 public:
 };

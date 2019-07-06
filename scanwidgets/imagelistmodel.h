@@ -4,6 +4,9 @@
 #include <QAbstractListModel>
 #include <QImage>
 #include <QMimeData>
+#include <QFont>
+#include <QFontMetrics>
+#include <QtDebug>
 
 #include "logger.h"
 
@@ -16,14 +19,15 @@ public:
   explicit ImageListModel(QObject* parent = nullptr);
 
   void setCover(const QImage& image);
-  int appendThumbnail(const QImage &image);
-  bool insertThumbnail(int row, const QImage &image);
+  int appendThumbnail(const QImage& image);
+  int appendCompleted(const bool completed);
+  bool insertThumbnail(int row, const QImage& image);
   bool removeThumbnail(int row);
   bool moveThumbnail(int source, int destination);
-  void replaceThumbnail(int row, const QImage &image);
+  void replaceThumbnail(int row, const QImage& image);
   QImage thumbnail(int row);
-  //  void setHasText(int row, bool has_text);
-  //  bool hasText(int row);
+  void setCompleted(int row, bool has_text);
+  bool isCompleted(int row);
   bool isEmpty();
   //  bool isInternalImage(int row);
   //  void setInternalImage(int row, bool value);
@@ -62,11 +66,13 @@ public:
                   int count,
                   const QModelIndex& parent = QModelIndex()) override;
 
+  void setFont(const QFont& font);
+
 protected:
-  Log4Qt::Logger* m_logger;
+  QFont m_font;
   ImageList m_images;
   ImageList m_internal_images; // used to store internal images.
-  //  QList<bool> m_has_text;
+  QList<bool> m_is_completed;
   //  QList<bool> m_internal_image;
   QStringList m_headers;
 

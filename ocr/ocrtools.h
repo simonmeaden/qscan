@@ -3,13 +3,10 @@
 
 #include <QObject>
 #include <QThread>
-
-#include "logger.h"
+#include <QtDebug>
 
 #include "ocr_global.h"
-//#include "scanpage.h"
 #include "documentdata.h"
-#include "logger.h"
 
 class OcrWorker;
 
@@ -35,10 +32,7 @@ signals:
 
 protected:
   OcrWorker* m_ocr_worker;
-  Log4Qt::Logger* m_logger;
 
-  void log(LogLevel, const QString&);
-  //  void converted(const Page& page);
 };
 
 #endif // OCRTOOLS_H

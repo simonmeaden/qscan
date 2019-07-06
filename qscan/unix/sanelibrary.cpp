@@ -27,8 +27,6 @@ SaneLibrary::SaneLibrary(QObject* parent)
   : ScanLibrary(parent)
   , m_scanning(false)
 {
-  m_logger = Log4Qt::Logger::logger(tr("ScanSane"));
-
   auto* thread = new QThread;
   auto* scan_worker = new SaneWorker();
 
@@ -68,9 +66,6 @@ SaneLibrary::SaneLibrary(QObject* parent)
   connect(
     scan_worker, &SaneWorker::scanProgress, this, &ScanLibrary::scanProgress);
 
-  // worker logging. Using m_logger in a thread causes a crash.
-  connect(scan_worker, &SaneWorker::log, this, &SaneLibrary::log);
-
   scan_worker->moveToThread(thread);
   thread->start();
 }
@@ -89,7 +84,7 @@ bool SaneLibrary::init()
 
   if (status == SANE_STATUS_GOOD) {
     m_version = Version(version_code);
-    m_logger->info(tr("SANE version code: %1").arg(version_code));
+    qInfo() << tr("SANE version code: %1").arg(version_code);
     return true;
   }
 
@@ -105,15 +100,15 @@ QStringList SaneLibrary::devices()
   sane_status = sane_get_devices(&device_list, SANE_FALSE);
 
   if (device_list) {
-    m_logger->debug(
-      tr("sane_get_devices status: %1").arg(sane_strstatus(sane_status)));
+    qDebug() <<
+             tr("sane_get_devices status: %1").arg(sane_strstatus(sane_status));
 
     const SANE_Device* current_device;
     size_t current_device_index = 0;
 
     while ((current_device = device_list[current_device_index]) != nullptr) {
       if (!current_device) {
-        m_logger->debug(tr("No devices connected"));
+        qDebug() << tr("No devices connected");
 
       } else {
         auto* scanner = new ScanDevice(this);
@@ -152,10 +147,10 @@ bool SaneLibrary::detectAvailableOptions(QString device_name)
   sane_status = sane_open(device_name.toStdString().c_str(), &sane_handle);
 
   if (sane_status == SANE_STATUS_GOOD) {
-    ScanDevice* device = m_scanners.value(device_name);
+    //    ScanDevice* device = m_scanners.value(device_name);
 
-    m_logger->debug(
-      tr("sane_open status: %1").arg(sane_strstatus(sane_status)));
+    qDebug() <<
+             tr("sane_open status: %1").arg(sane_strstatus(sane_status));
 
     sane_close(sane_handle);
 
@@ -184,38 +179,6 @@ void SaneLibrary::cancelScan(/*QString device_name*/)
   m_scanning = false;
 }
 
-void SaneLibrary::log(LogLevel level, const QString& msg)
-{
-  switch (level) {
-  case TRACE:
-    m_logger->trace(msg);
-    break;
-
-  case DEBUG:
-    m_logger->debug(msg);
-    break;
-
-  case INFO:
-    m_logger->info(msg);
-    break;
-
-  case WARN:
-    m_logger->warn(msg);
-    break;
-
-  case ERROR:
-    m_logger->error(msg);
-    break;
-
-  case FATAL:
-    m_logger->fatal(msg);
-    break;
-
-  case OFF:
-    break;
-  }
-}
-
 void SaneLibrary::exit()
 {
   sane_exit();
@@ -227,12 +190,6 @@ void SaneLibrary::getAvailableScannerOptions(QString device_name)
 
   emit getAvailableOptions(device);
 }
-
-// void
-// SaneLibrary::receiveAvailableScannerOptions(ScanDevice* device)
-//{
-//  //  device->options->insert(device_name, options);
-//}
 
 void SaneLibrary::receiveIntValue(ScanDevice* device, int value)
 {

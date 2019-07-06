@@ -11,74 +11,85 @@ void ImageDelegate::paint(QPainter* painter,
                           const QModelIndex& index) const
 {
   QVariant v = index.data(Qt::DecorationRole);
+  QString text;
+  QImage image;
+  bool is_image = false, is_text = false;
 
   if (v.canConvert<QImage>()) {
+    image = v.value<QImage>();
+    is_image = true;
+
+  } else if (v.canConvert<QString>()) {
+    text = v.toString();
+    is_text = true;
+  }
+
+  if (is_image || is_text) {
     painter->save();
     auto image = v.value<QImage>();
     QModelIndex i = index.model()->index(index.row(), 1, index);
-    bool has_text = index.model()->data(i, Qt::DecorationRole).toBool();
-    i = index.model()->index(index.row(), 2, index);
-    bool is_internal = index.model()->data(i, Qt::DecorationRole).toBool();
-    bool has_image = !image.isNull();
-    bool illegal = ((!has_text && !has_image && !is_internal)
-                    || (has_text && has_image && is_internal) || (has_text && is_internal));
+    bool is_completed = index.model()->data(i, Qt::DecorationRole).toBool();
 
     if (option.state & QStyle::State_Selected) {
       painter->fillRect(option.rect, option.palette.highlight());
     }
 
-    QRect image_rect;
+    QRect subject_rect;
     QRect border_rect;
-
-    border_rect.setX(option.rect.x() + 5);
-    border_rect.setY(option.rect.y() + 5);
-    border_rect.setWidth(image.rect().width() + 10);
-    border_rect.setHeight(image.rect().height() + 6);
-
-    image_rect.setX(option.rect.x() + 10);
-    image_rect.setY(option.rect.y() + 10);
-    image_rect.setWidth(image.rect().width());
-    image_rect.setHeight(image.rect().height());
 
     QPen pen;
 
-    if (!illegal) {
-      if (has_text && has_image) { // awaiting completion / re-edit
-        pen.setColor(QColor("darkgreen"));
+    if (is_completed) {
+      pen.setColor(QColor("lime"));
 
-      } else if (has_image && is_internal) { // awaiting completion
-        pen.setColor(QColor("darkgreen"));
+    } else  {
+      pen.setColor(QColor("blue"));
 
-      } else if (is_internal) { // internal image
-        pen.setColor(QColor("yellow"));
+    }
 
-      } else if (has_text) {
-        pen.setColor(QColor("green"));
+    border_rect.setX(option.rect.x() + 5);
+    border_rect.setY(option.rect.y() + 5);
+    subject_rect.setX(option.rect.x() + 10);
 
-      } else if (has_image) {
-        pen.setColor(QColor("blue"));
+    if (is_text) {
+      QFontMetrics metrics(option.font);
+      int width = metrics.width(text);
+      int height = metrics.height();
 
-      } else {
-        pen.setColor(QColor("red"));
-      }
+      subject_rect.setY(option.rect.y() + 5 + height);
+
+      border_rect.setHeight(height + 10);
+      border_rect.setWidth(width + 10);
+
+      subject_rect.setWidth(width);
+      subject_rect.setHeight(height);
 
       pen.setWidth(4);
       pen.setJoinStyle(Qt::MiterJoin);
       painter->setPen(pen);
-      painter->drawImage(image_rect, image);
       painter->drawRect(border_rect);
+      pen.setColor(QColor("black"));
+      painter->setPen(pen);
+      painter->drawText(subject_rect.topLeft(), text);
 
     } else {
+      border_rect.setWidth(image.rect().width() + 10);
+      border_rect.setHeight(image.rect().height() + 10);
+
+      subject_rect.setY(option.rect.y() + 10);
+      subject_rect.setWidth(image.rect().width());
+      subject_rect.setHeight(image.rect().height());
+
       pen.setWidth(4);
       pen.setJoinStyle(Qt::MiterJoin);
       painter->setPen(pen);
-      painter->drawImage(image_rect, image);
+      painter->drawImage(subject_rect, image);
       painter->drawRect(border_rect);
 
-      QBrush overlay(QColor(255, 0, 0, 100));
+      //      QBrush overlay(QColor(255, 0, 0, 100));
       painter->setPen(QPen());
-      painter->setBrush(overlay);
-      painter->drawRect(image_rect);
+      //      painter->setBrush(overlay);
+      painter->drawRect(subject_rect);
     }
 
     painter->restore();
@@ -88,11 +99,24 @@ void ImageDelegate::paint(QPainter* painter,
   }
 }
 
-QSize ImageDelegate::sizeHint(const QStyleOptionViewItem& /*option*/, const QModelIndex& index) const
+QSize ImageDelegate::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
   QVariant v = index.data(Qt::DecorationRole);
-  auto image = v.value<QImage>();
-  auto size = image.size();
-  size += QSize(10, 20);
-  return size;
+
+  if (v.canConvert<QImage>()) {
+    auto image = v.value<QImage>();
+    auto size = image.size();
+    size += QSize(10, 20);
+    return size;
+
+  } else if (v.canConvert<QString>()) {
+    QString text = tr("Page %1 : OCR completed.").arg(index.row());
+    QFontMetrics metrics(option.font);
+    int height = metrics.height() + 20;
+    int width = metrics.width(text) + 20;
+    QSize size(width, height);
+    return size;
+  }
+
+  return QStyledItemDelegate::sizeHint(option, index);
 }

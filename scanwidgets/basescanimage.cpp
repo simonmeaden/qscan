@@ -128,7 +128,7 @@ void BaseScanImage::scaleModifiedImage()
 
 void BaseScanImage::clearSelection()
 {
-  m_logger->info(tr("Clearing selection"));
+  qInfo() << tr("Clearing selection");
   m_rubber_band = QRect();
   m_stretched_band = QRect();
   m_edge_start = QPoint();
@@ -233,8 +233,8 @@ void BaseScanImage::mousePressEvent(QMouseEvent* event)
         switch (m_state) {
         case EDGE_SELECTED:
           m_state = EDGE_STARTING;
-          m_logger->info(
-            tr("Edge draw pressed. (%1, %2)").arg(m_edge_start.x()).arg(m_edge_start.y()));
+          qInfo() <<
+                  tr("Edge draw pressed. (%1, %2)").arg(m_edge_start.x()).arg(m_edge_start.y());
           m_edge_start = event->pos();
           m_edge_finish = m_edge_start;
           update();
@@ -328,7 +328,7 @@ void BaseScanImage::mouseMoveEvent(QMouseEvent* event)
         break;
 
       case EDGE_DRAWING:
-        m_logger->info(tr("Edge moving. (%1, %2)").arg(m_edge_finish.x()).arg(m_edge_finish.y()));
+        qInfo() << tr("Edge moving. (%1, %2)").arg(m_edge_finish.x()).arg(m_edge_finish.y());
         m_edge_finish = event->pos();
         break;
 
@@ -488,8 +488,8 @@ void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
       m_mouse_moved = false;
       m_edge_finish = event->pos();
       m_state = DOING_NOTHING;
-      m_logger->info(
-        tr("Edge draw released. (%1, %2)").arg(m_edge_finish.x()).arg(m_edge_finish.y()));
+      qInfo() <<
+              tr("Edge draw released. (%1, %2)").arg(m_edge_finish.x()).arg(m_edge_finish.y());
       rotateUsingEdge();
       emit unselected();
       break;
@@ -504,11 +504,11 @@ void BaseScanImage::mouseReleaseEvent(QMouseEvent* event)
       m_rubber_band.setHeight(
         (m_rb_start_y < m_rb_end_y ? m_rb_end_y - m_rb_start_y : m_rb_start_y - m_rb_end_y));
       m_stretched_band = m_rubber_band;
-      m_logger->debug(tr("x:%1, y:%2, width:%3, height:%4")
-                      .arg(m_rubber_band.x())
-                      .arg(m_rubber_band.y())
-                      .arg(m_rubber_band.width())
-                      .arg(m_rubber_band.height()));
+      qDebug() << tr("x:%1, y:%2, width:%3, height:%4")
+               .arg(m_rubber_band.x())
+               .arg(m_rubber_band.y())
+               .arg(m_rubber_band.width())
+               .arg(m_rubber_band.height());
       m_state = RUBBERBAND_COMPLETE;
       emit selected();
       update();
@@ -745,7 +745,7 @@ void BaseScanImage::rotateCCW()
 
 void BaseScanImage::rotateBy(qreal angle)
 {
-  m_logger->info(tr("Rotating by %1°").arg(angle));
+  qInfo() << tr("Rotating by %1°").arg(angle);
   QImage rotated = m_current_image.transformed([&angle](QPoint center) {
     QMatrix matrix;
     matrix.translate(center.x(), center.y());
