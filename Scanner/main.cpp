@@ -24,19 +24,8 @@
 #include <QTextStream>
 #include <QtDebug>
 
-#if defined(LOGGER_ENABLE)
-  //  #include "texteditiodevice.h"
-  #include <log4qt/consoleappender.h>
-  #include <log4qt/logger.h>
-  #include <log4qt/logmanager.h>
-  #include <log4qt/ttcclayout.h>
-  //  #include <log4qt/writerappender.h>
-#endif
-
 #include "scanoptions.h"
-//#include "scanpage.h"
 #include "documentdata.h"
-#include "logger.h"
 #include "style.h"
 
 using Image = QSharedPointer<QImage>;

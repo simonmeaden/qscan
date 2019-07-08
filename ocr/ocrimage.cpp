@@ -61,7 +61,7 @@ QImage OcrImage::copySelection()
   return QImage();
 }
 
-void OcrImage::binarise()
+void OcrImage::greyscale()
 {
   if (/*m_current_image.format() != QImage::Format_Mono
       && */m_current_image.format() != QImage::Format_Grayscale8) {

@@ -22,27 +22,24 @@ public:
   explicit OcrImage(QWidget* parent = nullptr);
   ~OcrImage() override = default;
 
-  //  void setImage(const QImage &image) override;
-
   void undoAllChanges();
 
   void clearToBackground();
   void cropToSelection();
   QImage copySelection();
 
-  void binarise();
+  void greyscale();
+  void monochrome();
   void applyThreshold(int value);
   void invert();
 
   void rescale();
-  //  void revertRescale();
   void applyRescale(double value);
 
   void acceptChanges();
   void cancelChanges();
 
   void denoise();
-  //  void revertDenoise();
   void applyDenoise(int filter_value, int template_value, int search_value);
   void deskew();
 

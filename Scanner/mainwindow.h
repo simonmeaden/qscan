@@ -68,6 +68,7 @@ public:
 protected:
   QScan* m_scan_lib;
 
+  QToolBar* m_source_bar, *m_mode_bar, *m_res_bar;
   QGridLayout* m_main_layout{};
   ScanEditor* m_image_editor{};
   QComboBox* m_mode_box{};
@@ -150,6 +151,8 @@ protected:
   void sourceChangeSelected(const QString& source);
   void receiveSourceChange(ScanDevice* device);
 
+  //  void receiveEditingImage();
+
   void resolutionEdited(const QString& value);
 
   void scanHasFailed();
@@ -162,6 +165,7 @@ protected:
   void receiveOptionsSet(ScanDevice* device);
   void enableNoSelectionActions();
   void enableSelectionActions();
+  void enableScanningToolbars(bool enable);
   void disableSelectionActions();
   void disableNoSelectionActions();
   void enableImageLoadedActions();

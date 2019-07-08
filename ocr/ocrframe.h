@@ -65,14 +65,15 @@ signals:
                                  int image_index,
                                  const QImage& image,
                                  const DocumentData& doc_data);
-  void accept();
-  void reject();
+  void makeCompleted(DocumentData);
+  void rejectChanges();
 
 protected:
   enum ChangeType
   {
     None,
-    Binarise,
+    Greyscale,
+    Monochrome,
     Rescale,
     Denoise,
   };
@@ -83,9 +84,10 @@ protected:
   DocumentData m_doc_data;
   QPushButton* m_crop_btn{};
   QPushButton* m_clr_to_back_btn{};
-  QPushButton* m_binarise_btn{};
+  QPushButton* m_greyscale_btn{};
+  QPushButton* m_monochrome_btn{};
   QPushButton* m_ocr_btn{};
-  QPushButton* m_ocr_sel_btn{};
+  //  QPushButton* m_ocr_sel_btn{};
   QPushButton* m_invert_btn{};
   QPushButton* m_denoise_btn{};
   QPushButton* m_dewarp_btn{};
@@ -136,7 +138,8 @@ protected:
   void setSelected();
   void setUnselected();
   void crop();
-  void binarise();
+  void greyscale();
+  void monochrome();
   void invert();
   void denoise();
   void dewarp();
@@ -174,6 +177,8 @@ protected:
   void scanListWasClicked(const QModelIndex&);
   void scanListWasDoubleClicked(const QModelIndex& index);
 
+  void completeOperation();
+
   void enableCleanImageBtns(bool enable);
   void imageSizeHasChanged(int width, int height, int xres, int yres);
 
@@ -181,6 +186,10 @@ protected:
   QFrame* initDoubleSliderFrame();
   QFrame* initDenoiseSliderFrame();
   void setResolution(const QImage& image);
+  //  QFrame* initOcrBtns();
+  QFrame* initMoveBtns();
+  QFrame* initModifyBtns();
+  QFrame* initFinaliseBtns();
 };
 
 //class OcrDialog : public QDialog

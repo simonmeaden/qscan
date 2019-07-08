@@ -122,12 +122,13 @@ signals:
   void selectionUnderway();
   void imageIsLoaded();
   void ocrImage(const DocumentData& documentData);
+  void editingImage(bool);
 
 protected:
   Log4Qt::Logger* m_logger;
 
-  int m_main_stack_id, m_ocr_stack_id;
-  QStackedLayout* m_main_layout;
+  int m_stack_id, m_ocr_stack_id;
+  QStackedLayout* m_scan_layout;
   OcrFrame* m_ocr_frame;
 
   QString m_current_doc_name;
@@ -198,7 +199,7 @@ protected:
   void receiveOcrPageResult(const DocumentData& doc_data);
   void receiveOcrImageResult(int documentData, const QString& text);
   void receiveOcrImageRectResult(int documentData, const QString& text);
-  void receiveModifyActionFinished();
+  void receiveModifyActionFinished(DocumentData doc_data);
   void receiveModificationCancelled();
   void receivePageMoved(int start_row, int dest_row);
   void removeBoth(int page_no = -1);

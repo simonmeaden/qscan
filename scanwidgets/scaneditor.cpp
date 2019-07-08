@@ -241,24 +241,24 @@ void ScanEditor::initTransferBtns()
 
 void ScanEditor::initGui()
 {
-  m_main_layout = new QStackedLayout;
-  setLayout(m_main_layout);
+  m_scan_layout = new QStackedLayout;
+  setLayout(m_scan_layout);
 
   QFrame* main_frame = new QFrame(this);
   auto* grid_layout = new QGridLayout(this);
   grid_layout->setContentsMargins(0, 0, 0, 0);
   main_frame->setLayout(grid_layout);
 
-  m_main_stack_id = m_main_layout->addWidget(main_frame);
+  m_stack_id = m_scan_layout->addWidget(main_frame);
 
   m_ocr_frame = new OcrFrame(this);
   connect(m_ocr_frame, &OcrFrame::saveModifiedImage, this, &ScanEditor::saveModifiedImage);
   connect(m_ocr_frame, &OcrFrame::saveModifiedData, this, &ScanEditor::saveModifiedData);
   connect(m_ocr_frame, &OcrFrame::sendOcrRequest, this, &ScanEditor::receiveOcrImageRequest);
   connect(m_ocr_frame, &OcrFrame::saveSelectedDocumentImage, this, &ScanEditor::saveDocumentImage);
-  connect(m_ocr_frame, &OcrFrame::accept, this, &ScanEditor::receiveModifyActionFinished);
-  connect(m_ocr_frame, &OcrFrame::reject, this, &ScanEditor::receiveModificationCancelled);
-  m_ocr_stack_id = m_main_layout->addWidget(m_ocr_frame);
+  connect(m_ocr_frame, &OcrFrame::makeCompleted, this, &ScanEditor::receiveModifyActionFinished);
+  connect(m_ocr_frame, &OcrFrame::rejectChanges, this, &ScanEditor::receiveModificationCancelled);
+  m_ocr_stack_id = m_scan_layout->addWidget(m_ocr_frame);
 
   m_scroller = new QScrollArea(this);
   m_scroller->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -299,7 +299,7 @@ void ScanEditor::initGui()
   grid_layout->setColumnStretch(1, 3);
   grid_layout->setColumnStretch(2, 10);
 
-  m_main_layout->setCurrentIndex(m_main_stack_id);
+  m_scan_layout->setCurrentIndex(m_stack_id);
 }
 
 void ScanEditor::makeConnections()
@@ -493,10 +493,11 @@ void ScanEditor::receiveWorkOnRequest(int page_no)
 {
   DocumentData doc_data = m_doc_data_store->documentData(page_no);
 
-  if (!doc_data) {
-    m_main_layout->setCurrentIndex(m_ocr_stack_id);
+  if (!doc_data.isNull()) {
+    m_scan_layout->setCurrentIndex(m_ocr_stack_id);
     QImage image(doc_data->filename(), "PNG");
     m_ocr_frame->setData(page_no, image, doc_data);
+    emit editingImage(true);
   }
 }
 
@@ -544,59 +545,30 @@ void ScanEditor::saveModifiedData(const DocumentData& doc_data)
 
 void ScanEditor::receiveOcrPageResult(const DocumentData& doc_data)
 {
-  m_main_layout->setCurrentIndex(m_ocr_stack_id);
+  m_scan_layout->setCurrentIndex(m_ocr_stack_id);
 
   int page_no = doc_data->pageNumber();
   QImage image(doc_data->filename(), "PNG");
   m_ocr_frame->setData(page_no, image, doc_data);
 }
 
-void ScanEditor::receiveModifyActionFinished()
+void ScanEditor::receiveModifyActionFinished(DocumentData doc_data)
 {
-  DocumentData doc_data = m_ocr_frame->documentData();
-
-  int index = doc_data->pageNumber();
-
-  if (doc_data->textWasInitialised()) {
-    if (doc_data->textHasChanged()) {
-      int answer = QMessageBox::question(this,
-                                         tr("Image text exists."),
-                                         tr("The image %1 already has text.\n"
-                                            "Do you want to overwrite this text?")
-                                         .arg(index),
-                                         QMessageBox::Yes | QMessageBox::No,
-                                         QMessageBox::No);
-
-      if (answer == QMessageBox::Yes) {
-        saveDataStore();
-      }
-    }
-
-  } else {
-    if (doc_data->textHasChanged()) {
-      saveDataStore();
-    }
-  }
-
-  if (m_ocr_frame->imageChanged()) {
-    // this will only happen if not already saved
-    QImage image = m_ocr_frame->modifiedImage();
-    int page_no = m_ocr_frame->pageNumber();
-    saveModifiedImage(page_no, image);
-  }
-
-  //  m_main_layout->setCurrentIndex(m_main_stack_id);
+  doc_data->setCompleted(true);
+  m_scan_layout->setCurrentIndex(m_stack_id);
   enableMoveBtns(false);
   disableEditBtns();
   disableListBtns();
+  emit editingImage(false);
 }
 
 void ScanEditor::receiveModificationCancelled()
 {
-  m_main_layout->setCurrentIndex(m_main_stack_id);
+  m_scan_layout->setCurrentIndex(m_stack_id);
   enableMoveBtns(false);
   disableEditBtns();
   disableListBtns();
+  emit editingImage(false);
 }
 
 void ScanEditor::receivePageMoved(int start_row, int dest_row)

@@ -168,58 +168,6 @@ void ScanList::contextMenuEvent(QContextMenuEvent* /*event*/)
   //  auto *context_menu = new QMenu();
 }
 
-/* ScanItemDelegate
- **************************************************************************************/
-//ScanItemDelegate::ScanItemDelegate(QObject* parent)
-//  : QStyledItemDelegate(parent)
-//{}
-
-//QWidget* ScanItemDelegate::createEditor(QWidget* parent,
-//                                        const QStyleOptionViewItem& option,
-//                                        const QModelIndex& index) const
-//{
-//  auto* editor = new QTextEdit(parent);
-//  editor->setFrameStyle(QFrame::NoFrame);
-//  return editor;
-//}
-
-//void ScanItemDelegate::setEditorData(QWidget* editor, const QModelIndex& index) const
-//{
-//  QVariant value = index.model()->data(index, Qt::EditRole);
-
-//  auto* text_edit = dynamic_cast<QTextEdit*>(editor);
-
-//  if (value.type() == QVariant::String) {
-//    text_edit->setPlainText(value.toString());
-
-//  } else if (value.type() == QVariant::Image) {
-//    QImage image = value.value<QImage>();
-//    QTextDocument* document = text_edit->document();
-//    document->addResource(QTextDocument::ImageResource, QUrl("data://image.png"), QVariant(image));
-//    QTextCursor cursor(document);
-//    QTextImageFormat imageFormat;
-//    imageFormat.setName("data://image.png");
-//    cursor.insertImage(imageFormat);
-//  }
-//}
-
-//void ScanItemDelegate::setModelData(QWidget* editor,
-//                                    QAbstractItemModel* model,
-//                                    const QModelIndex& index) const
-//{
-//  auto* text_edit = qobject_cast<QTextEdit*>(editor);
-//  QString text = text_edit->toPlainText();
-//  QVariant value = index.model()->data(index, Qt::EditRole);
-//  model->setData(index, value, Qt::EditRole);
-//}
-
-//void ScanItemDelegate::updateEditorGeometry(QWidget* editor,
-//    const QStyleOptionViewItem& option,
-//    const QModelIndex& /*index*/) const
-//{
-//  editor->setGeometry(option.rect);
-//}
-
 /* ScanListModel
  **************************************************************************************/
 ScanListModel::ScanListModel(QObject* parent)

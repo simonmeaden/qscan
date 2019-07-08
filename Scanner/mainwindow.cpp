@@ -126,13 +126,13 @@ bool MainWindow::close()
 
 void MainWindow::initGui()
 {
-  QScreen* screen = QGuiApplication::primaryScreen();
-  QSize size = screen->availableSize();
-  int w = size.width() - 1200;
-  int h = size.height() - 800;
-  int x = int(w / 2.0);
-  int y = int(h / 2.0);
-  setGeometry(x, y, 1200, 1000);
+  //  QScreen* screen = QGuiApplication::primaryScreen();
+  //  QSize size = screen->availableSize();
+  //  int w = size.width() - 1200;
+  //  int h = size.height() - 800;
+  //  int x = int(w / 2.0);
+  //  int y = int(h / 2.0);
+  //  setGeometry(x, y, 1200, 1000);
   QFrame* main_frame = new QFrame(this);
   setCentralWidget(main_frame);
   m_main_layout = new QGridLayout;
@@ -143,12 +143,12 @@ void MainWindow::initGui()
   m_image_editor->setTesseractLanguage(m_lang);
   installEventFilter(m_image_editor);
   connect(m_image_editor, &ScanEditor::scanCancelled, this, &MainWindow::cancelScanning);
+  connect(m_image_editor, &ScanEditor::editingImage, this, &MainWindow::enableScanningToolbars);
+  //  connect(m_image_editor, &ScanEditor::editingImage, this, &MainWindow::enableScanningToolbars);
   int row = 0;
 
-  //  m_main_layout->addWidget(m_empty_edit, row, 1);
   m_main_layout->addWidget(m_image_editor, 0, 0, row + 1, 1);
   m_main_layout->setColumnStretch(0, 30);
-  //  m_main_layout->setColumnStretch(1, 10);
   initToolbar();
 }
 
@@ -186,24 +186,24 @@ QToolBar* MainWindow::initMainToolbar()
 
 QToolBar* MainWindow::initSourceToolbar()
 {
-  QToolBar* toolbar = addToolBar("source");
-  addToolBar(Qt::TopToolBarArea, toolbar);
+  m_source_bar = addToolBar("source");
+  addToolBar(Qt::TopToolBarArea, m_source_bar);
   QLabel* lbl = new QLabel(tr("Source :"), this);
   lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  toolbar->addWidget(lbl);
+  m_source_bar->addWidget(lbl);
   m_source_box = new QComboBox(this);
   m_source_box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   m_source_box->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-  toolbar->addWidget(m_source_box);
+  m_source_bar->addWidget(m_source_box);
   lbl = new QLabel(tr("Current Source :"), this);
   lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
   lbl->setContentsMargins(30, 0, 0, 0);
-  toolbar->addWidget(lbl);
+  m_source_bar->addWidget(lbl);
   m_curr_src = new QLabel(tr("No Source"), this);
   m_curr_src->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  toolbar->addWidget(m_curr_src);
-  toolbar->setMovable(true);
-  return toolbar;
+  m_source_bar->addWidget(m_curr_src);
+  m_source_bar->setMovable(true);
+  return m_source_bar;
 }
 
 QToolBar* MainWindow::initRightToolbar()
@@ -234,30 +234,30 @@ QToolBar* MainWindow::initRightToolbar()
 
 QToolBar* MainWindow::initModeToolbar()
 {
-  QToolBar* toolbar = addToolBar("mode bar");
+  m_mode_bar = addToolBar("mode bar");
   QLabel* lbl = new QLabel(tr("Mode :"), this);
   lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  toolbar->addWidget(lbl);
+  m_mode_bar->addWidget(lbl);
 
   m_mode_box = new QComboBox(this);
   m_mode_box->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
   m_mode_box->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-  toolbar->addWidget(m_mode_box);
+  m_mode_bar->addWidget(m_mode_box);
 
   lbl = new QLabel(tr("Current Mode :"), this);
   lbl->setContentsMargins(30, 0, 0, 0);
   lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  toolbar->addWidget(lbl);
+  m_mode_bar->addWidget(lbl);
   m_curr_mode = new QLabel(tr("No Mode"), this);
   m_curr_mode->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  toolbar->addWidget(m_curr_mode);
+  m_mode_bar->addWidget(m_curr_mode);
 
-  return toolbar;
+  return m_mode_bar;
 }
 
 QToolBar* MainWindow::initResolutionToolbar()
 {
-  auto* toolbar = addToolBar("mode bar");
+  m_res_bar = addToolBar("mode bar");
 
   auto* stack_frame = new QFrame(this);
   m_res_layout = new QStackedLayout;
@@ -330,20 +330,19 @@ QToolBar* MainWindow::initResolutionToolbar()
 
     m_stack_list_id = m_res_layout->addWidget(m_res_list);
   }
-  toolbar->addWidget(stack_frame);
-  return toolbar;
+  m_res_bar->addWidget(stack_frame);
+  return m_res_bar;
 }
 
 void MainWindow::initToolbar()
 {
   initMainToolbar();
-
-  auto* source_bar = initSourceToolbar();
-  auto* mode_bar = initModeToolbar();
+  initSourceToolbar();
+  initModeToolbar();
   initResolutionToolbar();
 
-  insertToolBarBreak(source_bar);
-  insertToolBarBreak(mode_bar);
+  insertToolBarBreak(m_source_bar);
+  insertToolBarBreak(m_mode_bar);
 
   initRightToolbar();
 }
@@ -591,6 +590,11 @@ void MainWindow::receiveSourceChange(ScanDevice* device)
   m_curr_src->setText(device->options->source());
 }
 
+//void MainWindow::receiveEditingImage()
+//{
+//  enableScanningToolbars(false);
+//}
+
 void MainWindow::resolutionEdited(const QString& value)
 {
   ScanDevice* device = m_scan_lib->device(m_selected_name);
@@ -655,6 +659,20 @@ void MainWindow::enableSelectionActions()
 {
   m_crop_act->setEnabled(true);
   m_copy_act->setEnabled(true);
+}
+
+void MainWindow::enableScanningToolbars(bool enable)
+{
+  if (enable) {
+    removeToolBar(m_source_bar);
+    removeToolBar(m_mode_bar);
+    removeToolBar(m_res_bar);
+
+  } else {
+    addToolBar(m_source_bar);
+    addToolBar(m_mode_bar);
+    addToolBar(m_res_bar);
+  }
 }
 
 void MainWindow::disableSelectionActions()

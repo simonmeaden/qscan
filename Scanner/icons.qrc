@@ -76,5 +76,6 @@
         <file alias="clear_edit">edit-clear.png</file>
         <file alias="clear_history">edit-clear-history.png</file>
         <file alias="clear_list">edit-clear-list.png</file>
+        <file alias="ocr">ocr_32.png</file>
     </qresource>
 </RCC>
