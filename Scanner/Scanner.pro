@@ -45,51 +45,26 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-unix|win32: LIBS += -llog4qt
-
-
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qscan/ -lqscan
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../qscan/ -lqscan
-else:unix: LIBS += -L$$OUT_PWD/../qscan -lqscan
-
-INCLUDEPATH += $$PWD/../qscan
-DEPENDPATH += $$PWD/../qscan
-
 RESOURCES += \
     icons.qrc
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../scanwidgets/release/ -lscanwidgets
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../scanwidgets/debug/ -lscanwidgets
-else:unix: LIBS += -L$$OUT_PWD/../scanwidgets/ -lscanwidgets
-
-INCLUDEPATH += $$PWD/../scanwidgets
-DEPENDPATH += $$PWD/../scanwidgets
-
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../ocr/release/ -locr
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../ocr/debug/ -locr
-else:unix: LIBS += -L$$OUT_PWD/../ocr/ -locr
-
-INCLUDEPATH += $$PWD/../ocr
-DEPENDPATH += $$PWD/../ocr
-
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../logger/release/ -llogger
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../logger/debug/ -llogger
-else:unix: LIBS += -L$$OUT_PWD/../logger/ -llogger
-
-INCLUDEPATH += $$PWD/../logger
-DEPENDPATH += $$PWD/../logger
-
 unix|win32: LIBS += -lyaml-cpp
-#unix|win32: LIBS += -lqyaml-cpp
+unix|win32: LIBS += -lqyaml-cpp
 unix|win32: LIBS += -ltesseract
 unix|win32: LIBS += -lopencv_core
 unix|win32: LIBS += -lopencv_photo
 unix|win32: LIBS += -lqwt-qt5
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qyaml-cpp/release/ -lqyaml-cpp
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../qyaml-cpp/debug/ -lqyaml-cpp
-else:unix: LIBS += -L$$OUT_PWD/../qyaml-cpp/ -lqyaml-cpp
 
-INCLUDEPATH += $$PWD/../qyaml-cpp
-DEPENDPATH += $$PWD/../qyaml-cpp
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../interface/release/ -linterface
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../interface/debug/ -linterface
+else:unix: LIBS += -L$$OUT_PWD/../interface/ -linterface
 
+INCLUDEPATH += $$PWD/../interface
+DEPENDPATH += $$PWD/../interface
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../interface/release/libinterface.a
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../interface/debug/libinterface.a
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../interface/release/interface.lib
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../interface/debug/interface.lib
+else:unix: PRE_TARGETDEPS += $$OUT_PWD/../interface/libinterface.a

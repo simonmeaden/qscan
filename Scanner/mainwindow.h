@@ -45,11 +45,6 @@
 #include <QVariant>
 #include <QtHelp/QtHelp>
 
-#include "logger.h"
-
-#include "scaneditor.h"
-
-class QScan;
 using Image = QSharedPointer<QImage>;
 
 class ScanDevice;
@@ -62,28 +57,25 @@ public:
   explicit MainWindow(QWidget* parent = nullptr);
   ~MainWindow() override;
 
-  QToolBar* initRightToolbar();
-  QToolBar* initModeToolbar();
-
 protected:
-  QScan* m_scan_lib;
+  QMenu* m_main_menu;
 
-  QToolBar* m_source_bar, *m_mode_bar, *m_res_bar;
-  QGridLayout* m_main_layout{};
-  ScanEditor* m_image_editor{};
-  QComboBox* m_mode_box{};
-  QComboBox* m_source_box{};
-  QLabel* m_min_res{};
-  QLabel* m_max_res{};
-  QLabel* m_curr_src{};
-  QLabel* m_curr_mode{};
-  QIntValidator* m_res_validator{};
-  QLineEdit* m_res_edit{};
-  QFrame* m_res_range{};
-  QFrame* m_res_list{};
-  QStackedLayout* m_res_layout{};
-  QComboBox* m_res_combo{};
-  QComboBox* m_scanner_box{};
+  //  QToolBar* m_source_bar, *m_mode_bar, *m_res_bar;
+  QStackedLayout* m_main_layout{};
+  //  ScanEditor* m_image_editor{};
+  //  QComboBox* m_mode_box{};
+  //  QComboBox* m_source_box{};
+  //  QLabel* m_min_res{};
+  //  QLabel* m_max_res{};
+  //  QLabel* m_curr_src{};
+  //  QLabel* m_curr_mode{};
+  //  QIntValidator* m_res_validator{};
+  //  QLineEdit* m_res_edit{};
+  //  QFrame* m_res_range{};
+  //  QFrame* m_res_list{};
+  //  QStackedLayout* m_res_layout{};
+  //  QComboBox* m_res_combo{};
+  //  QComboBox* m_scanner_box{};
 
   QString m_config_dir;
   QString m_data_dir;
@@ -92,11 +84,14 @@ protected:
 
   QString m_selected_name;
   bool m_selected;
+
+  //  QMap<QFrame*, int> m_stack_id_map;
+
   int m_stack_range_id{};
   int m_stack_list_id{};
 
   QPixmapCache::Key help_key;
-  QPixmapCache::Key scan_key;
+  //  QPixmapCache::Key scan_key;
   QPixmapCache::Key rot_left_key;
   QPixmapCache::Key rot_right_key;
   QPixmapCache::Key rot_angle_key;
@@ -113,7 +108,7 @@ protected:
   QPixmapCache::Key fit_height_key;
   QPixmapCache::Key close_key;
 
-  QAction* m_scan_act{};
+  //  QAction* m_scan_act{};
   QAction* m_help_act{};
   QAction* m_rot_left_act{};
   QAction* m_rot_right_act{};
@@ -130,8 +125,9 @@ protected:
   QAction* m_fit_width_act{};
   QAction* m_fit_height_act{};
   QAction* m_close_act{};
-  QAction* m_set_docname_act{};
   QAction* m_doc_completed_act{};
+
+  void loadPlugins();
 
   bool close();
 
@@ -141,28 +137,28 @@ protected:
   void initMenu();
   void makeConnections();
 
-  void scannerSelectionChanged(int index);
-  void startScanning();
-  void cancelScanning();
+  //  void scannerSelectionChanged(int index);
+  //  void startScanning();
+  //  void cancelScanning();
 
-  void modeChangeSelected(const QString& mode);
-  void receiveModeChange(ScanDevice* device);
+  //  void modeChangeSelected(const QString& mode);
+  //  void receiveModeChange(ScanDevice* device);
 
-  void sourceChangeSelected(const QString& source);
-  void receiveSourceChange(ScanDevice* device);
+  //  void sourceChangeSelected(const QString& source);
+  //  void receiveSourceChange(ScanDevice* device);
 
   //  void receiveEditingImage();
 
-  void resolutionEdited(const QString& value);
+  //  void resolutionEdited(const QString& value);
 
-  void scanHasFailed();
+  //  void scanHasFailed();
   void scanProgressed(const int&);
   //  void geometry();
-  void modifyingSelection();
-  void editorHasSelection();
-  void editorHasNoSelection();
+  //  void modifyingSelection();
+  //  void editorHasSelection();
+  //  void editorHasNoSelection();
   void imageLoaded();
-  void receiveOptionsSet(ScanDevice* device);
+  //  void receiveOptionsSet(ScanDevice* device);
   void enableNoSelectionActions();
   void enableSelectionActions();
   void enableScanningToolbars(bool enable);
@@ -170,19 +166,19 @@ protected:
   void disableNoSelectionActions();
   void enableImageLoadedActions();
   void disableImageLoadedActions();
-  void createDocumentName();
-  void completeDocument();
+  //  void createDocumentName();
+  //  void completeDocument();
 
   static const QString OPTIONS_FILE;
   static const QString CURRENT_DOCUMENT;
   static const QString TESSERACT;
   static const QString LANGUAGE;
-  void loadOptions();
-  void saveOptions();
-  void loadExistingFiles();
+
   QToolBar* initMainToolbar();
-  QToolBar* initSourceToolbar();
-  QToolBar* initResolutionToolbar();
+  //  QToolBar* initSourceToolbar();
+  //  QToolBar* initResolutionToolbar();
+  QToolBar* initRightToolbar();
+  //  QToolBar* initModeToolbar();
   void initPixmaps();
   void makeDelayedConnections();
 };

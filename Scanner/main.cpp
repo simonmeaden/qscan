@@ -24,23 +24,19 @@
 #include <QTextStream>
 #include <QtDebug>
 
-#include "scanoptions.h"
 #include "documentdata.h"
 #include "style.h"
 
 using Image = QSharedPointer<QImage>;
 Q_DECLARE_METATYPE(Image)
 
-using namespace Log4Qt;
 int main(int argc, char* argv[])
 {
   //
   QApplication a(argc, argv);
   qRegisterMetaType<Image>();
-  qRegisterMetaType<ScanOptions>();
   qRegisterMetaType<DocData>();
   qRegisterMetaType<DocumentData>();
-  qRegisterMetaType<LogLevel>();
   qRegisterMetaType<StyleData>();
   qRegisterMetaType<Style>();
   qRegisterMetaType<StyledString>();
