@@ -17,13 +17,13 @@ OcrWorker::OcrWorker(QString datapath, QString lang)
 
 void OcrWorker::convertPage(const DocumentData& doc_data)
 {
-  qInfo() << (tr("Converting page in OcrWorker."));
+  qCInfo(QscanOcr) << (tr("Converting page in OcrWorker."));
   m_doc_data.append(doc_data);
 }
 
 void OcrWorker::convertImage(int page_no, const QImage& image, const QRect& rect)
 {
-  qInfo() << (tr("Converting image in OcrWorker."));
+  qCInfo(QscanOcr) << (tr("Converting image in OcrWorker."));
   m_images.append(image);
   m_page_nos.append(page_no);
   m_rects.append(rect);

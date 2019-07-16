@@ -35,32 +35,10 @@ using Image = QSharedPointer<QImage>;
 
 class ScanDevice : public QObject
 {
-public:
-  ScanDevice(QObject* parent = nullptr);
-  //  ScanDevice(const ScanDevice* other)
-  //    : name(other->name)
-  //    , vendor(other->vendor)
-  //    , model(other->model)
-  //    , type(other->type)
-  //    , op_name(other->op_name)
-  //    , options(other->options)
+  Q_OBJECT
 
-  //  {}
-  //  ~ScanDevice() override;
-
-  //  ScanDevice& operator=(const ScanDevice& other)
-  //  {
-  //    if (this != &other)
-  //    {
-  //      name = other.name;
-  //      vendor = other.vendor;
-  //      model = other.model;
-  //      type = other.type;
-  //      op_name = other.op_name;
-  //      options = other.options;
-  //    }
-  //    return *this;
-  //  }
+public: ScanDevice(QObject* parent = nullptr);
+  ScanDevice(const ScanDevice& other);
 
   QString name;
   QString vendor;
@@ -76,6 +54,7 @@ public:
 };
 // typedef QSharedPointer<ScanDevice> Device;
 typedef QMap<QString, ScanDevice*> DeviceMap;
+Q_DECLARE_METATYPE(ScanDevice)
 
 class ScanOptions;
 
@@ -138,12 +117,14 @@ public:
 protected:
 };
 
+
 class ScanLibrary
   : public QObject
   , public ScanInterface
 {
   Q_OBJECT
-public: ScanLibrary(QObject* parent = nullptr);
+public:
+  ScanLibrary(QObject* parent = nullptr);
   //  ~ScanLibrary();
 
 signals:

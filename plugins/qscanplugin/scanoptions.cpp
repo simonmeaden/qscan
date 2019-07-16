@@ -298,25 +298,28 @@ int ScanOptions::resolution() const
 void ScanOptions::setResolution(int scan_resolution)
 {
   m_resolution = scan_resolution;
+  m_resolution_range.value = scan_resolution;
+
   setResolutionX(scan_resolution);
   setResolutionY(scan_resolution);
 }
 
 bool ScanOptions::isResolutionRange()
 {
-  if (m_resolution_range.type() == QMetaType::QVariantList) {
+  // can only be a QList<int> or RangeData
+  if (m_resolution_range.range_data.canConvert<QList<int>>()) {
     return false;
   }
 
   return true;
 }
 
-void ScanOptions::setResulutionRange(QVariant v)
+void ScanOptions::setResulutionRange(ScanRange scan_range)
 {
-  m_resolution_range = v;
+  m_resolution_range = scan_range;
 }
 
-QVariant ScanOptions::resolutionRange()
+ScanRange ScanOptions::resolutionRange()
 {
   return m_resolution_range;
 }

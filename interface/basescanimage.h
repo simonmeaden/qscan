@@ -12,6 +12,7 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "qscanlogging.h"
 #include "imageconverter.h"
 
 using namespace cv;

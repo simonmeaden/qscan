@@ -30,6 +30,7 @@
 #include <sane/sane.h>
 #include <sane/saneopts.h>
 
+#include "qscanlogging.h"
 #include "saneworker.h"
 #include "scaninterface.h"
 #include "scanoptions.h"
@@ -82,6 +83,7 @@ public:
   void clearPreview(ScanDevice* device) override;
   void setMode(ScanDevice* device, const QString& value) override;
   void setSource(ScanDevice* device, const QString& value) override;
+  void getAvailableScannerOptions(QString device_name) override;
 
 signals:
   void finished();
@@ -101,7 +103,6 @@ protected:
 
   static QMutex _mutex;
 
-  void getAvailableScannerOptions(QString device_name) override;
   void receiveIntValue(ScanDevice* device, int value);
   void scanIsCompleted();
 

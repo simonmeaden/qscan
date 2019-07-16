@@ -6,6 +6,7 @@
 #include <QString>
 #include <QThread>
 
+#include "qscanlogging.h"
 #include "documentdata.h"
 #include "util.h"
 

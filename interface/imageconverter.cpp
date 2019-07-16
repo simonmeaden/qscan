@@ -45,8 +45,8 @@ cv::Mat imageToMat(const QImage& image_in, bool clone_image_data)
   // 8-bit, 3 channel
   case QImage::Format_RGB32: {
     if (!clone_image_data) {
-      qWarning() << QObject::tr("ImageConverter::imageToMat() - Conversion requires cloning so we "
-                                "don't modify the original QImage data");
+      qCWarning(QScanUtil) << QObject::tr("ImageConverter::imageToMat() - Conversion requires cloning so we "
+                                          "don't modify the original QImage data");
     }
 
     cv::Mat mat(image.height(),
@@ -65,8 +65,8 @@ cv::Mat imageToMat(const QImage& image_in, bool clone_image_data)
   // 8-bit, 3 channel
   case QImage::Format_RGB888: {
     if (!clone_image_data) {
-      qWarning() << QObject::tr("ImageConverter::imageToMat() - Conversion requires cloning so we "
-                                "don't modify the original QImage data");
+      qCWarning(QScanUtil) << QObject::tr("ImageConverter::imageToMat() - Conversion requires cloning so we "
+                                          "don't modify the original QImage data");
     }
 
     QImage swapped = image.rgbSwapped();
@@ -98,9 +98,9 @@ cv::Mat imageToMat(const QImage& image_in, bool clone_image_data)
   //                CV_8UC1,)
 
   default:
-    qWarning() << QObject::tr("ImageConverter::imageToMat() - QImage format not "
-                              "handled in switch : %1")
-               .arg(image.format());
+    qCWarning(QScanUtil) << QObject::tr("ImageConverter::imageToMat() - QImage format not "
+                                        "handled in switch : %1")
+                         .arg(image.format());
     break;
   }
 
@@ -179,9 +179,9 @@ QImage matToImage(const cv::Mat& mat)
   }
 
   default:
-    qWarning() << QObject::tr("ASM::cvMatToQImage() - cv::Mat image type not "
-                              "handled in switch: %1")
-               .arg(mat.type());
+    qCWarning(QScanUtil) << QObject::tr("ASM::cvMatToQImage() - cv::Mat image type not "
+                                        "handled in switch: %1")
+                         .arg(mat.type());
     break;
   }
 
@@ -283,7 +283,7 @@ QImage pixToImage(PIX* pixImage)
 
   if (result.isNull()) {
     static QImage none(0, 0, QImage::Format_Invalid);
-    qWarning() << "***Invalid format!!!";
+    qCWarning(QScanUtil) << "***Invalid format!!!";
     return none;
   }
 

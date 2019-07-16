@@ -28,7 +28,7 @@ public:
   int minorVersion() const override;
   int buildVersion() const override;
 
-  QMap<QString, QMenu*> menus() override;
+  QList<QMenu*> menus() override;
   //  QList<QToolBar*> toolbars() override;
   QList<StackableFrame*> editors(QWidget* parent) override;
 
@@ -47,8 +47,8 @@ protected:
   static const QString m_file_filter;
   static const QString m_file_description;
 
-  void enumerateMenu(QAction* act, QMenu* pareny_menu);
-  void addMenuAction(QMap<QString, QMenu*> menus, QMap<QString, QMenu*> list);
+  //  void enumerateMenu(QAction* act, QMenu* pareny_menu);
+  //  void addMenuAction(QMap<QString, QMenu*> menus, QMap<QString, QMenu*> list);
 };
 
 #endif // QSCANPLUGIN_H

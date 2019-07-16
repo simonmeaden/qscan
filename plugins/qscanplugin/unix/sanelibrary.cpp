@@ -83,10 +83,10 @@ bool SaneLibrary::init()
 
   if (status == SANE_STATUS_GOOD) {
     m_sane_version = Version(version_code);
-    qInfo() << tr("SANE version : %1.%2.%3")
-            .arg(m_sane_version.majorVersion())
-            .arg(m_sane_version.minorVersion())
-            .arg(m_sane_version.buildVersion());
+    qCInfo(QscanSane) << tr("SANE version : %1.%2.%3")
+                      .arg(m_sane_version.majorVersion())
+                      .arg(m_sane_version.minorVersion())
+                      .arg(m_sane_version.buildVersion());
     return true;
   }
 
@@ -102,15 +102,15 @@ QStringList SaneLibrary::devices()
   sane_status = sane_get_devices(&device_list, SANE_FALSE);
 
   if (device_list) {
-    qDebug() <<
-             tr("sane_get_devices status: %1").arg(sane_strstatus(sane_status));
+    qCDebug(QscanSane) <<
+                       tr("sane_get_devices status: %1").arg(sane_strstatus(sane_status));
 
     const SANE_Device* current_device;
     size_t current_device_index = 0;
 
     while ((current_device = device_list[current_device_index]) != nullptr) {
       if (!current_device) {
-        qDebug() << tr("No devices connected");
+        qCDebug(QscanSane) << tr("No devices connected");
 
       } else {
         auto* scanner = new ScanDevice(this);
@@ -151,8 +151,8 @@ bool SaneLibrary::detectAvailableOptions(QString device_name)
   if (sane_status == SANE_STATUS_GOOD) {
     //    ScanDevice* device = m_scanners.value(device_name);
 
-    qDebug() <<
-             tr("sane_open status: %1").arg(sane_strstatus(sane_status));
+    qCDebug(QscanSane) <<
+                       tr("sane_open status: %1").arg(sane_strstatus(sane_status));
 
     sane_close(sane_handle);
 

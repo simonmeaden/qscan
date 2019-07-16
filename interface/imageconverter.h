@@ -9,6 +9,7 @@
 #include <QPixmap>
 #include <QtDebug>
 
+#include "qscanlogging.h"
 #include "util.h"
 
 /*

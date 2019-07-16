@@ -81,7 +81,7 @@ void ScanImage::copySelection()
   QClipboard* clipboard = QGuiApplication::clipboard();
 
   if (hasSelection()) {
-    qInfo() << tr("Copying to clipboard");
+    qCInfo(QscanWidgets) << tr("Copying to clipboard");
     QRect scaled_rect;
     scaled_rect.setX(int(m_rubber_band.x() / m_scale_by));
     scaled_rect.setY(int(m_rubber_band.y() / m_scale_by));
@@ -100,7 +100,7 @@ void ScanImage::copySelection()
 
 void ScanImage::selectAll()
 {
-  qInfo() << tr("Selecting all");
+  qCInfo(QscanWidgets) << tr("Selecting all");
   //  m_rubber_band = m_scaled_rect;
   m_rubber_band = m_image.rect();
   m_stretched_band = m_rubber_band;
@@ -124,7 +124,7 @@ QPair<QImage, QImage> ScanImage::splitPages()
   int w = m_current_image.width();
   int w2 = int(w / 2.0);
 
-  qInfo() << tr("Copying to clipboard");
+  qCInfo(QscanWidgets) << tr("Copying to clipboard");
   QRect part_rect;
   part_rect.setX(0);
   part_rect.setY(0);
@@ -145,7 +145,7 @@ QImage ScanImage::splitLeftPage()
 {
   int w2 = int(m_current_image.width() / 2.0);
 
-  qInfo() << tr("Copying to clipboard");
+  qCInfo(QscanWidgets) << tr("Copying to clipboard");
   QRect part_rect;
   part_rect.setX(0);
   part_rect.setY(0);
@@ -162,7 +162,7 @@ QImage ScanImage::splitRightPage()
   int w = m_current_image.width();
   int w2 = int(w / 2.0);
 
-  qInfo() << tr("Copying to clipboard");
+  qCInfo(QscanWidgets) << tr("Copying to clipboard");
   QRect part_rect;
   part_rect.setX(w2 + 1);
   part_rect.setY(0);

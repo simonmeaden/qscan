@@ -28,7 +28,7 @@ public:
   virtual int minorVersion() const = 0;
   virtual int buildVersion() const = 0;
 
-  virtual QMap<QString, QMenu*> menus() = 0;
+  virtual QList<QMenu*> menus() = 0;
   //  virtual QList<QToolBar*> toolbars() = 0;
   virtual QList<StackableFrame*> editors(QWidget* parent = nullptr) = 0;
 

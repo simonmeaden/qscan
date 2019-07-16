@@ -39,7 +39,8 @@ SOURCES +=   \
   imagelistmodel.cpp \
   imageview.cpp \
   papersize.cpp \
-  StackableFrame.cpp \
+  qmenuutils.cpp \
+  qscanlogging.cpp \
   stackableframe.cpp \
   style.cpp \
   util.cpp
@@ -54,11 +55,12 @@ HEADERS += \
     interface_global.h \
     iplugininterface.h  \
     papersize.h \
-    StackableFrame.h \
+    qmenuutils.h \
+    qscanlogging.h \
     stackableframe.h \
     style.h \
     util.h
-    
+
 DISTFILES += \
     plugininterface.json
 

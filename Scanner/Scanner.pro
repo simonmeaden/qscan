@@ -6,7 +6,7 @@
 
 DEFINES += LOGGER_ENABLE
 
-QT       += core gui help
+QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -53,7 +53,8 @@ unix|win32: LIBS += -lqyaml-cpp
 unix|win32: LIBS += -ltesseract
 unix|win32: LIBS += -lopencv_core
 unix|win32: LIBS += -lopencv_photo
-unix|win32: LIBS += -lqwt-qt5
+unix|win32: LIBS += -L/usr/local/qwt-6.1.4/lib -lqwt
+INCLUDEPATH += /usr/local/qwt-6.1.4/include
 
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../interface/release/ -linterface

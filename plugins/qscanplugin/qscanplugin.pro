@@ -118,3 +118,6 @@ else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../../i
 else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../../interface/release/interface.lib
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../../interface/debug/interface.lib
 else:unix: PRE_TARGETDEPS += $$OUT_PWD/../../interface/libinterface.a
+
+unix|win32: LIBS += -L/usr/local/qwt-6.1.4/lib -lqwt
+INCLUDEPATH += /usr/local/qwt-6.1.4/include

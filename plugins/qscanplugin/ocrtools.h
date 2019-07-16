@@ -5,6 +5,7 @@
 #include <QThread>
 #include <QtDebug>
 
+#include "qscanlogging.h"
 #include "documentdata.h"
 
 class OcrWorker;

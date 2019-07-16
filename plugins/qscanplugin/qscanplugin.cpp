@@ -2,6 +2,8 @@
 
 #include "scaneditor.h"
 #include "ocreditor.h"
+#include "qmenuutils.h"
+#include "scaninterface.h"
 
 const QString QScanPlugin::m_plugin_name = "OCR Plugin";
 const QString QScanPlugin::m_plugin_group = "OCR";
@@ -67,54 +69,22 @@ int QScanPlugin::buildVersion() const
   return m_build_version;
 }
 
-void QScanPlugin::enumerateMenu(QAction* act, QMenu* parent_menu)
+QList<QMenu*> QScanPlugin::menus()
 {
-  QMenu* sub;
-
-  if ((sub = act->menu())) {
-    parent_menu->addMenu(sub);
-
-  }   else {
-    // act is either a menu action or a seperator.
-    parent_menu->addAction(act);
-  }
-}
-
-void QScanPlugin::addMenuAction(QMap<QString, QMenu*> menus, QMap<QString, QMenu*> list)
-{
-  QMenu* menu;
-
-  for (auto name : menus.keys()) {
-    if (list.contains(name)) {
-      menu = list.value(name);
-      QMenu* sub = menus.value(name);
-
-      for (auto act : sub->actions()) {
-        enumerateMenu(act, menu);
-      }
-
-    } else {
-      menu = new QMenu(name);
-      list.insert(name, menu);
-    }
-  }
-}
-
-QMap<QString, QMenu*> QScanPlugin::menus()
-{
-  QMap<QString, QMenu*> list;
+  QList<QMenu*> menu_list;
+  QList<QMenu*> menus;
 
   if (m_scan_editor) {
-    QMap<QString, QMenu*> menus = m_scan_editor->menus();
-    addMenuAction(menus, list);
+    menus = m_scan_editor->menus();
+    QMenuUtils::mergeMenus(menus, menu_list);
   }
 
   if (m_ocr_editor) {
-    QMap<QString, QMenu*> menus = m_ocr_editor->menus();
-    addMenuAction(menus, list);
+    menus = m_ocr_editor->menus();
+    QMenuUtils::mergeMenus(menus, menu_list);
   }
 
-  return list;
+  return menu_list;
 }
 
 //QList<QToolBar*> QScanPlugin::toolbars()

@@ -22,8 +22,8 @@
 #include <QStandardPaths>
 #include <QDir>
 
-#include <qt5/qwt/qwt_scale_engine.h>
-#include <qt5/qwt/qwt_slider.h>
+#include <qwt_scale_engine.h>
+#include <qwt_slider.h>
 
 #include "qscanplugin_global.h"
 #include "ocrtools.h"
@@ -62,7 +62,7 @@ public:
 
   DocumentData documentData() const;
 
-  QMap<QString, QMenu*> menus();
+  QList<QMenu*> menus();
 
 signals:
   void sendOcrRequest(int, const QImage&, const QRect& rect = QRect());

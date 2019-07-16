@@ -43,6 +43,7 @@
 #include <QToolBar>
 #include <QMenuBar>
 
+#include "qscanlogging.h"
 #include "qscanplugin_global.h"
 #include "scaninterface.h"
 #include "pageview.h"
@@ -122,10 +123,8 @@ public:
   void setLang(const QString& lang);
 
   QStringList scanners();
-  QMap<QString, QMenu*> menus();
+  QList<QMenu*> menus();
   //  QList<QToolBar*> toolbars() override;
-
-  QMenu* getMenu(const QString& name);
 
 signals:
   void scanCancelled();
@@ -134,6 +133,10 @@ signals:
   void selectionUnderway();
   void imageIsLoaded();
   void ocrImage(const DocumentData& documentData);
+  void currentScanner(const QString);
+  void currentMode(const QString);
+  void currentSource(const QString);
+  void currentResolution(int);
   //  void editingImage(bool);
 
   void sendOcrRequest(int);
@@ -143,14 +146,11 @@ signals:
 
 protected:
   QScan* m_scan_lib{};
-  int m_stack_id, m_ocr_stack_id;
+  int m_main_id, m_ocr_stack_id;
   QStackedLayout* m_scan_layout;
   QGridLayout* m_editor_layout;
-  QMenuBar* m_menubar;
-  QMap<QString, QMenu*> m_menus;
-  QToolBar* m_toolbar;
   QAction*  m_open_act{}, *m_close_act{}, *m_set_docname_act{};
-  QMenu* m_scanners_menu{}, *m_modes_menu{}, *m_src_menu{};
+  QMenu* m_scanners_menu{}, *m_modes_menu{}, *m_src_menu{}, *m_res_menu{};
   //  OcrFrame* m_ocr_frame;
 
   QString m_current_doc_name;
@@ -178,26 +178,28 @@ protected:
   QPushButton* m_rem_txt_btn{};
   QPushButton* m_rem_img_btn{};
   QPushButton* m_rem_both_btn{};
-  QComboBox* m_scanner_box{}/*, *m_mode_box{}*/, *m_res_combo{}, *m_source_box{};
+  //  QComboBox* m_scanner_box{}/*, *m_mode_box{}*//*, *m_res_combo{}*//*, *m_source_box{}*/;
   QStackedLayout* m_res_layout{};
   int m_stack_range_id, m_stack_list_id;
   QFrame* m_res_range{};
   QFrame* m_res_list{};
-  QLabel* m_min_res{}, *m_max_res{}, *m_curr_src{}, *m_curr_mode{};
-  QLineEdit* m_res_edit{};
+  QLabel* m_min_res{}, *m_max_res{}, *m_curr_src{}, *m_curr_mode{}/*,m_curr_scanner{}*/;
   QIntValidator* m_res_validator{};
   QGroupBox* image_edit_group{}, *page_list_group{}, *image_transfer_group{};
   QString m_selected_name;
 
-  int m_resolution;
+  int m_image_resolution;
 
   bool eventFilter(QObject* obj, QEvent* event) override;
   void receiveOptionsSet(ScanDevice* device);
+  void receiveScannerChange(bool);
   void receiveModeChange(ScanDevice* device);
   void receiveSourceChange(ScanDevice* device);
   void resolutionEdited(const QString& value);
   void modeChangeSelected(const bool);
-  void sourceChangeSelected(const QString& source);
+  void sourceChangeSelected(bool);
+  void resolutionChangeSelected(bool);
+  void resolutionRangedChangeSelected(bool);
   void scannerSelectionChanged(int index);
   void scanHasFailed();
   void scanOpenHasFailed();
@@ -245,6 +247,9 @@ protected:
   void initTransferBtns();
   void saveDataStore();
 
+  //  QFrame* initMenuAndToolbars();
+  void initScannerMenu();
+
   static const QString OCR_IMAGE_NAME;
   static const QString INTERNAL_IMAGE_NAME;
   static const QString OCR_IMAGE_FILTER;
@@ -252,7 +257,6 @@ protected:
 
   static const QString OPTIONS_FILE;
   static const QString CURRENT_DOCUMENT;
-  QFrame* initMenuAndToolbars();
 };
 
 #endif // SCANEDITOR_H

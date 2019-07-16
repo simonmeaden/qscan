@@ -31,10 +31,18 @@
 class ScanDevice;
 using Device = QSharedPointer<ScanDevice>;
 
-struct ScanRange
+struct RangeData
 {
   int min;
   int max;
+};
+Q_DECLARE_METATYPE(RangeData);
+
+struct ScanRange
+{
+  QVariant range_data;
+  int value;
+
 };
 Q_DECLARE_METATYPE(ScanRange);
 
@@ -118,8 +126,8 @@ public:
   //  int maxResolution() const;
   //  void setMaxResolution(int maxResolution);
   bool isResolutionRange();
-  void setResulutionRange(QVariant v);
-  QVariant resolutionRange();
+  void setResulutionRange(ScanRange scan_range);
+  ScanRange resolutionRange();
 
   int optionId(const QString& name) const;
   void setOptionId(const QString& name, int option_id);
@@ -154,7 +162,7 @@ protected:
   int m_page_delay;
   QRect m_geometry;
   int m_resolution = -1;
-  QVariant m_resolution_range;
+  ScanRange m_resolution_range;
   //  int m_min_resolution = 1;
   //  int m_max_resolution = 1;
   int m_resolution_x = -1;

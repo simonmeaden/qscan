@@ -147,9 +147,16 @@ DocumentData OcrEditor::documentData() const
   return m_doc_data;
 }
 
-QMap<QString, QMenu*> OcrEditor::menus()
+QList<QMenu*> OcrEditor::menus()
 {
+  QList<QMenu*> menu_map;
+  QString ocr_name =  tr("OCR");
+  QMenu* ocr_menu = new QMenu(ocr_name);
 
+  // TODO build menu map.
+
+  menu_map.append(ocr_menu);
+  return menu_map;
 }
 
 void OcrEditor::loadOptions()

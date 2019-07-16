@@ -24,6 +24,7 @@
 
 #include "iplugininterface.h"
 #include "stackableframe.h"
+#include "qmenuutils.h"
 
 /*MainWindow
   =============================================================================*/
@@ -48,8 +49,11 @@ MainWindow::MainWindow(QWidget* parent)
   initPixmaps();
   initActions();
   initGui();
-  loadPlugins(); // must be after initGui() else no QStackedlayout
   initMenu();
+  /* must be after initGui() else no QStackedlayout
+     also after initMenus() as this creates master menus.
+  */
+  loadPlugins();
   makeConnections();
 
 
@@ -124,27 +128,6 @@ QToolBar* MainWindow::initMainToolbar()
   return toolbar;
 }
 
-//QToolBar* MainWindow::initSourceToolbar()
-//{
-//  m_source_bar = addToolBar("source");
-//  addToolBar(Qt::TopToolBarArea, m_source_bar);
-//  QLabel* lbl = new QLabel(tr("Source :"), this);
-//  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//  m_source_bar->addWidget(lbl);
-//  m_source_box = new QComboBox(this);
-//  m_source_box->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//  m_source_box->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-//  m_source_bar->addWidget(m_source_box);
-//  lbl = new QLabel(tr("Current Source :"), this);
-//  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//  lbl->setContentsMargins(30, 0, 0, 0);
-//  m_source_bar->addWidget(lbl);
-//  m_curr_src = new QLabel(tr("No Source"), this);
-//  m_curr_src->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//  m_source_bar->addWidget(m_curr_src);
-//  m_source_bar->setMovable(true);
-//  return m_source_bar;
-//}
 
 QToolBar* MainWindow::initRightToolbar()
 {
@@ -171,29 +154,6 @@ QToolBar* MainWindow::initRightToolbar()
   toolbar->setMovable(false);
   return toolbar;
 }
-
-//QToolBar* MainWindow::initModeToolbar()
-//{
-//  m_mode_bar = addToolBar("mode bar");
-//  QLabel* lbl = new QLabel(tr("Mode :"), this);
-//  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//  m_mode_bar->addWidget(lbl);
-
-////  m_mode_box = new QComboBox(this);
-////  m_mode_box->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
-////  m_mode_box->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-////  m_mode_bar->addWidget(m_mode_box);
-
-//  lbl = new QLabel(tr("Current Mode :"), this);
-//  lbl->setContentsMargins(30, 0, 0, 0);
-//  lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//  m_mode_bar->addWidget(lbl);
-//  m_curr_mode = new QLabel(tr("No Mode"), this);
-//  m_curr_mode->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//  m_mode_bar->addWidget(m_curr_mode);
-
-//  return m_mode_bar;
-//}
 
 void MainWindow::loadPlugins()
 {
@@ -236,14 +196,17 @@ void MainWindow::loadPlugins()
           }
         }
 
-        //        QMap<QString, QMenu *> menus = plugins->menus();
+        QList<QMenu*> menus = plugins->menus();
 
-        //        if (!menus.isEmpty()) {
-        //          for (auto* name: menus) {
-        //            if (menuBar().cont)
+        if (!menus.isEmpty()) {
+          QMenuUtils::mergeMenus(menus, m_menus);
+        }
 
-        //          }
-        //        }
+        menuBar()->clear();
+
+        for (QMenu* menu : m_menus) {
+          menuBar()->addMenu(menu);
+        }
 
         //        QList<QToolBar*> toolbars = plugins->toolbars();
 
@@ -344,20 +307,15 @@ void MainWindow::loadPlugins()
 void MainWindow::initToolbar()
 {
   initMainToolbar();
-  //  initSourceToolbar();
-  //  initModeToolbar();
-  //  initResolutionToolbar();
-
-  //  insertToolBarBreak(m_source_bar);
-  //  insertToolBarBreak(m_mode_bar);
-
   initRightToolbar();
 }
 
 void MainWindow::initMenu()
 {
-  //  QMenu* file_menu = menuBar()->addMenu(tr("File"));
-  //  file_menu->addAction(m_set_docname_act);
+  QString menu_name = tr("&File");
+  QMenu* file_menu = menuBar()->addMenu(menu_name);
+  file_menu->addAction(m_close_act);
+  m_menus.append(file_menu);
 }
 
 void MainWindow::initActions()
@@ -381,9 +339,9 @@ void MainWindow::initActions()
   QPixmapCache::find(fit_best_key, &fit_best_icon);
   QPixmapCache::find(fit_width_key, &fit_width_icon);
   QPixmapCache::find(fit_height_key, &fit_height_icon);
-  QPixmapCache::find(close_key, &close_icon);
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/close")), &close_icon);
 
-  m_close_act = new QAction(QIcon(close_icon), tr("Close Application"), this);
+  m_close_act = new QAction(close_icon, tr("Close Application"), this);
   m_help_act = new QAction(QIcon(help_icon), tr("Help"), this);
   //  m_scan_act = new QAction(QIcon(scan_icon), tr("Scan"), this);
   //  m_scan_act->setEnabled(false);
@@ -421,7 +379,7 @@ void MainWindow::initPixmaps()
   crop_key = QPixmapCache::insert(QPixmap(":/qscan_icons/crop"));
   save_key = QPixmapCache::insert(QPixmap(":/qscan_icons/save"));
   save_as_key = QPixmapCache::insert(QPixmap(":/qscan_icons/save-as"));
-  close_key = QPixmapCache::insert(QPixmap(":/qscan_icons/close"));
+  //  close_key = QPixmapCache::insert(QPixmap(":/qscan_icons/close"));
   zoom_in_key = QPixmapCache::insert(QPixmap(":/qscan_icons/zoom-in"));
   zoom_out_key = QPixmapCache::insert(QPixmap(":/qscan_icons/zoom-out"));
   fit_best_key = QPixmapCache::insert(QPixmap(":/qscan_icons/fit-best"));

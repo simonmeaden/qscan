@@ -29,6 +29,7 @@ QScan::QScan(QObject* parent)
   : QObject(parent)
 {
   qRegisterMetaType<ScanOptions>();
+  qRegisterMetaType<ScanDevice>();
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
   m_scan_lib = new SaneLibrary(this);
@@ -68,7 +69,7 @@ bool QScan::openDevice(const QString& device_name)
   bool open = m_scan_lib->detectAvailableOptions(device_name);
 
   if (open) {
-    qInfo() << tr("Scanner %1 open.").arg(device_name);
+    qCInfo(QscanSane) << tr("Scanner %1 open.").arg(device_name);
     m_scan_lib->getAvailableScannerOptions(device_name);
   }
 
@@ -79,13 +80,15 @@ bool QScan::startScanning(const QString& device_name)
 {
   bool open = m_scan_lib->detectAvailableOptions(device_name);
 
-  qInfo() << tr("Starting scan");
-  return m_scan_lib->startScan(device_name);
+  if (opem) {
+    qCInfo(QscanSane) << tr("Starting scan");
+    return m_scan_lib->startScan(device_name);
+  }
 }
 
 void QScan::cancelScan(/*const QString& device_name*/)
 {
-  qInfo() << tr("Cancelled scan");
+  qCInfo(QscanSane) << tr("Cancelled scan");
   m_scan_lib->cancelScan(/*device_name*/);
 }
 

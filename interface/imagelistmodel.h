@@ -8,6 +8,8 @@
 #include <QFontMetrics>
 #include <QtDebug>
 
+#include "qscanlogging.h"
+
 using ImageList = QList<QImage>;
 
 class ImageListModel : public QAbstractListModel

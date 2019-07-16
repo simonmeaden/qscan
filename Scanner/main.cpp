@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
   qRegisterMetaType<Style>();
   qRegisterMetaType<StyledString>();
 
-  //  qSetMessagePattern("%{file}(%{line}): %{message}");
+  qSetMessagePattern("%{category} %{backtrace depth=1}:%{line} - %{message}");
 
   MainWindow w;
 

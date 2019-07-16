@@ -26,6 +26,7 @@
 #include <QObject>
 #include <QtDebug>
 
+#include "qscanlogging.h"
 #include "scaninterface.h"
 #include "scanoptions.h"
 
@@ -75,11 +76,13 @@ protected:
   void setResolution(ScanDevice* device,
                      const SANE_Option_Descriptor* current_option,
                      SANE_Int option_id);
+  void setSource(ScanDevice* device, const SANE_Option_Descriptor* option, SANE_Int option_id);
 
   static const int GUARDS_SIZE = 4; /* 4 bytes */
   void* guardedMalloc(size_t size);
   void guardedFree(void* ptr);
   QVariant getOptionValue(ScanDevice* device, const QString& option_name);
+  void setMode(ScanDevice* device, const SANE_Option_Descriptor* option, SANE_Int option_id);
 };
 
 #endif // SANESCANETHREAD_H

@@ -60,22 +60,7 @@ public:
 protected:
   QMenu* m_main_menu;
 
-  //  QToolBar* m_source_bar, *m_mode_bar, *m_res_bar;
   QStackedLayout* m_main_layout{};
-  //  ScanEditor* m_image_editor{};
-  //  QComboBox* m_mode_box{};
-  //  QComboBox* m_source_box{};
-  //  QLabel* m_min_res{};
-  //  QLabel* m_max_res{};
-  //  QLabel* m_curr_src{};
-  //  QLabel* m_curr_mode{};
-  //  QIntValidator* m_res_validator{};
-  //  QLineEdit* m_res_edit{};
-  //  QFrame* m_res_range{};
-  //  QFrame* m_res_list{};
-  //  QStackedLayout* m_res_layout{};
-  //  QComboBox* m_res_combo{};
-  //  QComboBox* m_scanner_box{};
 
   QString m_config_dir;
   QString m_data_dir;
@@ -84,8 +69,7 @@ protected:
 
   QString m_selected_name;
   bool m_selected;
-
-  //  QMap<QFrame*, int> m_stack_id_map;
+  QList<QMenu*> m_menus;
 
   int m_stack_range_id{};
   int m_stack_list_id{};
@@ -137,28 +121,8 @@ protected:
   void initMenu();
   void makeConnections();
 
-  //  void scannerSelectionChanged(int index);
-  //  void startScanning();
-  //  void cancelScanning();
-
-  //  void modeChangeSelected(const QString& mode);
-  //  void receiveModeChange(ScanDevice* device);
-
-  //  void sourceChangeSelected(const QString& source);
-  //  void receiveSourceChange(ScanDevice* device);
-
-  //  void receiveEditingImage();
-
-  //  void resolutionEdited(const QString& value);
-
-  //  void scanHasFailed();
   void scanProgressed(const int&);
-  //  void geometry();
-  //  void modifyingSelection();
-  //  void editorHasSelection();
-  //  void editorHasNoSelection();
   void imageLoaded();
-  //  void receiveOptionsSet(ScanDevice* device);
   void enableNoSelectionActions();
   void enableSelectionActions();
   void enableScanningToolbars(bool enable);
@@ -166,21 +130,20 @@ protected:
   void disableNoSelectionActions();
   void enableImageLoadedActions();
   void disableImageLoadedActions();
-  //  void createDocumentName();
-  //  void completeDocument();
+  QToolBar* initMainToolbar();
+  QToolBar* initRightToolbar();
+  void initPixmaps();
+  void makeDelayedConnections();
+
+  //  void enumerateMenu(QAction* act, QMenu* pareny_menu);
+  //  void addMenuAction(QMap<QString, QMenu*> menus, QMap<QString, QMenu*> menu_map);
+
 
   static const QString OPTIONS_FILE;
   static const QString CURRENT_DOCUMENT;
   static const QString TESSERACT;
   static const QString LANGUAGE;
 
-  QToolBar* initMainToolbar();
-  //  QToolBar* initSourceToolbar();
-  //  QToolBar* initResolutionToolbar();
-  QToolBar* initRightToolbar();
-  //  QToolBar* initModeToolbar();
-  void initPixmaps();
-  void makeDelayedConnections();
 };
 
 #endif // MAINWINDOW_H

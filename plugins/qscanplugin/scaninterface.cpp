@@ -29,3 +29,9 @@ ScanDevice::ScanDevice(QObject* parent)
 {
   options = new ScanOptions(parent);
 }
+
+ScanDevice::ScanDevice(const ScanDevice& other)
+  : QObject(other.parent())
+{
+  options = other.options;
+}

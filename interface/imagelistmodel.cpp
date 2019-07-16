@@ -387,7 +387,7 @@ bool ImageListModel::canDropMimeData(const QMimeData* data,
     format += f + ", ";
   }
 
-  qDebug() << tr("Row : %1, Col : %2 Formats : %3").arg(row, column).arg(format);
+  qCDebug(QscanWidgets) << tr("Row : %1, Col : %2 Formats : %3").arg(row, column).arg(format);
 
   return (data->hasFormat(MIMETYPE) && (column == 0 || (column == -1 && parent.column() == 0)));
 }
