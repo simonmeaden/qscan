@@ -29,7 +29,7 @@ public:
   int buildVersion() const override;
 
   QList<QMenu*> menus() override;
-  //  QList<QToolBar*> toolbars() override;
+  QList<QToolBar*> toolbars() override;
   QList<StackableFrame*> editors(QWidget* parent) override;
 
 protected:

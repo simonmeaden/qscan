@@ -89,6 +89,8 @@ void OcrEditor::setData(int page_no, const QImage& image, const DocumentData& do
     m_greyscale_btn->setEnabled(false);
     enableCleanImageBtns(true);
   }
+
+  setFrameToTop();
 }
 
 void OcrEditor::setOcrImage(int page_no, const QImage& image)
@@ -157,6 +159,15 @@ QList<QMenu*> OcrEditor::menus()
 
   menu_map.append(ocr_menu);
   return menu_map;
+}
+
+QList<QToolBar*> OcrEditor::toolbars()
+{
+  QList<QToolBar*> toolbar_list;
+
+  // TODO build toolbar list
+
+  return toolbar_list;
 }
 
 void OcrEditor::loadOptions()

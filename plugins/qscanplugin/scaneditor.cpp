@@ -58,18 +58,24 @@ ScanEditor::ScanEditor(QWidget* parent)
 {
   QDir dir;
 
-  QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-  config_path += "/Biblos";
+  //  QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+  // TODO remove temporary configuration path which equates to "/home/simonmeaden/.config/Scanner"
+  // in the Scanner test application.
+  QString config_path = "/home/simonmeaden/.config/Biblos";
   dir.mkpath(config_path);
   m_options_file = config_path + QDir::separator() + OPTIONS_FILE;
 
-  m_data_dir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+  //  m_data_dir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+  // TODO remove temporary data store which equates to "/home/simonmeaden/.local/share/Scanner//"
+  // in the Scanner test application.
+  m_data_dir = "/home/simonmeaden/.local/share/Biblos/ocr";
+  dir.mkpath(m_data_dir);
 
-  m_lang = "eng";
+  m_lang = "eng"; // default language
   m_scan_lib = new QScan(this);
   m_scan_lib->init();
 
-  connect(m_scan_lib, &QScan::optionsSet, this, &ScanEditor::receiveOptionsSet);
+  connect(m_scan_lib, &QScan::optionsSet, this, &ScanEditor::receiveScannerData);
   connect(
     m_scan_lib, &QScan::modeChanged, this, &ScanEditor::receiveModeChange);
   connect(
@@ -82,32 +88,11 @@ ScanEditor::ScanEditor(QWidget* parent)
           &ScanEditor::setScanProgress);
   connect(m_scan_lib, &QScan::scanFailed, this, &ScanEditor::scanHasFailed);
 
-
-  loadOptions();
-  loadCurrentDocument();
-
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   initGui();
 
-  //  QStringList scanners = m_scan_lib->devices();
-
-  //  if (scanners.isEmpty()) {
-  //    m_scanner_box->addItem(tr("No scanners available"));
-
-  //  } else {
-
-  //    m_selected_name = scanners.at(0);
-
-  //    if (!m_selected_name.isEmpty()) {
-  //      if (m_scan_lib->openDevice(m_selected_name)) {
-  //        ScanDevice* device = m_scan_lib->device(m_selected_name);
-  //        receiveOptionsSet(device);
-  //      }
-
-  //    } else {
-  //      qCDebug(QscanWidgets) << tr("Unable to open %1").arg(m_selected_name);
-  //    }
-  //  }
+  loadOptions();
+  loadCurrentDocument();
 
   makeConnections();
 }
@@ -119,227 +104,301 @@ ScanEditor::~ScanEditor()
   saveOptions();
 }
 
-void ScanEditor::initPageListBtns()
+//void ScanEditor::initPageListBtns()
+//{
+//  QPixmap rem_img_icon, rem_txt_icon, rem_img_txt_icon;
+//  QPixmap move_up_icon, move_down_icon, move_to_icon;
+//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/del_image")), &rem_img_icon);
+//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/del_text")), &rem_txt_icon);
+//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/del_image_text")), &rem_img_txt_icon);
+//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/up")), &move_up_icon);
+//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/down")), &move_down_icon);
+//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/move_to_edit")), &move_to_icon);
+
+//  page_list_group = new QGroupBox(tr("Edit Document"), this);
+//  page_list_group->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+//  auto* group2_layout = new QVBoxLayout;
+//  page_list_group->setLayout(group2_layout);
+
+//  m_move_up_btn = new QPushButton(move_up_icon, "", this);
+//  m_move_up_btn->setIconSize(QSize(96, 32));
+//  m_move_up_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//  m_move_up_btn->setToolTip(tr("Move selection up one position"));
+//  group2_layout->addWidget(m_move_up_btn);
+//  connect(m_move_up_btn, &QPushButton::clicked, m_page_view, &PageView::moveUp);
+
+//  m_move_down_btn = new QPushButton(move_down_icon, "", this);
+//  m_move_down_btn->setIconSize(QSize(96, 32));
+//  m_move_down_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//  m_move_down_btn->setToolTip(tr("Move selection down one position"));
+//  group2_layout->addWidget(m_move_down_btn);
+//  connect(m_move_down_btn, &QPushButton::clicked, m_page_view, &PageView::moveDown);
+
+//  m_move_to_btn = new QPushButton(move_to_icon, "", this);
+//  m_move_to_btn->setIconSize(QSize(96, 32));
+//  m_move_to_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//  m_move_to_btn->setToolTip(tr("Work with selection"));
+//  group2_layout->addWidget(m_move_to_btn);
+//  connect(m_move_to_btn, &QPushButton::clicked, m_page_view, &PageView::workOnImage);
+
+//  m_rem_txt_btn = new QPushButton(rem_txt_icon, "", this);
+//  m_rem_txt_btn->setIconSize(QSize(96, 32));
+//  m_rem_txt_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//  m_rem_txt_btn->setToolTip(tr("Remove the text"));
+//  group2_layout->addWidget(m_rem_txt_btn);
+//  connect(m_rem_txt_btn, &QPushButton::clicked, this, &ScanEditor::removeText);
+
+//  m_rem_img_btn = new QPushButton(rem_img_icon, "", this);
+//  m_rem_img_btn->setIconSize(QSize(96, 32));
+//  m_rem_img_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//  m_rem_img_btn->setToolTip(tr("Remove the image"));
+//  group2_layout->addWidget(m_rem_img_btn);
+//  connect(m_rem_img_btn, &QPushButton::clicked, this, &ScanEditor::removeImage);
+
+//  m_rem_both_btn = new QPushButton(rem_img_txt_icon, "", this);
+//  m_rem_both_btn->setIconSize(QSize(96, 32));
+//  m_rem_both_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//  m_rem_both_btn->setToolTip(tr("Remove the both the image and the text"));
+//  group2_layout->addWidget(m_rem_both_btn);
+//  connect(m_rem_both_btn, &QPushButton::clicked, this, &ScanEditor::removeText);
+//}
+
+//void ScanEditor::initImageEditBtns()
+//{
+//  QPixmap crop_icon;
+//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/crop")), &crop_icon);
+
+//  image_edit_group = new QGroupBox(tr("Edit Image"), this);
+//  image_edit_group->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+//  auto* group1_layout = new QVBoxLayout;
+//  image_edit_group->setLayout(group1_layout);
+
+//  m_crop_btn = new QPushButton(crop_icon, "", this);
+//  m_crop_btn->setIconSize(QSize(96, 32));
+//  m_crop_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//  m_crop_btn->setToolTip(tr("Crop image to selection"));
+//  group1_layout->addWidget(m_crop_btn);
+//  connect(m_crop_btn, &QPushButton::clicked, this, &ScanEditor::cropToSelection);
+//}
+
+//void ScanEditor::initTransferBtns()
+//{
+//  QPixmap left_icon, right_icon, single_icon, both_icon, cover_icon;
+//  QPixmap scale_icon /*, move_to_internal_icon*/;
+//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/cover64")), &cover_icon);
+//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/left64")), &left_icon);
+//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/right64")), &right_icon);
+//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/single64")), &single_icon);
+//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/both64")), &both_icon);
+//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/scale")), &scale_icon);
+
+//  //  image_transfer_group = new QGroupBox(tr("Transfer Image"), this);
+//  //  image_transfer_group->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+//  auto* group3_layout = new QVBoxLayout;
+//  //  image_transfer_group->setLayout(group3_layout);
+
+//  m_cover_btn = new QPushButton(cover_icon, "", this);
+//  m_cover_btn->setIconSize(QSize(96, 32));
+//  m_cover_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//  m_cover_btn->setToolTip(tr("Move image to cover"));
+//  group3_layout->addWidget(m_cover_btn);
+//  connect(m_cover_btn, &QPushButton::clicked, this, &ScanEditor::movePageToCover);
+
+//  m_left_btn = new QPushButton(left_icon, "", this);
+//  m_left_btn->setIconSize(QSize(96, 32));
+//  m_left_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//  m_left_btn->setToolTip(tr("Move left image to page list"));
+//  group3_layout->addWidget(m_left_btn);
+//  connect(m_left_btn, &QPushButton::clicked, this, &ScanEditor::moveLeftPageToDocument);
+
+//  m_right_btn = new QPushButton(right_icon, "", this);
+//  m_right_btn->setIconSize(QSize(96, 32));
+//  m_right_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//  m_right_btn->setToolTip(tr("Move right image to page list"));
+//  group3_layout->addWidget(m_right_btn);
+//  connect(m_right_btn, &QPushButton::clicked, this, &ScanEditor::moveRightPageToDocument);
+
+//  m_single_btn = new QPushButton(single_icon, "", this);
+//  m_single_btn->setIconSize(QSize(96, 32));
+//  m_single_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//  m_single_btn->setToolTip(tr("Move image as single page to list list"));
+//  group3_layout->addWidget(m_single_btn);
+//  connect(m_single_btn, &QPushButton::clicked, this, &ScanEditor::movePageToDocument);
+
+//  m_both_btn = new QPushButton(both_icon, "", this);
+//  m_both_btn->setIconSize(QSize(96, 32));
+//  m_both_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//  m_both_btn->setToolTip(tr("Move both images to page list"));
+//  group3_layout->addWidget(m_both_btn);
+//  connect(m_both_btn, &QPushButton::clicked, this, &ScanEditor::moveBothPagesToDocument);
+//}
+
+void ScanEditor::initRightToolbar(QToolBar* r_toolbar)
+{
+  QPixmap copy_icon, crop_icon, scale_icon, rot_left_icon, rot_right_icon, rot_angle_icon,
+          rot_edge_icon, fit_best_icon, fit_width_icon, fit_height_icon, zoom_in_icon,
+          zoom_out_icon, help_icon;
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/copy")), &copy_icon);
+  QAction* act = new QAction(copy_icon, tr("Copy selection to clipboard"), this);
+  r_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::copySelection);
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/crop")), &crop_icon);
+  act = new QAction(crop_icon, tr("Crop to selection"), this);
+  r_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::cropToSelection);
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/scale")), &scale_icon);
+  act = new QAction(scale_icon, tr("Scale image"), this);
+  r_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::scale);
+
+  r_toolbar->addSeparator();
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-left")), &rot_left_icon);
+  act = new QAction(rot_left_icon, tr("Rotate Anti-clockwise"), this);
+  r_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::rotateACW);
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-right")), &rot_right_icon);
+  act = new QAction(rot_right_icon, tr("Rotate Clockwise"), this);
+  r_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::rotateCW);
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-angle")), &rot_angle_icon);
+  act = new QAction(rot_angle_icon, tr("Rotate by angle"), this);
+  r_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::rotateByAngle);
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-edge")), &rot_edge_icon);
+  act = new QAction(rot_edge_icon, tr("Rotate by defined edge"), this);
+  r_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::rotateByEdge);
+
+  r_toolbar->addSeparator();
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/fit-best")), &fit_best_icon);
+  act = new QAction(fit_best_icon, tr("Best fit"), this);
+  r_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::fitBest);
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/fit-width")), &fit_width_icon);
+  act = new QAction(fit_width_icon, tr("Fit to width"), this);
+  r_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::fitWidth);
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/fit-height")), &fit_height_icon);
+  act = new QAction(fit_height_icon, tr("Fit to feight"), this);
+  r_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::fitHeight);
+
+  r_toolbar->addSeparator();
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/zoom-in")), &zoom_in_icon);
+  act = new QAction(zoom_in_icon, tr("Zoom in"), this);
+  r_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::fitBest);
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/zoom-out")), &zoom_out_icon);
+  act = new QAction(zoom_out_icon, tr("Zoom out"), this);
+  r_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::fitWidth);
+
+}
+
+void ScanEditor::initTopToolbar(QToolBar* t_toolbar)
+{
+  QPixmap scan_icon, help_icon;
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/scan")), &scan_icon);
+  QAction* act = new QAction(scan_icon, tr("Scan"), this);
+  t_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::copySelection);
+
+  t_toolbar->addSeparator();
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/help-contents")), &help_icon);
+  act = new QAction(help_icon, tr("Help"), this);
+  t_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::help);
+}
+
+void ScanEditor::initLeftToolbar(QToolBar* l_toolbar)
 {
   QPixmap rem_img_icon, rem_txt_icon, rem_img_txt_icon;
   QPixmap move_up_icon, move_down_icon, move_to_icon;
-  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/del_image")), &rem_img_icon);
-  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/del_text")), &rem_txt_icon);
-  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/del_image_text")), &rem_img_txt_icon);
+
   QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/up")), &move_up_icon);
+  QAction* act = new QAction(move_up_icon, tr("Move selection up one position"), this);
+  l_toolbar->addAction(act);
+  connect(act, &QAction::triggered, m_page_view, &PageView::moveUp);
+
   QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/down")), &move_down_icon);
+  act = new QAction(move_down_icon, tr("Move selection down one position"), this);
+  l_toolbar->addAction(act);
+  connect(act, &QAction::triggered, m_page_view, &PageView::moveDown);
+
+  l_toolbar->addSeparator();
+
+  QToolBar* l2_toolbar = new QToolBar("left_2", this);
+  l2_toolbar->setOrientation(Qt::Vertical);
+  l2_toolbar->setIconSize(QSize(96, 32));
+  l_toolbar->addWidget(l2_toolbar);
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/del_image")), &rem_img_icon);
+  act = new QAction(rem_img_icon, tr("Remove the image"), this);
+  l2_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::removeImage);
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/del_text")), &rem_txt_icon);
+  act = new QAction(rem_txt_icon, tr("Remove the text"), this);
+  l2_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::removeText);
+
+  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/del_image_text")), &rem_img_txt_icon);
+  act = new QAction(rem_img_txt_icon, tr("Remove the both the image and the text"), this);
+  l2_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::removeBoth);
+
+  l2_toolbar->addSeparator();
+
   QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/move_to_edit")), &move_to_icon);
-
-  page_list_group = new QGroupBox(tr("Edit Document"), this);
-  page_list_group->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  auto* group2_layout = new QVBoxLayout;
-  page_list_group->setLayout(group2_layout);
-
-  m_move_up_btn = new QPushButton(move_up_icon, "", this);
-  m_move_up_btn->setIconSize(QSize(96, 32));
-  m_move_up_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_move_up_btn->setToolTip(tr("Move selection up one position"));
-  group2_layout->addWidget(m_move_up_btn);
-  connect(m_move_up_btn, &QPushButton::clicked, m_page_view, &PageView::moveUp);
-
-  m_move_down_btn = new QPushButton(move_down_icon, "", this);
-  m_move_down_btn->setIconSize(QSize(96, 32));
-  m_move_down_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_move_down_btn->setToolTip(tr("Move selection down one position"));
-  group2_layout->addWidget(m_move_down_btn);
-  connect(m_move_down_btn, &QPushButton::clicked, m_page_view, &PageView::moveDown);
-
-  m_move_to_btn = new QPushButton(move_to_icon, "", this);
-  m_move_to_btn->setIconSize(QSize(96, 32));
-  m_move_to_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_move_to_btn->setToolTip(tr("Work with selection"));
-  group2_layout->addWidget(m_move_to_btn);
-  connect(m_move_to_btn, &QPushButton::clicked, m_page_view, &PageView::workOnImage);
-
-  m_rem_txt_btn = new QPushButton(rem_txt_icon, "", this);
-  m_rem_txt_btn->setIconSize(QSize(96, 32));
-  m_rem_txt_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_rem_txt_btn->setToolTip(tr("Remove the text"));
-  group2_layout->addWidget(m_rem_txt_btn);
-  connect(m_rem_txt_btn, &QPushButton::clicked, this, &ScanEditor::removeText);
-
-  m_rem_img_btn = new QPushButton(rem_img_icon, "", this);
-  m_rem_img_btn->setIconSize(QSize(96, 32));
-  m_rem_img_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_rem_img_btn->setToolTip(tr("Remove the image"));
-  group2_layout->addWidget(m_rem_img_btn);
-  connect(m_rem_img_btn, &QPushButton::clicked, this, &ScanEditor::removeImage);
-
-  m_rem_both_btn = new QPushButton(rem_img_txt_icon, "", this);
-  m_rem_both_btn->setIconSize(QSize(96, 32));
-  m_rem_both_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_rem_both_btn->setToolTip(tr("Remove the both the image and the text"));
-  group2_layout->addWidget(m_rem_both_btn);
-  connect(m_rem_both_btn, &QPushButton::clicked, this, &ScanEditor::removeText);
+  act = new QAction(move_to_icon, tr("Work with selected image"), this);
+  l2_toolbar->addAction(act);
+  connect(act, &QAction::triggered, m_page_view, &PageView::workOnImage);
 }
 
-void ScanEditor::initImageEditBtns()
-{
-  QPixmap crop_icon;
-  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/crop")), &crop_icon);
-
-  image_edit_group = new QGroupBox(tr("Edit Image"), this);
-  image_edit_group->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  auto* group1_layout = new QVBoxLayout;
-  image_edit_group->setLayout(group1_layout);
-
-  m_crop_btn = new QPushButton(crop_icon, "", this);
-  m_crop_btn->setIconSize(QSize(96, 32));
-  m_crop_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_crop_btn->setToolTip(tr("Crop image to selection"));
-  group1_layout->addWidget(m_crop_btn);
-  connect(m_crop_btn, &QPushButton::clicked, this, &ScanEditor::cropToSelection);
-}
-
-void ScanEditor::initTransferBtns()
+void ScanEditor::initCentreToolbar(QToolBar* c_toolbar)
 {
   QPixmap left_icon, right_icon, single_icon, both_icon, cover_icon;
-  QPixmap scale_icon /*, move_to_internal_icon*/;
+  c_toolbar->setIconSize(QSize(96, 32));
+
   QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/cover64")), &cover_icon);
+  QAction* act = new QAction(cover_icon, tr("Move image to cover"), this);
+  c_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::movePageToCover);
+
   QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/left64")), &left_icon);
+  act = new QAction(left_icon, tr("Move left image to page list"), this);
+  c_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::moveLeftPageToDocument);
+
   QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/right64")), &right_icon);
+  act = new QAction(right_icon, tr("Move right image to page list"), this);
+  c_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::moveRightPageToDocument);
+
   QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/single64")), &single_icon);
+  act = new QAction(single_icon, tr("Move image as single page to list list"), this);
+  c_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::movePageToDocument);
+
   QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/both64")), &both_icon);
-  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/scale")), &scale_icon);
-
-  image_transfer_group = new QGroupBox(tr("Transfer Image"), this);
-  image_transfer_group->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-  auto* group3_layout = new QVBoxLayout;
-  image_transfer_group->setLayout(group3_layout);
-
-  m_cover_btn = new QPushButton(cover_icon, "", this);
-  m_cover_btn->setIconSize(QSize(96, 32));
-  m_cover_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_cover_btn->setToolTip(tr("Move image to cover"));
-  group3_layout->addWidget(m_cover_btn);
-  connect(m_cover_btn, &QPushButton::clicked, this, &ScanEditor::makeCover);
-
-  m_left_btn = new QPushButton(left_icon, "", this);
-  m_left_btn->setIconSize(QSize(96, 32));
-  m_left_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_left_btn->setToolTip(tr("Move left image to page list"));
-  group3_layout->addWidget(m_left_btn);
-  connect(m_left_btn, &QPushButton::clicked, this, &ScanEditor::moveLeftPageToDocument);
-
-  m_right_btn = new QPushButton(right_icon, "", this);
-  m_right_btn->setIconSize(QSize(96, 32));
-  m_right_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_right_btn->setToolTip(tr("Move right image to page list"));
-  group3_layout->addWidget(m_right_btn);
-  connect(m_right_btn, &QPushButton::clicked, this, &ScanEditor::moveRightPageToDocument);
-
-  m_single_btn = new QPushButton(single_icon, "", this);
-  m_single_btn->setIconSize(QSize(96, 32));
-  m_single_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_single_btn->setToolTip(tr("Move image as single page to list list"));
-  group3_layout->addWidget(m_single_btn);
-  connect(m_single_btn, &QPushButton::clicked, this, &ScanEditor::movePageToDocument);
-
-  m_both_btn = new QPushButton(both_icon, "", this);
-  m_both_btn->setIconSize(QSize(96, 32));
-  m_both_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-  m_both_btn->setToolTip(tr("Move both images to page list"));
-  group3_layout->addWidget(m_both_btn);
-  connect(m_both_btn, &QPushButton::clicked, this, &ScanEditor::moveBothPagesToDocument);
+  act = new QAction(both_icon, tr("Move both images to page list"), this);
+  c_toolbar->addAction(act);
+  connect(act, &QAction::triggered, this, &ScanEditor::moveLeftPageToDocument);
 }
-
-//QFrame* ScanEditor::initMenuAndToolbars()
-//{
-//  QFrame* bar_frame = new QFrame(this);
-//  QVBoxLayout* bar_layout = new QVBoxLayout;
-//  bar_frame->setLayout(bar_layout);
-
-//  QToolBar* toolbar1 = new QToolBar(this);
-//  bar_layout->addWidget(toolbar1);
-
-//  QPixmap scan_icon;
-//  QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/scan")), &scan_icon);
-//  QAction* scan_act = new QAction(scan_icon, tr("Scan"), this);
-//  toolbar1->addAction(scan_act);
-//  connect(scan_act, &QAction::triggered, this, &ScanEditor::startScanning);
-
-//  QToolBar* toolbar2 = new QToolBar(this);
-//  auto* stack_frame = new QFrame(this);
-//  toolbar2->addWidget(stack_frame);
-//  bar_layout->addWidget(toolbar2);
-
-//  m_res_layout = new QStackedLayout;
-//  stack_frame->setLayout(m_res_layout);
-//  {
-//    m_res_range = new QFrame(this);
-//    auto* range_layout = new QGridLayout;
-//    m_res_range->setLayout(range_layout);
-//    /*===*/
-//    auto* lbl = new QLabel(tr("Min Resolution :"), this);
-//    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    range_layout->addWidget(lbl, 0, 0);
-
-//    QString s(tr("%1 %2"));
-//    m_min_res = new QLabel(s.arg(1).arg("dpi"), this);
-//    m_min_res->setAlignment(Qt::AlignLeft);
-//    m_min_res->setContentsMargins(0, 0, 0, 0);
-//    m_min_res->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    range_layout->addWidget(m_min_res, 0, 1);
-//    /*===*/
-//    lbl = new QLabel(tr("Resolution :"), this);
-//    lbl->setContentsMargins(30, 0, 0, 0);
-//    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    range_layout->addWidget(lbl, 0, 2);
-
-//    // the edit lineedit will only accept integers between 100 and 999
-//    m_res_edit = new QLineEdit(this);
-//    m_res_edit->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    m_res_validator = new QIntValidator(1, 1, this);
-//    m_res_edit->setValidator(new QIntValidator(1, 1, this));
-//    m_res_edit->setText("1");
-//    range_layout->addWidget(m_res_edit, 0, 3);
-//    lbl = new QLabel("dpi", this);
-//    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    range_layout->addWidget(lbl, 0, 4);
-
-//    /*===*/
-//    lbl = new QLabel("Max Resolution :", this);
-//    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    range_layout->addWidget(lbl, 0, 5);
-
-//    m_max_res = new QLabel(s.arg(1).arg("dpi"), this);
-//    m_max_res->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    m_max_res->setAlignment(Qt::AlignLeft);
-//    m_max_res->setContentsMargins(0, 0, 0, 0);
-//    range_layout->addWidget(m_max_res, 0, 6);
-
-//    m_stack_range_id = m_res_layout->addWidget(m_res_range);
-//  }
-//  {
-//    m_res_list = new QFrame(this);
-//    m_res_list->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    auto* list_layout = new QGridLayout;
-//    m_res_list->setLayout(list_layout);
-//    m_res_list->setVisible(true);
-
-//    auto* lbl = new QLabel(tr("Resolution :"), this);
-//    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    list_layout->addWidget(lbl, 0, 0);
-
-//    m_res_combo = new QComboBox(this);
-//    m_res_combo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    m_res_combo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-//    list_layout->addWidget(m_res_combo, 0, 1);
-
-//    auto* spacer_widget = new QWidget(this);
-//    spacer_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-//    list_layout->addWidget(spacer_widget, 0, 2);
-
-//    m_stack_list_id = m_res_layout->addWidget(m_res_list);
-//  }
-
-//  return bar_frame;
-//}
 
 void ScanEditor::initGui()
 {
@@ -352,7 +411,18 @@ void ScanEditor::initGui()
   main_frame->setLayout(m_editor_layout);
   m_main_id = m_scan_layout->addWidget(main_frame);
 
-  int row = 0;
+  QToolBar* t_toolbar = new QToolBar("top", this);
+  t_toolbar->setOrientation(Qt::Horizontal);
+  m_editor_layout->addWidget(t_toolbar, 0, 0, 1, 5);
+  QToolBar* r_toolbar = new QToolBar("right", this);
+  r_toolbar->setOrientation(Qt::Vertical);
+  m_editor_layout->addWidget(r_toolbar, 1, 0);
+  QToolBar* c_toolbar = new QToolBar("centre", this);
+  c_toolbar->setOrientation(Qt::Vertical);
+  m_editor_layout->addWidget(c_toolbar, 1, 2);
+  QToolBar* l_toolbar = new QToolBar("left", this);
+  l_toolbar->setOrientation(Qt::Vertical);
+  m_editor_layout->addWidget(l_toolbar, 1, 4);
 
   m_scroller = new QScrollArea(this);
   m_scroller->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -364,32 +434,22 @@ void ScanEditor::initGui()
   m_scan_display->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
   m_scan_display->setScaledContents(true);
   m_scroller->setWidget(m_scan_display);
-  m_editor_layout->addWidget(m_scroller, row, 0);
+  m_editor_layout->addWidget(m_scroller, 1, 1);
 
   // needs to be created before the buttons are connected.
   m_page_view = new PageView(this);
 
-  auto* btn_frame = new QFrame(this);
-  btn_frame->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-  auto* btn_layout = new QGridLayout;
-  btn_frame->setLayout(btn_layout);
-  m_editor_layout->addWidget(btn_frame, row, 1);
-
-  initImageEditBtns();
-  btn_layout->addWidget(image_edit_group, 0, 0);
-
-  initPageListBtns();
-  btn_layout->addWidget(page_list_group, 1, 0);
-
-  initTransferBtns();
-  btn_layout->addWidget(image_transfer_group, 2, 0);
+  initTopToolbar(t_toolbar);
+  initRightToolbar(r_toolbar);
+  initLeftToolbar(l_toolbar);
+  initCentreToolbar(c_toolbar);
 
   m_page_view->setContentsMargins(0, 0, 0, 0);
-  m_editor_layout->addWidget(m_page_view, row, 2);
+  m_editor_layout->addWidget(m_page_view, 1, 3);
 
-  m_editor_layout->setColumnStretch(0, 30);
-  m_editor_layout->setColumnStretch(1, 3);
-  m_editor_layout->setColumnStretch(2, 10);
+  m_editor_layout->setColumnStretch(1, 30);
+  m_editor_layout->setColumnStretch(3, 10);
+  //  m_editor_layout->setColumnStretch(2, 10);
 
   enableMoveBtns(false);
   disableEditBtns();
@@ -555,7 +615,7 @@ void ScanEditor::saveModifiedImage(int page_no, const QImage& image)
   }
 }
 
-void ScanEditor::makeCover()
+void ScanEditor::movePageToCover()
 {
   if (!m_current_doc_name.isEmpty()) {
     // TODO no doc name yet.
@@ -1092,7 +1152,7 @@ bool ScanEditor::eventFilter(QObject* obj, QEvent* event)
   return result;
 }
 
-void ScanEditor::receiveOptionsSet(ScanDevice* device)
+void ScanEditor::receiveScannerData(ScanDevice* device)
 {
   ScanOptions* options = device->options;
   //  m_mode_box->clear();
@@ -1103,7 +1163,7 @@ void ScanEditor::receiveOptionsSet(ScanDevice* device)
   for (auto mode : list) {
     QAction* act = new QAction(mode);
     m_modes_menu->addAction(act);
-    connect(act, &QAction::triggered, this, &ScanEditor::modeChangeSelected);
+    connect(act, &QAction::triggered, this, &ScanEditor::receiveModeChange);
   }
 
   QStringList sources =  options->sources();
@@ -1112,7 +1172,7 @@ void ScanEditor::receiveOptionsSet(ScanDevice* device)
   for (auto source : sources) {
     QAction* act = new QAction(source);
     m_src_menu->addAction(act);
-    connect(act, &QAction::triggered, this, &ScanEditor::sourceChangeSelected);
+    connect(act, &QAction::triggered, this, &ScanEditor::receiveSourceChange);
   }
 
   ScanRange scan_range = options->resolutionRange();
@@ -1124,7 +1184,7 @@ void ScanEditor::receiveOptionsSet(ScanDevice* device)
     QAction* act = new QAction(s.arg(u));
     act->setData(scan_range.range_data);
     m_res_menu->addAction(act);
-    connect(act, &QAction::triggered, this, &ScanEditor::resolutionRangedChangeSelected);
+    connect(act, &QAction::triggered, this, &ScanEditor::receiveResolutionRangedChange);
 
   } else if (scan_range.range_data.canConvert<QList<int>>()) {
     QString s = tr("%1%2");
@@ -1133,7 +1193,7 @@ void ScanEditor::receiveOptionsSet(ScanDevice* device)
       QAction* act = new QAction(s.arg(res).arg(u));
       act->setData(res);
       m_res_menu->addAction(act);
-      connect(act, &QAction::triggered, this, &ScanEditor::resolutionChangeSelected);
+      connect(act, &QAction::triggered, this, &ScanEditor::receiveResolutionListChange);
     }
   }
 }
@@ -1144,30 +1204,19 @@ void ScanEditor::receiveScannerChange(bool)
   QAction* act = qobject_cast<QAction*>(o);
 
   if (act) {
-    //    ScanDevice* scanner = act->data().value<ScanDevice*>();
-    QString name = act->text();
-    emit currentScanner(name);
-    m_scan_lib->openDevice(name);
+    QString dev_name = act->data().toString();
+    m_current_scanner = dev_name;
+    m_scan_lib->openDevice(dev_name);
   }
-}
-
-void ScanEditor::receiveModeChange(ScanDevice* device)
-{
-  m_curr_mode->setText(device->options->mode());
-}
-
-void ScanEditor::receiveSourceChange(ScanDevice* device)
-{
-  m_curr_src->setText(device->options->source());
 }
 
 void ScanEditor::resolutionEdited(const QString& value)
 {
-  ScanDevice* device = m_scan_lib->device(m_selected_name);
+  ScanDevice* device = m_scan_lib->device(m_current_scanner);
   m_scan_lib->setResolution(device, value.toInt());
 }
 
-void ScanEditor::modeChangeSelected(const bool /*triggered*/)
+void ScanEditor::receiveModeChange(const bool /*triggered*/)
 {
   QObject* o = sender();
   QAction* act = qobject_cast<QAction*>(o);
@@ -1175,14 +1224,14 @@ void ScanEditor::modeChangeSelected(const bool /*triggered*/)
   if (act) {
     QString mode = act->text();
 
-    if (!mode.isEmpty() && !m_selected_name.isEmpty()) {
-      ScanDevice* device = m_scan_lib->device(m_selected_name);
+    if (!mode.isEmpty() && !m_current_scanner.isEmpty()) {
+      ScanDevice* device = m_scan_lib->device(m_current_scanner);
       m_scan_lib->setScanMode(device, mode);
     }
   }
 }
 
-void ScanEditor::sourceChangeSelected(bool /*triggered*/)
+void ScanEditor::receiveSourceChange(bool /*triggered*/)
 {
   QObject* o = sender();
   QAction* act = qobject_cast<QAction*>(o);
@@ -1190,44 +1239,44 @@ void ScanEditor::sourceChangeSelected(bool /*triggered*/)
   if (act) {
     QString source = act->text();
 
-    if (!source.isEmpty() && !m_selected_name.isEmpty()) {
-      ScanDevice* device = m_scan_lib->device(m_selected_name);
+    if (!source.isEmpty() && !m_current_scanner.isEmpty()) {
+      ScanDevice* device = m_scan_lib->device(m_current_scanner);
       m_scan_lib->setSource(device, source);
     }
   }
 }
 
-void ScanEditor::resolutionChangeSelected(bool)
+void ScanEditor::receiveResolutionListChange(bool)
 {
   QObject* o = sender();
   QAction* act = qobject_cast<QAction*>(o);
 
-  if (act && !m_selected_name.isEmpty()) {
-    ScanDevice* device = m_scan_lib->device(m_selected_name);
+  if (act && !m_current_scanner.isEmpty()) {
+    ScanDevice* device = m_scan_lib->device(m_current_scanner);
     bool ok = false;
     int res = act->data().toInt(&ok);
 
     if (ok) {
       m_scan_lib->setResolution(device, res);
-      emit currentResolution(res);
+      //      emit currentResolution(res);
     }
   }
 }
 
-void ScanEditor::resolutionRangedChangeSelected(bool)
+void ScanEditor::receiveResolutionRangedChange(bool)
 {
   QObject* o = sender();
   QAction* act = qobject_cast<QAction*>(o);
 
-  if (act && !m_selected_name.isEmpty()) {
+  if (act && !m_current_scanner.isEmpty()) {
     ScanRange scan_range = act->data().value<ScanRange>();
 
     if (scan_range.range_data.canConvert<RangeData>()) {
-      if (!m_selected_name.isEmpty()) {
+      if (!m_current_scanner.isEmpty()) {
         RangeData range_data = scan_range.range_data.value<RangeData>();
         QString s = tr("Resolution (Min %1, Max %2)");
         bool ok = false;
-        ScanDevice* device = m_scan_lib->device(m_selected_name);
+        ScanDevice* device = m_scan_lib->device(m_current_scanner);
         int res = QInputDialog::getInt(this,
                                        tr("Select resolution"),
                                        s.arg(range_data.min).arg(range_data.max),
@@ -1239,25 +1288,8 @@ void ScanEditor::resolutionRangedChangeSelected(bool)
 
         if (ok) {
           m_scan_lib->setResolution(device, res);
-          emit currentResolution(res);
+          //          emit currentResolution(res);
         }
-      }
-    }
-  }
-}
-
-void ScanEditor::scannerSelectionChanged(int index)
-{
-  if (!m_scan_lib->devices().isEmpty()) {
-    QString name = m_scan_lib->devices().at(index);
-
-    if (!name.isEmpty()) {
-      if (m_scan_lib->openDevice(name)) {
-        m_selected_name = name;
-        m_scanners_menu->setEnabled(true);
-
-      } else {
-        qCDebug(QscanWidgets) << tr("Unable to open %1").arg(m_selected_name);
       }
     }
   }
@@ -1281,7 +1313,7 @@ void ScanEditor::scanOpenHasFailed()
 
 void ScanEditor::startScanning()
 {
-  m_scan_lib->startScanning(m_selected_name);
+  m_scan_lib->startScanning(m_current_scanner);
 }
 
 void ScanEditor::adjustScrollbar(qreal factor)
@@ -1322,7 +1354,7 @@ void ScanEditor::rotateByEdge()
   m_scan_display->rotateByEdge();
 }
 
-void ScanEditor::copySelection()
+void ScanEditor::copySelection(bool)
 {
   m_scan_display->copySelection();
 }
@@ -1340,6 +1372,11 @@ void ScanEditor::clearSelection()
 void ScanEditor::cropToContent()
 {
   m_scan_display->cropToContent();
+}
+
+void ScanEditor::help()
+{
+  // TODO help.
 }
 
 void ScanEditor::rescan()
@@ -1573,7 +1610,10 @@ void ScanEditor::initScannerMenu()
                   .arg(scanner->model)
                   .arg(scanner->type);
       QAction* act = new QAction(n, this);
-      act->setData(QVariant::fromValue(scanner));
+      act->setData(scanner->name);
+
+      qCDebug(QscanWidgets) << n << " : " << scanner->name;
+
       m_scanners_menu->addAction(act);
       connect(act, &QAction::triggered, this, &ScanEditor::receiveScannerChange);
       // TODO add appropriate connection
@@ -1581,16 +1621,16 @@ void ScanEditor::initScannerMenu()
       //        s.arg(scanner->model, scanner->type, scanner->name));
     }
 
-    m_selected_name = scanners.at(0);
+    m_current_scanner = scanners.at(0);
 
-    if (!m_selected_name.isEmpty()) {
-      if (m_scan_lib->openDevice(m_selected_name)) {
-        ScanDevice* device = m_scan_lib->device(m_selected_name);
-        receiveOptionsSet(device);
+    if (!m_current_scanner.isEmpty()) {
+      if (m_scan_lib->openDevice(m_current_scanner)) {
+        ScanDevice* device = m_scan_lib->device(m_current_scanner);
+        receiveScannerData(device);
       }
 
     } else {
-      qCDebug(QscanWidgets) << tr("Unable to open %1").arg(m_selected_name);
+      qCDebug(QscanWidgets) << tr("Unable to open %1").arg(m_current_scanner);
     }
   }
 }
@@ -1606,6 +1646,7 @@ QList<QMenu*> ScanEditor::menus()
 
   // scan action
   QAction* scan_act = new QAction(scan_icon, tr("Start Scanning"));
+  connect(scan_act, &QAction::triggered, this, &ScanEditor::startScanning);
   scan_menu->addAction(scan_act);
 
   // scanners sub-menu
@@ -1627,12 +1668,14 @@ QList<QMenu*> ScanEditor::menus()
   return menu_list;
 }
 
-//QList<QToolBar*> ScanEditor::toolbars()
-//{
-//  QList<QToolBar*> list;
-//  // TODO make toolbars
-//  return list;
-//}
+QList<QToolBar*> ScanEditor::toolbars()
+{
+  QList<QToolBar*> toolbar_list;
+
+  // TODO build toolbar list
+
+  return toolbar_list;
+}
 
 QImage ScanEditor::thumbnail(const QImage& image) const
 {
@@ -1656,31 +1699,31 @@ void ScanEditor::enableMoveBtns(bool enable)
   //  m_right_btn->setEnabled(enable);
   //  m_single_btn->setEnabled(enable);
   //  m_both_btn->setEnabled(enable);
-  image_transfer_group->setEnabled(enable);
+  //  image_transfer_group->setEnabled(enable);
 }
 
 void ScanEditor::enableListBtns()
 {
   //  m_move_up_btn->setEnabled(true);
   //  m_move_down_btn->setEnabled(true);
-  page_list_group->setEnabled(true);
+  //  page_list_group->setEnabled(true);
 }
 
 void ScanEditor::disableListBtns()
 {
   //  m_move_up_btn->setEnabled(false);
   //  m_move_down_btn->setEnabled(false);
-  page_list_group->setEnabled(false);
+  //  page_list_group->setEnabled(false);
 }
 
 void ScanEditor::enableEditBtns()
 {
   //  m_crop_btn->setEnabled(true);
-  image_edit_group->setEnabled(true);
+  //  image_edit_group->setEnabled(true);
 }
 
 void ScanEditor::disableEditBtns()
 {
   //  m_crop_btn->setEnabled(false);
-  image_edit_group->setEnabled(false);
+  //  image_edit_group->setEnabled(false);
 }

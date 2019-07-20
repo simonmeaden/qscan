@@ -37,14 +37,15 @@ MainWindow::MainWindow(QWidget* parent)
   : QMainWindow(parent)
   , m_selected(false)
 {
-  QString home_dir = QStandardPaths::locate(
-                       QStandardPaths::HomeLocation, QString(), QStandardPaths::LocateDirectory);
-  QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-  QString data_dir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+  //  QString home_dir = QStandardPaths::locate(
+  //                       QStandardPaths::HomeLocation, QString(), QStandardPaths::LocateDirectory);
+  //  QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+  //  QString data_dir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
 
-  m_config_dir = "/home/simonmeaden/.config/Biblos";
-  m_data_dir = "/home/simonmeaden/.local/share/Biblos/ocr";
-  m_lang = "eng";
+  setWindowTitle("Scanner - QScan Test Application");
+  //  m_config_dir = "/home/simonmeaden/.config/Biblos";
+  //  m_data_dir = "/home/simonmeaden/.local/share/Biblos/ocr";
+  //  m_lang = "eng";
 
   initPixmaps();
   initActions();
@@ -70,6 +71,7 @@ bool MainWindow::close()
   //  if (!m_scan_lib->isScanning()) {
   return QMainWindow::close();
   //  }
+
 
   //  auto* msg_box = new QMessageBox(QMessageBox::Warning,
   //                                  tr("Scanning"),
@@ -100,6 +102,7 @@ void MainWindow::initGui()
   main_frame->setLayout(m_main_layout);
 
   initToolbar();
+  initStatusbar();
 }
 
 QToolBar* MainWindow::initMainToolbar()
@@ -111,17 +114,17 @@ QToolBar* MainWindow::initMainToolbar()
   toolbar->addAction(m_save_as_act);
   toolbar->addSeparator();
   //  toolbar->addAction(m_scan_act);
-  toolbar->addSeparator();
-  toolbar->addAction(m_zoom_in_act);
-  toolbar->addAction(m_zoom_out_act);
+  //  toolbar->addSeparator();
+  //  toolbar->addAction(m_zoom_in_act);
+  //  toolbar->addAction(m_zoom_out_act);
 
   QWidget* spacer_widget = new QWidget(this);
   spacer_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   spacer_widget->setVisible(true);
   toolbar->addWidget(spacer_widget);
 
-  toolbar->addSeparator();
-  toolbar->addAction(m_help_act);
+  //  toolbar->addSeparator();
+  //  toolbar->addAction(m_help_act);
   toolbar->addSeparator();
   toolbar->addAction(m_close_act);
 
@@ -129,31 +132,31 @@ QToolBar* MainWindow::initMainToolbar()
 }
 
 
-QToolBar* MainWindow::initRightToolbar()
-{
-  QToolBar* toolbar = addToolBar("Right");
-  addToolBar(Qt::RightToolBarArea, toolbar);
-  toolbar->setOrientation(Qt::Vertical);
-  toolbar->setMovable(true);
-  toolbar->addAction(m_copy_act);
-  toolbar->addAction(m_crop_act);
-  toolbar->addAction(m_scale_act);
-  toolbar->addSeparator();
-  toolbar->addAction(m_rot_left_act);
-  toolbar->addAction(m_rot_right_act);
-  toolbar->addAction(m_rot_angle_act);
-  toolbar->addAction(m_rot_edge_act);
-  toolbar->addSeparator();
-  toolbar->addAction(m_fit_best_act);
-  toolbar->addAction(m_fit_width_act);
-  toolbar->addAction(m_fit_height_act);
-  //  spacer_widget = new QWidget(this);
-  //  spacer_widget->setSizePolicy(QSizePolicy::Expanding,
-  //  QSizePolicy::Preferred); spacer_widget->setVisible(true);
-  //  toolbar3->addWidget(spacer_widget);
-  toolbar->setMovable(false);
-  return toolbar;
-}
+//QToolBar* MainWindow::initRightToolbar()
+//{
+//  QToolBar* toolbar = addToolBar("Right");
+//  addToolBar(Qt::RightToolBarArea, toolbar);
+//  toolbar->setOrientation(Qt::Vertical);
+//  toolbar->setMovable(true);
+//  toolbar->addAction(m_copy_act);
+//  toolbar->addAction(m_crop_act);
+//  toolbar->addAction(m_scale_act);
+//  toolbar->addSeparator();
+//  toolbar->addAction(m_rot_left_act);
+//  toolbar->addAction(m_rot_right_act);
+//  toolbar->addAction(m_rot_angle_act);
+//  toolbar->addAction(m_rot_edge_act);
+//  toolbar->addSeparator();
+//  toolbar->addAction(m_fit_best_act);
+//  toolbar->addAction(m_fit_width_act);
+//  toolbar->addAction(m_fit_height_act);
+//  //  spacer_widget = new QWidget(this);
+//  //  spacer_widget->setSizePolicy(QSizePolicy::Expanding,
+//  //  QSizePolicy::Preferred); spacer_widget->setVisible(true);
+//  //  toolbar3->addWidget(spacer_widget);
+//  toolbar->setMovable(false);
+//  return toolbar;
+//}
 
 void MainWindow::loadPlugins()
 {
@@ -193,10 +196,12 @@ void MainWindow::loadPlugins()
           for (auto* frame : frames) {
             int id = m_main_layout->addWidget(frame);
             frame->setId(id);
+            connect(frame, &StackableFrame::setTop, m_main_layout, &QStackedLayout::setCurrentIndex);
           }
         }
 
         QList<QMenu*> menus = plugins->menus();
+        QMenu* help_menu = nullptr;
 
         if (!menus.isEmpty()) {
           QMenuUtils::mergeMenus(menus, m_menus);
@@ -205,18 +210,27 @@ void MainWindow::loadPlugins()
         menuBar()->clear();
 
         for (QMenu* menu : m_menus) {
-          menuBar()->addMenu(menu);
+          if (menu->title() == tr("&Help")) {
+            // stores help menu so that it can be placed at the end.
+            help_menu = menu;
+            continue;
+
+          } else {
+            menuBar()->addMenu(menu);
+          }
         }
 
-        //        QList<QToolBar*> toolbars = plugins->toolbars();
+        if (help_menu) {
+          menuBar()->addMenu(help_menu);
+        }
 
-        //        if (!toolbars.isEmpty()) {
-        //          for (auto* toolbar : toolbars) {
-        //            addToolBar(toolbar);
-        //          }
-        //        }
+        QList<QToolBar*> toolbars = plugins->toolbars();
 
-        // TODO add in toolbar & menu
+        if (!toolbars.isEmpty()) {
+          for (auto* toolbar : toolbars) {
+            // TODO add toolbars to system.
+          }
+        }
 
       } else {
         qDebug() << tr("Plugin error : %1").arg(loader.errorString());
@@ -225,89 +239,10 @@ void MainWindow::loadPlugins()
   }
 }
 
-//QToolBar* MainWindow::initResolutionToolbar()
-//{
-//  m_res_bar = addToolBar("mode bar");
-
-//  auto* stack_frame = new QFrame(this);
-//  m_res_layout = new QStackedLayout;
-//  stack_frame->setLayout(m_res_layout);
-
-//  {
-//    m_res_range = new QFrame(this);
-//    auto* range_layout = new QGridLayout;
-//    m_res_range->setLayout(range_layout);
-//    /*===*/
-//    auto* lbl = new QLabel(tr("Min Resolution :"), this);
-//    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    range_layout->addWidget(lbl, 0, 0);
-
-//    QString s(tr("%1 %2"));
-//    m_min_res = new QLabel(s.arg(1).arg("dpi"), this);
-//    m_min_res->setAlignment(Qt::AlignLeft);
-//    m_min_res->setContentsMargins(0, 0, 0, 0);
-//    m_min_res->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    range_layout->addWidget(m_min_res, 0, 1);
-//    /*===*/
-//    lbl = new QLabel(tr("Resolution :"), this);
-//    lbl->setContentsMargins(30, 0, 0, 0);
-//    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    range_layout->addWidget(lbl, 0, 2);
-
-//    // the edit lineedit will only accept integers between 100 and 999
-//    m_res_edit = new QLineEdit(this);
-//    m_res_edit->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    m_res_validator = new QIntValidator(1, 1, this);
-//    m_res_edit->setValidator(m_res_validator);
-//    m_res_edit->setText("1");
-//    range_layout->addWidget(m_res_edit, 0, 3);
-//    lbl = new QLabel("dpi", this);
-//    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    range_layout->addWidget(lbl, 0, 4);
-
-//    /*===*/
-//    lbl = new QLabel("Max Resolution :", this);
-//    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    range_layout->addWidget(lbl, 0, 5);
-
-//    m_max_res = new QLabel(s.arg(1).arg("dpi"), this);
-//    m_max_res->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    m_max_res->setAlignment(Qt::AlignLeft);
-//    m_max_res->setContentsMargins(0, 0, 0, 0);
-//    range_layout->addWidget(m_max_res, 0, 6);
-
-//    m_stack_range_id = m_res_layout->addWidget(m_res_range);
-//  }
-//  {
-//    m_res_list = new QFrame(this);
-//    m_res_list->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    auto* list_layout = new QGridLayout;
-//    m_res_list->setLayout(list_layout);
-//    m_res_list->setVisible(true);
-
-//    auto* lbl = new QLabel(tr("Resolution :"), this);
-//    lbl->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    list_layout->addWidget(lbl, 0, 0);
-
-//    m_res_combo = new QComboBox(this);
-//    m_res_combo->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    m_res_combo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-//    list_layout->addWidget(m_res_combo, 0, 1);
-
-//    auto* spacer_widget = new QWidget(this);
-//    spacer_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
-//    list_layout->addWidget(spacer_widget, 0, 2);
-
-//    m_stack_list_id = m_res_layout->addWidget(m_res_list);
-//  }
-//  m_res_bar->addWidget(stack_frame);
-//  return m_res_bar;
-//}
-
 void MainWindow::initToolbar()
 {
   initMainToolbar();
-  initRightToolbar();
+  //  initRightToolbar();
 }
 
 void MainWindow::initMenu()
@@ -316,6 +251,28 @@ void MainWindow::initMenu()
   QMenu* file_menu = menuBar()->addMenu(menu_name);
   file_menu->addAction(m_close_act);
   m_menus.append(file_menu);
+
+  menu_name = tr("&Help");
+  file_menu = menuBar()->addMenu(menu_name);
+  //    file_menu->addAction(m_close_act);
+  m_menus.append(file_menu);
+}
+
+void MainWindow::initStatusbar()
+{
+  QStatusBar* status_bar = statusBar();
+
+  m_res_lbl = new QLabel(this);
+  status_bar->addPermanentWidget(m_res_lbl);
+
+  m_src_lbl = new QLabel(this);
+  status_bar->addPermanentWidget(m_src_lbl);
+
+  m_mode_lbl = new QLabel(this);
+  status_bar->addPermanentWidget(m_mode_lbl);
+
+  m_scanner_lbl = new QLabel(this);
+  status_bar->addPermanentWidget(m_scanner_lbl);
 }
 
 void MainWindow::initActions()
@@ -323,68 +280,84 @@ void MainWindow::initActions()
   QPixmap scan_icon, rot_left_icon, rot_right_icon, rot_angle_icon, rot_edge_icon, copy_icon,
           scale_icon, crop_icon, close_icon, save_icon, save_as_icon, zoom_in_icon, zoom_out_icon,
           fit_best_icon, fit_width_icon, fit_height_icon, help_icon;
-  QPixmapCache::find(help_key, &help_icon);
+  //  QPixmapCache::find(help_key, &help_icon);
   //  QPixmapCache::find(scan_key, &scan_icon);
-  QPixmapCache::find(rot_left_key, &rot_left_icon);
-  QPixmapCache::find(rot_right_key, &rot_right_icon);
-  QPixmapCache::find(rot_angle_key, &rot_angle_icon);
-  QPixmapCache::find(rot_edge_key, &rot_edge_icon);
-  QPixmapCache::find(copy_key, &copy_icon);
-  QPixmapCache::find(scale_key, &scale_icon);
-  QPixmapCache::find(crop_key, &crop_icon);
+  //  QPixmapCache::find(rot_left_key, &rot_left_icon);
+  //  QPixmapCache::find(rot_right_key, &rot_right_icon);
+  //  QPixmapCache::find(rot_angle_key, &rot_angle_icon);
+  //  QPixmapCache::find(rot_edge_key, &rot_edge_icon);
+  //  QPixmapCache::find(copy_key, &copy_icon);
+  //  QPixmapCache::find(scale_key, &scale_icon);
+  //  QPixmapCache::find(crop_key, &crop_icon);
   QPixmapCache::find(save_key, &save_icon);
   QPixmapCache::find(save_as_key, &save_as_icon);
-  QPixmapCache::find(zoom_in_key, &zoom_in_icon);
-  QPixmapCache::find(zoom_out_key, &zoom_out_icon);
-  QPixmapCache::find(fit_best_key, &fit_best_icon);
-  QPixmapCache::find(fit_width_key, &fit_width_icon);
-  QPixmapCache::find(fit_height_key, &fit_height_icon);
+  //  QPixmapCache::find(zoom_in_key, &zoom_in_icon);
+  //  QPixmapCache::find(zoom_out_key, &zoom_out_icon);
+  //  QPixmapCache::find(fit_best_key, &fit_best_icon);
+  //  QPixmapCache::find(fit_width_key, &fit_width_icon);
+  //  QPixmapCache::find(fit_height_key, &fit_width_icon);
   QPixmapCache::find(QPixmapCache::insert(QPixmap(":/qscan_icons/close")), &close_icon);
 
   m_close_act = new QAction(close_icon, tr("Close Application"), this);
-  m_help_act = new QAction(QIcon(help_icon), tr("Help"), this);
+  //  m_help_act = new QAction(QIcon(help_icon), tr("Help"), this);
   //  m_scan_act = new QAction(QIcon(scan_icon), tr("Scan"), this);
   //  m_scan_act->setEnabled(false);
-  m_rot_left_act = new QAction(QIcon(rot_left_icon), tr("Rotate Anti-clockwise"), this);
-  m_rot_right_act = new QAction(QIcon(rot_right_icon), tr("Rotate Clockwise"), this);
-  m_rot_angle_act = new QAction(QIcon(rot_angle_icon), tr("Rotate by angle"), this);
-  m_rot_edge_act = new QAction(QIcon(rot_edge_icon), tr("Rotate by defined edge"), this);
-  m_copy_act = new QAction(QIcon(copy_icon), tr("Copy selection to clipboard"), this);
-  m_scale_act = new QAction(QIcon(scale_icon), tr("Scale image"), this);
+  //  m_rot_left_act = new QAction(QIcon(rot_left_icon), tr("Rotate Anti-clockwise"), this);
+  //  m_rot_right_act = new QAction(QIcon(rot_right_icon), tr("Rotate Clockwise"), this);
+  //  m_rot_angle_act = new QAction(QIcon(rot_angle_icon), tr("Rotate by angle"), this);
+  //  m_rot_edge_act = new QAction(QIcon(rot_edge_icon), tr("Rotate by defined edge"), this);
+  //  m_copy_act = new QAction(QIcon(copy_icon), tr("Copy selection to clipboard"), this);
+  //  m_scale_act = new QAction(QIcon(scale_icon), tr("Scale image"), this);
   m_save_act = new QAction(QIcon(save_icon), tr("Save image"), this);
   m_save_as_act = new QAction(QIcon(save_as_icon), tr("save as image"), this);
-  m_crop_act = new QAction(QIcon(crop_icon), tr("Crop to selection"), this);
-  m_zoom_in_act = new QAction(QIcon(zoom_in_icon), tr("Zoom in"), this);
-  m_zoom_out_act = new QAction(QIcon(zoom_out_icon), tr("zoom out"), this);
-  m_fit_best_act = new QAction(QIcon(fit_best_icon), tr("Best fit"), this);
-  m_fit_width_act = new QAction(QIcon(fit_width_icon), tr("Fit to width"), this);
-  m_fit_height_act = new QAction(QIcon(fit_height_icon), tr("Fit to feight"), this);
+  //  m_crop_act = new QAction(QIcon(crop_icon), tr("Crop to selection"), this);
+  //  m_zoom_in_act = new QAction(QIcon(zoom_in_icon), tr("Zoom in"), this);
+  //  m_zoom_out_act = new QAction(QIcon(zoom_out_icon), tr("zoom out"), this);
+  //  m_fit_best_act = new QAction(QIcon(fit_best_icon), tr("Best fit"), this);
+  //  m_fit_width_act = new QAction(QIcon(fit_width_icon), tr("Fit to width"), this);
+  //  m_fit_height_act = new QAction(QIcon(fit_height_icon), tr("Fit to feight"), this);
   m_doc_completed_act = new QAction(tr("Document completed."), this);
   m_doc_completed_act->setToolTip(tr("This completes the document and prepares to start another."));
-
-  disableImageLoadedActions();
-  disableSelectionActions();
-  disableNoSelectionActions();
 }
 
 void MainWindow::initPixmaps()
 {
-  help_key = QPixmapCache::insert(QPixmap(":/qscan_icons/help-contents"));
-  rot_left_key = QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-left"));
-  rot_right_key = QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-right"));
-  rot_angle_key = QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-angle"));
-  rot_edge_key = QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-edge"));
-  copy_key = QPixmapCache::insert(QPixmap(":/qscan_icons/copy"));
-  scale_key = QPixmapCache::insert(QPixmap(":/qscan_icons/scale"));
-  crop_key = QPixmapCache::insert(QPixmap(":/qscan_icons/crop"));
+  //  help_key = QPixmapCache::insert(QPixmap(":/qscan_icons/help-contents"));
+  //  rot_left_key = QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-left"));
+  //  rot_right_key = QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-right"));
+  //  rot_angle_key = QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-angle"));
+  //  rot_edge_key = QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-edge"));
+  //  copy_key = QPixmapCache::insert(QPixmap(":/qscan_icons/copy"));
+  //  scale_key = QPixmapCache::insert(QPixmap(":/qscan_icons/scale"));
+  //  crop_key = QPixmapCache::insert(QPixmap(":/qscan_icons/crop"));
   save_key = QPixmapCache::insert(QPixmap(":/qscan_icons/save"));
   save_as_key = QPixmapCache::insert(QPixmap(":/qscan_icons/save-as"));
   //  close_key = QPixmapCache::insert(QPixmap(":/qscan_icons/close"));
-  zoom_in_key = QPixmapCache::insert(QPixmap(":/qscan_icons/zoom-in"));
-  zoom_out_key = QPixmapCache::insert(QPixmap(":/qscan_icons/zoom-out"));
-  fit_best_key = QPixmapCache::insert(QPixmap(":/qscan_icons/fit-best"));
-  fit_width_key = QPixmapCache::insert(QPixmap(":/qscan_icons/fit-width"));
-  fit_height_key = QPixmapCache::insert(QPixmap(":/qscan_icons/fit-height"));
+  //  zoom_in_key = QPixmapCache::insert(QPixmap(":/qscan_icons/zoom-in"));
+  //  zoom_out_key = QPixmapCache::insert(QPixmap(":/qscan_icons/zoom-out"));
+  //  fit_best_key = QPixmapCache::insert(QPixmap(":/qscan_icons/fit-best"));
+  //  fit_width_key = QPixmapCache::insert(QPixmap(":/qscan_icons/fit-width"));
+  //  fit_height_key = QPixmapCache::insert(QPixmap(":/qscan_icons/fit-height"));
+}
+
+void MainWindow::setScanner(const QString& text)
+{
+  m_scanner_lbl->setText(text);
+}
+
+void MainWindow::setMode(const QString& text)
+{
+  m_mode_lbl->setText(text);
+}
+
+void MainWindow::setSource(const QString& text)
+{
+  m_src_lbl->setText(text);
+}
+
+void MainWindow::setResolution(const QString& text)
+{
+  m_res_lbl->setText(text);
 }
 
 void MainWindow::makeConnections()
@@ -591,75 +564,75 @@ void MainWindow::scanProgressed(const int&)
 void MainWindow::imageLoaded()
 {
   enableImageLoadedActions();
-  enableNoSelectionActions();
-  disableSelectionActions();
+  //  enableNoSelectionActions();
+  //  disableSelectionActions();
 }
 
-void MainWindow::disableNoSelectionActions()
-{
-  m_rot_left_act->setEnabled(false);
-  m_rot_right_act->setEnabled(false);
-  m_rot_angle_act->setEnabled(false);
-  m_rot_edge_act->setEnabled(false);
-  m_scale_act->setEnabled(false);
-}
+//void MainWindow::disableNoSelectionActions()
+//{
+//  m_rot_left_act->setEnabled(false);
+//  m_rot_right_act->setEnabled(false);
+//  m_rot_angle_act->setEnabled(false);
+//  m_rot_edge_act->setEnabled(false);
+//  m_scale_act->setEnabled(false);
+//}
 
-void MainWindow::enableNoSelectionActions()
-{
-  m_rot_left_act->setEnabled(true);
-  m_rot_right_act->setEnabled(true);
-  m_rot_angle_act->setEnabled(true);
-  m_rot_edge_act->setEnabled(true);
-  m_scale_act->setEnabled(true);
-}
+//void MainWindow::enableNoSelectionActions()
+//{
+//  m_rot_left_act->setEnabled(true);
+//  m_rot_right_act->setEnabled(true);
+//  m_rot_angle_act->setEnabled(true);
+//  m_rot_edge_act->setEnabled(true);
+//  m_scale_act->setEnabled(true);
+//}
 
-void MainWindow::enableSelectionActions()
-{
-  m_crop_act->setEnabled(true);
-  m_copy_act->setEnabled(true);
-}
+//void MainWindow::enableSelectionActions()
+//{
+//  m_crop_act->setEnabled(true);
+//  m_copy_act->setEnabled(true);
+//}
 
-void MainWindow::enableScanningToolbars(bool enable)
-{
-  //  if (enable) {
-  //    removeToolBar(m_source_bar);
-  //    removeToolBar(m_mode_bar);
-  //    removeToolBar(m_res_bar);
+//void MainWindow::enableScanningToolbars(bool enable)
+//{
+//  //  if (enable) {
+//  //    removeToolBar(m_source_bar);
+//  //    removeToolBar(m_mode_bar);
+//  //    removeToolBar(m_res_bar);
 
-  //  } else {
-  //    addToolBar(m_source_bar);
-  //    addToolBar(m_mode_bar);
-  //    addToolBar(m_res_bar);
-  //  }
-}
+//  //  } else {
+//  //    addToolBar(m_source_bar);
+//  //    addToolBar(m_mode_bar);
+//  //    addToolBar(m_res_bar);
+//  //  }
+//}
 
-void MainWindow::disableSelectionActions()
-{
-  m_crop_act->setEnabled(false);
-  m_copy_act->setEnabled(false);
-}
+////void MainWindow::disableSelectionActions()
+////{
+////  m_crop_act->setEnabled(false);
+////  m_copy_act->setEnabled(false);
+////}
 
 void MainWindow::enableImageLoadedActions()
 {
   m_save_act->setEnabled(true);
   m_save_as_act->setEnabled(true);
-  m_zoom_in_act->setEnabled(true);
-  m_zoom_out_act->setEnabled(true);
-  m_fit_best_act->setEnabled(true);
-  m_fit_width_act->setEnabled(true);
-  m_fit_height_act->setEnabled(true);
+  //  m_zoom_in_act->setEnabled(true);
+  //  m_zoom_out_act->setEnabled(true);
+  //  m_fit_best_act->setEnabled(true);
+  //  m_fit_width_act->setEnabled(true);
+  //  m_fit_height_act->setEnabled(true);
 }
 
-void MainWindow::disableImageLoadedActions()
-{
-  m_save_act->setEnabled(false);
-  m_save_as_act->setEnabled(false);
-  m_zoom_in_act->setEnabled(false);
-  m_zoom_out_act->setEnabled(false);
-  m_fit_best_act->setEnabled(false);
-  m_fit_width_act->setEnabled(false);
-  m_fit_height_act->setEnabled(false);
-}
+//void MainWindow::disableImageLoadedActions()
+//{
+//  m_save_act->setEnabled(false);
+//  m_save_as_act->setEnabled(false);
+//  m_zoom_in_act->setEnabled(false);
+//  m_zoom_out_act->setEnabled(false);
+//  m_fit_best_act->setEnabled(false);
+//  m_fit_width_act->setEnabled(false);
+//  m_fit_height_act->setEnabled(false);
+//}
 
 ///*
 //  Gets the document name or renames it if it exists. Pops up a dialog

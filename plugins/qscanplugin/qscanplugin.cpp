@@ -87,11 +87,20 @@ QList<QMenu*> QScanPlugin::menus()
   return menu_list;
 }
 
-//QList<QToolBar*> QScanPlugin::toolbars()
-//{
-//  QList<QToolBar*> list;
-//  return list;
-//}
+QList<QToolBar*> QScanPlugin::toolbars()
+{
+  QList<QToolBar*> toolbar_list;
+
+  if (m_scan_editor) {
+    toolbar_list.append(m_scan_editor->toolbars());
+  }
+
+  if (m_ocr_editor) {
+    toolbar_list.append(m_ocr_editor->toolbars());
+  }
+
+  return toolbar_list;
+}
 
 QList<StackableFrame*> QScanPlugin::editors(QWidget* parent)
 {

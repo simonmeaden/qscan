@@ -80,7 +80,7 @@ bool QScan::startScanning(const QString& device_name)
 {
   bool open = m_scan_lib->detectAvailableOptions(device_name);
 
-  if (opem) {
+  if (open) {
     qCInfo(QscanSane) << tr("Starting scan");
     return m_scan_lib->startScan(device_name);
   }

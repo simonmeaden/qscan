@@ -71,6 +71,8 @@ protected:
   bool m_selected;
   QList<QMenu*> m_menus;
 
+  QLabel* m_scanner_lbl, *m_mode_lbl, *m_res_lbl, *m_src_lbl;
+
   int m_stack_range_id{};
   int m_stack_list_id{};
 
@@ -93,21 +95,21 @@ protected:
   QPixmapCache::Key close_key;
 
   //  QAction* m_scan_act{};
-  QAction* m_help_act{};
-  QAction* m_rot_left_act{};
-  QAction* m_rot_right_act{};
-  QAction* m_rot_angle_act{};
-  QAction* m_rot_edge_act{};
-  QAction* m_copy_act{};
-  QAction* m_crop_act{};
-  QAction* m_scale_act{};
+  //  QAction* m_help_act{};
+  //  QAction* m_rot_left_act{};
+  //  QAction* m_rot_right_act{};
+  //  QAction* m_rot_angle_act{};
+  //  QAction* m_rot_edge_act{};
+  //  QAction* m_copy_act{};
+  //  QAction* m_crop_act{};
+  //  QAction* m_scale_act{};
   QAction* m_save_act{};
   QAction* m_save_as_act{};
-  QAction* m_zoom_in_act{};
-  QAction* m_zoom_out_act{};
-  QAction* m_fit_best_act{};
-  QAction* m_fit_width_act{};
-  QAction* m_fit_height_act{};
+  //  QAction* m_zoom_in_act{};
+  //  QAction* m_zoom_out_act{};
+  //  QAction* m_fit_best_act{};
+  //  QAction* m_fit_width_act{};
+  //  QAction* m_fit_height_act{};
   QAction* m_close_act{};
   QAction* m_doc_completed_act{};
 
@@ -119,21 +121,27 @@ protected:
   void initActions();
   void initToolbar();
   void initMenu();
+  void initStatusbar();
   void makeConnections();
 
   void scanProgressed(const int&);
   void imageLoaded();
-  void enableNoSelectionActions();
-  void enableSelectionActions();
-  void enableScanningToolbars(bool enable);
-  void disableSelectionActions();
-  void disableNoSelectionActions();
+  //  void enableNoSelectionActions();
+  //  void enableSelectionActions();
+  //  void enableScanningToolbars(bool enable);
+  //  void disableSelectionActions();
+  //  void disableNoSelectionActions();
   void enableImageLoadedActions();
-  void disableImageLoadedActions();
+  //  void disableImageLoadedActions();
   QToolBar* initMainToolbar();
-  QToolBar* initRightToolbar();
+  //  QToolBar* initRightToolbar();
   void initPixmaps();
   void makeDelayedConnections();
+
+  void setScanner(const QString& text);
+  void setMode(const QString& text);
+  void setSource(const QString& text);
+  void setResolution(const QString& text);
 
   //  void enumerateMenu(QAction* act, QMenu* pareny_menu);
   //  void addMenuAction(QMap<QString, QMenu*> menus, QMap<QString, QMenu*> menu_map);

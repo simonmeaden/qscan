@@ -83,10 +83,11 @@ public:
   void rotateACW();
   void rotateByAngle();
   void rotateByEdge();
-  void copySelection();
+  void copySelection(bool);
   void cropToSelection();
   void clearSelection();
   void cropToContent();
+  void help();
   void rescan();
   void scale();
   void save();
@@ -124,7 +125,7 @@ public:
 
   QStringList scanners();
   QList<QMenu*> menus();
-  //  QList<QToolBar*> toolbars() override;
+  QList<QToolBar*> toolbars();
 
 signals:
   void scanCancelled();
@@ -133,11 +134,6 @@ signals:
   void selectionUnderway();
   void imageIsLoaded();
   void ocrImage(const DocumentData& documentData);
-  void currentScanner(const QString);
-  void currentMode(const QString);
-  void currentSource(const QString);
-  void currentResolution(int);
-  //  void editingImage(bool);
 
   void sendOcrRequest(int);
   void optionsSet(ScanDevice*);
@@ -185,22 +181,22 @@ protected:
   QFrame* m_res_list{};
   QLabel* m_min_res{}, *m_max_res{}, *m_curr_src{}, *m_curr_mode{}/*,m_curr_scanner{}*/;
   QIntValidator* m_res_validator{};
-  QGroupBox* image_edit_group{}, *page_list_group{}, *image_transfer_group{};
-  QString m_selected_name;
+  QGroupBox* image_edit_group{}, *page_list_group{}/*, *image_transfer_group{}*/;
+  QString m_current_scanner;
 
   int m_image_resolution;
 
   bool eventFilter(QObject* obj, QEvent* event) override;
-  void receiveOptionsSet(ScanDevice* device);
+  void receiveScannerData(ScanDevice* device);
   void receiveScannerChange(bool);
-  void receiveModeChange(ScanDevice* device);
-  void receiveSourceChange(ScanDevice* device);
+  //  void receiveModeChange(ScanDevice* device);
+  //  void receiveSourceChange(ScanDevice* device);
   void resolutionEdited(const QString& value);
-  void modeChangeSelected(const bool);
-  void sourceChangeSelected(bool);
-  void resolutionChangeSelected(bool);
-  void resolutionRangedChangeSelected(bool);
-  void scannerSelectionChanged(int index);
+  void receiveModeChange(const bool);
+  void receiveSourceChange(bool);
+  void receiveResolutionListChange(bool);
+  void receiveResolutionRangedChange(bool);
+  //  void receiveScannerChange(int index);
   void scanHasFailed();
   void scanOpenHasFailed();
   void startScanning();
@@ -217,7 +213,7 @@ protected:
                             const QImage& image,
                             const DocumentData& doc_data);
   void saveModifiedImage(int index, const QImage& image);
-  void makeCover();
+  void movePageToCover();
   void receiveLoadText(int page_no);
   void receiveWorkOnRequest(int documentData);
   //  void receiveOcrPageRequest(int documentData);
@@ -242,9 +238,9 @@ protected:
   void enableEditBtns();
   void disableEditBtns();
   //  void moveImage(const DocumentData& data);
-  void initPageListBtns();
-  void initImageEditBtns();
-  void initTransferBtns();
+  //  void initPageListBtns();
+  //  void initImageEditBtns();
+  //  void initTransferBtns();
   void saveDataStore();
 
   //  QFrame* initMenuAndToolbars();
@@ -257,6 +253,11 @@ protected:
 
   static const QString OPTIONS_FILE;
   static const QString CURRENT_DOCUMENT;
+  void initRightToolbar(QToolBar* r_toolbar);
+  void initTopToolbar(QToolBar* t_toolbar);
+  void initLeftToolbar(QToolBar* l_toolbar);
+  void initCentreToolbar(QToolBar* c_toolbar);
+
 };
 
 #endif // SCANEDITOR_H

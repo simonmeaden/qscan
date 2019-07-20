@@ -63,6 +63,7 @@ public:
   DocumentData documentData() const;
 
   QList<QMenu*> menus();
+  QList<QToolBar*> toolbars();
 
 signals:
   void sendOcrRequest(int, const QImage&, const QRect& rect = QRect());
