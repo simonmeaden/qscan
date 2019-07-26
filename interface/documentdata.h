@@ -6,6 +6,8 @@
 #include <QSharedPointer>
 #include <QMap>
 
+#include <yaml-cpp/yaml.h>
+
 #include "util.h"
 #include "style.h"
 

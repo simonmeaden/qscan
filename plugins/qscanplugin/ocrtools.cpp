@@ -22,6 +22,7 @@ OcrTools::OcrTools(const QString& datapath,
   connect(m_ocr_worker, &OcrWorker::pageConverted, this, &OcrTools::convertedPage);
   connect(m_ocr_worker, &OcrWorker::imageConverted, this, &OcrTools::convertedImage);
   connect(m_ocr_worker, &OcrWorker::imageConvertedRect, this, &OcrTools::convertedImageRect);
+  connect(m_ocr_worker, &OcrWorker::ocrFailed, this, &OcrTools::ocrFailed);
 
   qCInfo(QscanOcr) << tr("Starting OCR Thread");
 

@@ -1,4 +1,5 @@
 #include "util.h"
+#include "style.h"
 
 namespace Util {
 
@@ -68,8 +69,8 @@ QString cleanText(const QString& text)
     QString escaped_text;
     bool bs = false;
 
-    int index = text.indexOf("tug") + 3;
-    QChar h = text.at(index);
+    //    int index = text.indexOf("tug") + 3;
+    //    QChar h = text.at(index);
 
     for (auto c : text) {
       if (c == D_QUOTE || c == S_QUOTE) { // standard d-quote or s-quote
@@ -109,7 +110,7 @@ QString cleanText(const QString& text)
         if (!bs) {
           bs = true;
 
-        } else { // escaped \ ie \\
+        } else { /* escaped \ ie \\ */
           bs = false;
           escaped_text += c;
         }

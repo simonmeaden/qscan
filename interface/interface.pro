@@ -32,6 +32,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES +=   \
+  baseeditor.cpp \
   basescanimage.cpp \
   documentdata.cpp \
   imageconverter.cpp \
@@ -46,6 +47,7 @@ SOURCES +=   \
   util.cpp
 
 HEADERS += \
+    baseeditor.h \
     basescanimage.h \
     documentdata.h \
     imageconverter.h \
@@ -65,13 +67,6 @@ DISTFILES += \
     plugininterface.json
 
 INCLUDEPATH += /usr/local/include
-
-#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/ -lqyaml-cpp
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/ -lqyaml-cppd
-#else:unix: LIBS += -L$$OUT_PWD/ -lqyaml-cpp
-
-#INCLUDEPATH += $$PWD/../qyaml-cpp
-#DEPENDPATH += $$PWD/../qyaml-cpp
 
 unix|win32: LIBS += -lqyaml-cpp
 unix|win32: LIBS += -lyaml-cpp

@@ -29,16 +29,16 @@
 #include "ocrtools.h"
 #include "documentdata.h"
 #include "util.h"
-#include "stackableframe.h"
+#include "baseeditor.h"
 
 class OcrImage;
 class ScanList;
 
-class QSCANPLUGINSHARED_EXPORT OcrEditor : public StackableFrame
+class QSCANPLUGINSHARED_EXPORT OcrEditor : public BaseEditor
 {
   Q_OBJECT
 public:
-  explicit OcrEditor(QWidget* parent = nullptr);
+  explicit OcrEditor(/*QString lang = "eng",*/ QWidget* parent = nullptr);
   //  ~OcrDialog() override = default;
 
   //  OcrDialog(const OcrDialog&) = delete;
@@ -51,6 +51,7 @@ public:
   void setOcrImage(int page_no, const QImage& image);
   void setOcrText(int page_no, const QString& texts);
   void appendOcrText(int page_no, const QString& texts);
+  void ocrFailed(int page_no);
   QList<StyledString> texts();
 
   bool imageChanged() const;
@@ -67,13 +68,14 @@ public:
 
 signals:
   void sendOcrRequest(int, const QImage&, const QRect& rect = QRect());
-  void saveModifiedImage(int page_no, const QImage& image);
+  void saveModifiedImage(int page_no, const QImage& image, const QString filename);
   void saveModifiedData(const DocumentData& data);
   void saveSelectedDocumentImage(int page_no,
                                  int image_index,
                                  const QImage& image,
                                  const DocumentData& doc_data);
   void makeCompleted(DocumentData);
+  void goToScanEditor();
   void rejectChanges();
 
 protected:
@@ -125,7 +127,6 @@ protected:
 
   QString m_image_name;
   QString m_lang;
-  QString m_options_file;
   QString m_image_size;
   QString m_message;
   QString m_resolution;
@@ -163,7 +164,7 @@ protected:
   void rotateCCW();
   void rescale();
   void saveData();
-  void saveCurrentStateImage();
+  void saveCurrentImage();
   //  void discard();
   void acceptChanges();
   void undoChanges();
@@ -207,7 +208,6 @@ protected:
 
   static const QString TESSERACT;
   static const QString LANGUAGE;
-  static const QString OPTIONS_FILE;
 
 };
 

@@ -108,6 +108,8 @@ QList<StackableFrame*> QScanPlugin::editors(QWidget* parent)
   m_ocr_editor = new OcrEditor(parent);
   connect(m_scan_editor, &ScanEditor::sendWorkData, m_ocr_editor, &OcrEditor::setData);
   connect(m_ocr_editor, &OcrEditor::makeCompleted, m_scan_editor, &ScanEditor::completeDocument);
+  connect(m_scan_editor, &ScanEditor::goToOcrEditor, m_ocr_editor, &StackableFrame::setFrameToTop);
+  connect(m_ocr_editor, &OcrEditor::goToScanEditor, m_scan_editor, &StackableFrame::setFrameToTop);
   QList<StackableFrame*> list;
   list << m_scan_editor << m_ocr_editor;
   return list;

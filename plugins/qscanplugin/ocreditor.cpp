@@ -10,26 +10,20 @@
 
 const QString OcrEditor::TESSERACT = "tesseract";
 const QString OcrEditor::LANGUAGE = "language";
-const QString OcrEditor::OPTIONS_FILE = QStringLiteral("ocroptions.yaml");
 
 OcrEditor::OcrEditor(QWidget* parent)
-  : StackableFrame(parent)
+  : BaseEditor(parent)
   , m_scan_list(nullptr)
   , m_image_display(nullptr)
+  , m_lang("eng")
   , m_change_type(None)
 {
-  QDir dir;
-  QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-  config_path += QStringLiteral("/Biblos");
-  dir.mkpath(config_path);
-  m_options_file = config_path + QDir::separator() + OPTIONS_FILE;
-
-  QString data_dir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
-  data_dir = data_dir + QStringLiteral("/Biblos/ocr");
+  OPTIONS_FILE = QStringLiteral("ocroptions.yaml");
+  m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
 
   loadOptions();
 
-  QString datapath = config_path + QStringLiteral("/tesseract/tessdata");
+  QString datapath = m_config_dir + QStringLiteral("/tesseract/tessdata");
   m_ocr_tools = new OcrTools(datapath, m_lang);
 
   initGui();
@@ -62,7 +56,7 @@ void OcrEditor::setData(int page_no, const QImage& image, const DocumentData& do
   for (auto it = text_data.keyBegin(), end = text_data.keyEnd(); it != end; ++it) {
     int key = *it;
     StyledString styled_string(text_data.value(key));
-    data.insert(key, styled_string);
+    data.insert(key, QVariant::fromValue<StyledString>(styled_string));
     m_item_count = (m_item_count >= *it ? m_item_count : *it);
   }
 
@@ -70,7 +64,7 @@ void OcrEditor::setData(int page_no, const QImage& image, const DocumentData& do
     int key = *it;
     QString path = image_data.value(key);
     QImage image;
-    image.load(path, "PNG");
+    image.load(path, PNG);
     data.insert(key, image);
     m_item_count = (m_item_count >= *it ? m_item_count : *it);
   }
@@ -89,8 +83,6 @@ void OcrEditor::setData(int page_no, const QImage& image, const DocumentData& do
     m_greyscale_btn->setEnabled(false);
     enableCleanImageBtns(true);
   }
-
-  setFrameToTop();
 }
 
 void OcrEditor::setOcrImage(int page_no, const QImage& image)
@@ -119,6 +111,14 @@ void OcrEditor::appendOcrText(int page_no, const QString& text)
   }
 }
 
+void OcrEditor::ocrFailed(int page_no)
+{
+  QMessageBox::warning(this,
+                       tr("OCR Failure"),
+                       tr("Unfortunately your ORC request produced no text.\n"
+                          "Try tweaking the image and try again."), QMessageBox::Ok);
+}
+
 QList<StyledString> OcrEditor::texts()
 {
   return m_scan_list->texts();
@@ -126,7 +126,7 @@ QList<StyledString> OcrEditor::texts()
 
 bool OcrEditor::imageChanged() const
 {
-  return m_image_display->imageChanged();
+  return m_image_display->isImageChanged();
 }
 
 bool OcrEditor::hasText()
@@ -182,6 +182,9 @@ void OcrEditor::loadOptions()
 
       if (tesseract_options[LANGUAGE]) {
         m_lang = tesseract_options[LANGUAGE].as<QString>();
+
+      } else {
+        m_lang = "eng";
       }
     }
   }
@@ -510,13 +513,13 @@ QFrame* OcrEditor::initFinaliseBtns()
 
   m_save_img_btn = new QPushButton(tr("Save OCR Image"), this);
   m_save_img_btn->setToolTip(tr("Save the OCR image for later."));
-  connect(m_save_img_btn, &QPushButton::clicked, this, &OcrEditor::saveCurrentStateImage);
+  connect(m_save_img_btn, &QPushButton::clicked, this, &OcrEditor::saveCurrentImage);
   layout->addWidget(m_save_img_btn);
 
   m_close_and_save_btn = new QPushButton(tr("Close and Save"), this);
   m_close_and_save_btn->setToolTip(tr("Closes the dialog, saving any changes."));
   connect(m_close_and_save_btn, &QPushButton::clicked, this, &OcrEditor::saveData);
-  connect(m_close_and_save_btn, &QPushButton::clicked, this, &OcrEditor::saveCurrentStateImage);
+  connect(m_close_and_save_btn, &QPushButton::clicked, this, &OcrEditor::saveCurrentImage);
   connect(m_close_and_save_btn, &QPushButton::clicked, this, &OcrEditor::close);
   layout->addWidget(m_close_and_save_btn);
 
@@ -605,6 +608,11 @@ void OcrEditor::initGui()
     m_ocr_btn = new QPushButton(tr("Run OCR"), this);
     m_ocr_btn->setToolTip(tr("Re run the OCR on tweaked image."));
     connect(m_ocr_btn, &QPushButton::clicked, this, &OcrEditor::requestOcr);
+    connect(this, &OcrEditor::sendOcrRequest, m_ocr_tools,
+            qOverload<int, const QImage&, const QRect&>(&OcrTools::convertImageToText));
+    connect(m_ocr_tools, &OcrTools::convertedImage, this, &OcrEditor::setOcrText);
+    connect(m_ocr_tools, &OcrTools::convertedImageRect, this, &OcrEditor::appendOcrText);
+    connect(m_ocr_tools, &OcrTools::ocrFailed, this, &OcrEditor::ocrFailed);
     btn_layout->addWidget(m_ocr_btn);
 
     //    btn_layout->addStretch(1);
@@ -647,7 +655,7 @@ void OcrEditor::requestOcrOnSelection()
   QImage image = m_image_display->currentImage();
   QImage cropped = image.copy(copy_rect);
   QFileInfo info("rect_image.png");
-  cropped.save(info.filePath(), "PNG");
+  cropped.save(info.filePath(), PNG);
 
   if (!copy_rect.isNull()) {
     emit sendOcrRequest(m_page_no, image, copy_rect);
@@ -803,12 +811,14 @@ void OcrEditor::completeOperation()
       emit makeCompleted(m_doc_data);
 
     } else if (result == QMessageBox::Save) {
-      saveCurrentStateImage();
+      saveCurrentImage();
       saveData();
       m_doc_data->setInverted(m_image_display->isInverted());
       emit makeCompleted(m_doc_data);
     }
   }
+
+  emit goToScanEditor();
 }
 
 void OcrEditor::removeItemFromDocument()
@@ -835,43 +845,22 @@ void OcrEditor::saveData()
   emit saveModifiedData(m_doc_data);
 }
 
-void OcrEditor::saveCurrentStateImage()
+void OcrEditor::saveCurrentImage()
 {
-  //  emit saveModifiedImage(m_page_no, m_image_display->currentImage());
+  saveImage(m_image_display->currentImage(), m_doc_data->filename());
   m_image_display->setImageChanged(false);
-  //  emit reject();
 }
-
-//void OcrFrame::discard()
-//{
-//  if (m_image_display->hasImageChanges() || m_scan_list->hasDataChanges()) {
-//    int result = QMessageBox::warning(this,
-//                                      tr("Discaring Changes"),
-//                                      tr("You are about to discard any changes you have made\n"
-//                                         "and quit the dialog.\n"
-//                                         "This cannot be undone\n"
-//                                         "Are you sure?"),
-//                                      QMessageBox::Yes | QMessageBox::No,
-//                                      QMessageBox::No);
-
-//    if (result == QMessageBox::Yes) {
-//      m_image_display->setImageChanged(false);
-//      m_scan_list->dumpData();
-//      emit reject();
-//    }
-
-//  } else {
-//    m_image_display->setImageChanged(false);
-//    m_scan_list->dumpData();
-//    emit reject();
-//  }
-//}
 
 void OcrEditor::acceptChanges()
 {
   m_image_display->acceptChanges();
+
+  if (m_image_display->isImageChanged()) {
+    saveImage(m_image_display->currentImage(), m_doc_data->filename());
+    m_image_display->setImageChanged(false);
+  }
+
   m_ctl_stack->setCurrentIndex(m_btn_stack);
-  emit makeCompleted(m_doc_data);
 }
 
 void OcrEditor::undoChanges()
@@ -922,7 +911,7 @@ void OcrEditor::scanListDataChanged()
   } else {
     m_save_txt_btn->setEnabled(false);
 
-    if (!m_image_display->hasImageChanges()) {
+    if (!m_image_display->isImageChanged()) {
       m_close_and_save_btn->setEnabled(false);
     }
   }

@@ -3,7 +3,7 @@
 
 TextEditDialog::TextEditDialog(QWidget* parent)
   : QDialog(parent)
-  , m_text(QString())
+  , m_text(StyledString())
 {
   initGui();
 }
@@ -16,7 +16,7 @@ TextEditDialog::TextEditDialog(QWidget* parent)
 void TextEditDialog::setText(const StyledString& text)
 {
   m_text = text;
-  m_editor->setPlainText(text);
+  m_editor->setPlainText(m_text.text());
 }
 
 /*!
@@ -121,6 +121,12 @@ void TextEditDialog::initGui()
           this, &TextEditDialog::setFontSizeSelected);
   sub_box_layout->addWidget(m_font_size_box);
 
+  m_make_para_btn = new QPushButton(tr("Make Paragraph"), this);
+  m_make_para_btn->setIconSize(QSize(144, 48));
+  m_make_para_btn->setToolTip(tr("Converts several lines of text into a paragraph."));
+  connect(m_make_para_btn, &QPushButton::clicked, this, &TextEditDialog::makeParagraph);
+  sub_box_layout->addWidget(m_make_para_btn);
+
   m_match_quotes_btn = new QPushButton(match_quotes_icon, "", this);
   m_match_quotes_btn->setIconSize(QSize(144, 48));
   m_match_quotes_btn->setToolTip(tr("Match Quotes. Shows matching quote in text."));
@@ -145,11 +151,13 @@ void TextEditDialog::initGui()
   m_reject_btn = new QPushButton(reject_icon, "Reject Changes", this);
   m_reject_btn->setIconSize(QSize(32, 32));
   m_reject_btn->setToolTip(tr("Reject changes"));
+  connect(m_reject_btn, &QPushButton::clicked, this, &TextEditDialog::reject);
   main_box_layout->addWidget(m_reject_btn);
 
   m_accept_btn = new QPushButton(accept_icon, "Accept Changes and Save", this);
   m_accept_btn->setIconSize(QSize(32, 32));
   m_accept_btn->setToolTip(tr("Accept all changes"));
+  connect(m_accept_btn, &QPushButton::clicked, this, &TextEditDialog::acceptChanges);
   main_box_layout->addWidget(m_accept_btn);
 
 }
@@ -165,6 +173,7 @@ void TextEditDialog::textSelectionChanged()
     m_underline_btn->setEnabled(true);
     m_normal_btn->setEnabled(true);
     m_font_size_box->setEnabled(true);
+    m_make_para_btn->setEnabled(true);
     m_font_size_box->setCurrentText(tr("Normal"));
 
   } else {
@@ -172,6 +181,7 @@ void TextEditDialog::textSelectionChanged()
     m_italic_btn->setEnabled(false);
     m_underline_btn->setEnabled(false);
     m_normal_btn->setEnabled(false);
+    m_make_para_btn->setEnabled(false);
     m_font_size_box->setEnabled(false);
   }
 }
@@ -213,6 +223,10 @@ void TextEditDialog::setTextStyle(int start, int length, StyleData::Type type)
   case StyleData::Font_X_Large:
   case StyleData::Font_X_X_Large:
     format.setFontStretch(StyleData::fontStretch(type));
+    break;
+
+  case StyleData::Paragraph:
+    format.setBackground(QBrush(Qt::lightGray));
     break;
 
   default:
@@ -297,6 +311,27 @@ void TextEditDialog::setFontSizeSelected(int index)
 void TextEditDialog::matchQuotes()
 {
   // TODO
+}
+
+void TextEditDialog::makeParagraph()
+{
+  QTextCursor cursor = m_editor->textCursor();
+  QString text = cursor.selectedText();
+
+  if (!text.isEmpty()) {
+    int start = cursor.anchor();
+    int length = cursor.position() - start;
+    setTextStyle(start, length, StyleData::Paragraph);
+    storeStyle(start, length, StyleData::Paragraph);
+  }
+}
+
+void TextEditDialog::acceptChanges()
+{
+  QList<StyledString> text_list;
+  QString text = m_editor->toPlainText();
+
+  emit accept();
 }
 
 void TextEditDialog::setUnderlineClicked()

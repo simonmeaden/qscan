@@ -8,10 +8,10 @@
 using namespace cv;
 
 OcrWorker::OcrWorker(QString datapath, QString lang)
-  : m_available(true)
-  , m_running(true)
-  , m_datapath(std::move(datapath))
+  : m_datapath(std::move(datapath))
   , m_lang(std::move(lang))
+  , m_available(true)
+  , m_running(true)
 {
 }
 
@@ -41,11 +41,16 @@ void OcrWorker::process()
       QRect rect = m_rects.takeFirst();
       text = TessTools::getStringFromImage(m_datapath, m_lang, image, rect);
 
-      if (rect.isNull()) {
-        emit imageConverted(page_no, Util::cleanText(text));
+      if (text.isEmpty()) {
+        emit ocrFailed(page_no);
 
       } else {
-        emit imageConvertedRect(page_no, Util::cleanText(text));
+        if (rect.isNull()) {
+          emit imageConverted(page_no, Util::cleanText(text));
+
+        } else {
+          emit imageConvertedRect(page_no, Util::cleanText(text));
+        }
       }
 
     } else if (!m_doc_data.isEmpty()) {

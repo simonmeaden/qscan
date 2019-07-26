@@ -54,7 +54,7 @@ public:
 
 signals:
   void imageIsLoaded();
-  void imageHasChanged(bool);
+  //  void imageHasChanged(bool);
   void adjustScrollbar(qreal);
   void selected();
   void unselected();
@@ -125,7 +125,7 @@ protected:
   void wheelEvent(QWheelEvent* event) override;
   //  void resizeEvent(QResizeEvent* event) override;
 
-  void scaleModifiedImage();
+  void scaleCurrentImage();
 
   void rotateUsingEdge();
   void paintRubberBand(QPainter* painter);

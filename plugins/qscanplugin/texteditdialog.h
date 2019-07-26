@@ -11,6 +11,8 @@
 #include <QGridLayout>
 #include <QFrame>
 #include <QPixmapCache>
+#include <QList>
+#include <QPair>
 
 #include "style.h"
 
@@ -38,6 +40,7 @@ protected:
   QPushButton* m_help_btn;
   QPushButton* m_accept_btn;
   QPushButton* m_reject_btn;
+  QPushButton* m_make_para_btn;
 
   void initGui();
   void textSelectionChanged();
@@ -52,6 +55,9 @@ protected:
   void setFontSizeSelected(int index);
 
   void matchQuotes();
+  void makeParagraph();
+
+  void acceptChanges();
 
   void storeStyle(int start, int length, StyleData::Type style);
 };

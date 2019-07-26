@@ -32,7 +32,7 @@ void OcrImage::clearToBackground()
   m_op_images.append(m_current_image);
   BaseScanImage::clearToBackground();
   m_image_changed = true;
-  emit imageHasChanged(m_image_changed);
+  //  emit imageHasChanged(m_image_changed);
 }
 
 void OcrImage::cropToSelection()
@@ -40,7 +40,7 @@ void OcrImage::cropToSelection()
   m_op_images.append(m_current_image);
   BaseScanImage::cropToSelection();
   m_image_changed = true;
-  emit imageHasChanged(m_image_changed);
+  //  emit imageHasChanged(m_image_changed);
 }
 
 QImage OcrImage::copySelection()
@@ -63,8 +63,7 @@ QImage OcrImage::copySelection()
 
 void OcrImage::greyscale()
 {
-  if (/*m_current_image.format() != QImage::Format_Mono
-      && */m_current_image.format() != QImage::Format_Grayscale8) {
+  if (m_current_image.format() != QImage::Format_Grayscale8) {
     // create a modifiable image.
     m_undo_list.insertMulti(BINARISE, m_current_image);
     // let's use QImages convertToFormat() method rather than more
@@ -75,6 +74,7 @@ void OcrImage::greyscale()
     //    cvtColor(mat, mat, CV_BGR2GRAY);
     //    m_temp_image = ImageConverter::matToImage(mat);
     scaleTemporaryImage();
+    m_current_image = m_temp_image;
   }
 
 }
@@ -90,15 +90,17 @@ void OcrImage::invert()
   m_current_image = image;
   m_inverted = !m_inverted;
   m_image_changed = true;
-  emit imageHasChanged(m_image_changed);
-  scaleModifiedImage();
+  //  emit imageHasChanged(m_image_changed);
+  scaleCurrentImage();
 }
 
 void OcrImage::acceptChanges()
 {
+  //  m_temp_image.save("temp_image.png", "PNG");
   m_current_image = m_temp_image;
+  //  m_temp_image.save("current.png", "PNG");
   m_temp_image = QImage();
-  scaleModifiedImage();
+  scaleCurrentImage();
 }
 
 void OcrImage::applyThreshold(int value)
@@ -110,9 +112,8 @@ void OcrImage::applyThreshold(int value)
   Mat mat = ImageConverter::imageToMat(m_current_image);
   threshold(mat, mat, value, 255, THRESH_BINARY);
   m_temp_image = ImageConverter::matToImage(mat);
-  //  m_temp_image = m_temp_image.convertToFormat(QImage::Format::Format_Grayscale8);
   m_image_changed = true;
-  emit imageHasChanged(m_image_changed);
+  //  emit imageHasChanged(m_image_changed);
   scaleTemporaryImage();
 }
 
@@ -130,7 +131,7 @@ void OcrImage::applyRescale(double value)
 
   scaleTemporaryImage();
   m_image_changed = true;
-  emit imageHasChanged(m_image_changed);
+  //  emit imageHasChanged(m_image_changed);
   emit imageSizeChanged(m_temp_image.width(),
                         m_temp_image.height(),
                         Util::dpmToDpi(m_temp_image.dotsPerMeterX()),
@@ -148,7 +149,7 @@ void OcrImage::scaleTemporaryImage()
 void OcrImage::cancelChanges()
 {
   m_image_changed = false;
-  scaleModifiedImage();
+  scaleCurrentImage();
 }
 
 void OcrImage::denoise()
@@ -172,7 +173,7 @@ void OcrImage::applyDenoise(int filter_value, int template_value, int search_val
 
     cv::fastNlMeansDenoising(mat, dst, filter_value, template_value, search_value);
     m_image_changed = true;
-    emit imageHasChanged(m_image_changed);
+    //    emit imageHasChanged(m_image_changed);
   }/* else {
 
     cv::fastNlMeansDenoisingColored(mat, dst, 10, 10, 7, 21);
@@ -201,12 +202,7 @@ void OcrImage::setInverted(bool inverted)
   m_inverted = inverted;
 }
 
-bool OcrImage::hasImageChanges()
-{
-  return (!m_undo_list.isEmpty());
-}
-
-bool OcrImage::imageChanged() const
+bool OcrImage::isImageChanged() const
 {
   return m_image_changed;
 }

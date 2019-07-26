@@ -4,6 +4,19 @@
 #include <QObject>
 #include <QSharedPointer>
 #include <QBitArray>
+#include <QMap>
+#include <QList>
+
+#include <qyaml-cpp/QYamlCpp>
+#include <yaml-cpp/yaml.h>
+
+#include "util.h"
+
+class StyledString;
+
+namespace Util {
+StyledString cleanText(const StyledString& text);
+}
 
 class StyleData
 {
@@ -14,6 +27,8 @@ public:
     Bold,
     Italic,
     Underline,
+    Subscript,
+    Superscript,
     Font_X_X_Small,
     Font_X_Small,
     Font_Small,
@@ -23,10 +38,11 @@ public:
     Font_V_Large,
     Font_X_Large,
     Font_X_X_Large,
+    Paragraph,
   };
 
   StyleData();
-  StyleData(Type style, int start, int length);
+  StyleData(Type type, int start, int length);
 
   int start() const;
   void setStart(int start);
@@ -34,8 +50,10 @@ public:
   int length() const;
   void setLength(int length);
 
-  Type style() const;
-  void setStyle(const Type& style);
+  int end() const;
+
+  Type type() const;
+  void setType(const Type& type);
 
   bool isValid();
 
@@ -48,13 +66,20 @@ protected:
 };
 using Style = QSharedPointer<StyleData>;
 
-class StyledString : public QString
+class StyledString /*: public QString*/
 {
 public:
   StyledString();
   StyledString(const char* string);
   StyledString(QString string);
   StyledString(const StyledString& string);
+
+  QString text() const;
+  int length();
+  bool isEmpty();
+  StyledString mid();
+  StyledString left(int n);
+  StyledString right(int n);
 
   void appendStyle(Style style);
   void removeStyle(Style style);
@@ -63,8 +88,11 @@ public:
   int indexOf(const Style& style);
   void move(int from, int to);
 
+  QList<StyledString> splitParagraphs();
+
   StyledString& operator=(const QString&);
   StyledString& operator=(const StyledString&);
+  StyledString& operator+=(const StyledString&);
 
   void setText(const QString& text);
 
@@ -72,9 +100,43 @@ public:
   void setStyles(const QList<Style>& styles);
 
 protected:
+  QString m_text;
   QList<Style> m_styles;
 
+  void transferStyles(StyledString& data_str, int p_start, int p_end, QMap<int, Style> others);
+
 };
+
+namespace YAML {
+
+template<>
+struct convert<StyledString>
+{
+  static Node encode(const StyledString& rhs) {
+    Node node;
+    node = rhs.text().toStdString();
+    return node;
+  }
+
+  static bool decode(const Node& node, StyledString& rhs) {
+    if (!node.IsScalar()) {
+      return false;
+    }
+
+    std::string sstr = node.as<std::string>();
+    rhs = StyledString(sstr.c_str());
+
+    return true;
+  }
+};
+
+Emitter& operator<<(Emitter& emitter, StyledString& v);
+Emitter& operator<<(Emitter& emitter, const StyledString& v);
+
+void operator>>(const Node& node, QString& q);
+void operator<<(Node& node, const QString& q);
+
+}
 
 Q_DECLARE_METATYPE(StyleData)
 Q_DECLARE_METATYPE(Style)

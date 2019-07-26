@@ -41,7 +41,6 @@ const QString ScanEditor::INTERNAL_IMAGE_NAME = QStringLiteral("docimage%1_%2.pn
 const QString ScanEditor::OCR_IMAGE_FILTER = QStringLiteral("ocrimage*.png");
 const QString ScanEditor::INTERNAL_IMAGE_FILTER = QStringLiteral("docimage*.png");
 
-const QString ScanEditor::OPTIONS_FILE = QStringLiteral("scanoptions.yaml");
 const QString ScanEditor::CURRENT_DOCUMENT = QStringLiteral("current document");
 
 /*!
@@ -54,24 +53,11 @@ const QString ScanEditor::CURRENT_DOCUMENT = QStringLiteral("current document");
    \param parent - the parent QObject.
 */
 ScanEditor::ScanEditor(QWidget* parent)
-  : StackableFrame(parent)
+  : BaseEditor(parent)
 {
-  QDir dir;
+  OPTIONS_FILE = QStringLiteral("scanoptions.yaml");
+  m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
 
-  //  QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-  // TODO remove temporary configuration path which equates to "/home/simonmeaden/.config/Scanner"
-  // in the Scanner test application.
-  QString config_path = "/home/simonmeaden/.config/Biblos";
-  dir.mkpath(config_path);
-  m_options_file = config_path + QDir::separator() + OPTIONS_FILE;
-
-  //  m_data_dir = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
-  // TODO remove temporary data store which equates to "/home/simonmeaden/.local/share/Scanner//"
-  // in the Scanner test application.
-  m_data_dir = "/home/simonmeaden/.local/share/Biblos/ocr";
-  dir.mkpath(m_data_dir);
-
-  m_lang = "eng"; // default language
   m_scan_lib = new QScan(this);
   m_scan_lib->init();
 
@@ -473,11 +459,6 @@ void ScanEditor::makeConnections()
   connect(m_scan_display, &ScanImage::adjustScrollbar, this, &ScanEditor::adjustScrollbar);
   connect(m_page_view, &PageView::workOn, this, &ScanEditor::receiveWorkOnRequest);
   connect(m_page_view, &PageView::loadText, this, &ScanEditor::receiveLoadText);
-  //  connect(m_page_view, &PageView::sendOcrPage, this, &ScanEditor::sendOcrRequest);
-
-  //  connect(m_ocr_tools, &OcrTools::convertedPage, this, &ScanEditor::receiveOcrPageResult);
-  //  connect(m_ocr_tools, &OcrTools::convertedImage, this, &ScanEditor::receiveOcrImageResult);
-  //  connect(m_ocr_tools, &OcrTools::convertedImageRect, this, &ScanEditor::receiveOcrImageRectResult);
 }
 
 /*
@@ -508,17 +489,6 @@ void ScanEditor::receiveImages(const QImage& left, const QImage& right)
   receiveImage(left);
   receiveImage(right);
 }
-
-//void ScanEditor::receiveString(int page_no, const QString& text)
-//{
-//  if (page_no > 0) { // 0 is cover page so no text.
-//    DocumentData doc_data = m_doc_data_store->documentData(page_no);
-
-//    if (doc_data) {
-//      doc_data->setText(page_no, Util::cleanText(text));
-//    }
-//  }
-//}
 
 QString ScanEditor::saveImage(int index, const QImage& image)
 {
@@ -618,7 +588,25 @@ void ScanEditor::saveModifiedImage(int page_no, const QImage& image)
 void ScanEditor::movePageToCover()
 {
   if (!m_current_doc_name.isEmpty()) {
-    // TODO no doc name yet.
+    QString doc_name = QInputDialog::getText(this,
+                       tr("Get Document Name"),
+                       tr("Please supply a name for this document.\n"
+                          "Do not add file extension as this is\n"
+                          "created internally."));
+
+    if (!doc_name.isEmpty()) {
+      m_current_doc_name = doc_name;
+      QImage image = m_scan_display->saveAsCover();
+      m_page_view->setCover(thumbnail(image));
+      QString path = m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator()
+                     + "cover.png";
+
+      if (!image.save(path, "PNG", 100)) {
+        qCInfo(QscanOcr) << tr("failed to save file path");
+        return;
+      }
+    }
+
   } else {
     // always
     QImage image = m_scan_display->saveAsCover();
@@ -652,6 +640,8 @@ void ScanEditor::receiveWorkOnRequest(int page_no)
     QImage image(doc_data->filename(), "PNG");
     emit sendWorkData(page_no, image, doc_data, m_doc_data_store->lang());
   }
+
+  emit goToOcrEditor();
 }
 
 //void ScanEditor::receiveOcrPageRequest(int page_no)
@@ -1083,6 +1073,7 @@ void ScanEditor::setDocumentName(const QString& name)
 {
   m_current_doc_name = name;
   loadCurrentDocument();
+
 }
 
 /*!
@@ -1207,6 +1198,7 @@ void ScanEditor::receiveScannerChange(bool)
     QString dev_name = act->data().toString();
     m_current_scanner = dev_name;
     m_scan_lib->openDevice(dev_name);
+    qCInfo(QscanWidgets) << "New scanner is " << act->text();
   }
 }
 
@@ -1227,6 +1219,7 @@ void ScanEditor::receiveModeChange(const bool /*triggered*/)
     if (!mode.isEmpty() && !m_current_scanner.isEmpty()) {
       ScanDevice* device = m_scan_lib->device(m_current_scanner);
       m_scan_lib->setScanMode(device, mode);
+      qCInfo(QscanWidgets) << "New mode is " << mode;
     }
   }
 }
@@ -1242,6 +1235,7 @@ void ScanEditor::receiveSourceChange(bool /*triggered*/)
     if (!source.isEmpty() && !m_current_scanner.isEmpty()) {
       ScanDevice* device = m_scan_lib->device(m_current_scanner);
       m_scan_lib->setSource(device, source);
+      qCInfo(QscanWidgets) << "New source is " << source;
     }
   }
 }
@@ -1259,6 +1253,7 @@ void ScanEditor::receiveResolutionListChange(bool)
     if (ok) {
       m_scan_lib->setResolution(device, res);
       //      emit currentResolution(res);
+      qCInfo(QscanWidgets) << "New resolution is " << res;
     }
   }
 }
@@ -1289,6 +1284,7 @@ void ScanEditor::receiveResolutionRangedChange(bool)
         if (ok) {
           m_scan_lib->setResolution(device, res);
           //          emit currentResolution(res);
+          qCInfo(QscanWidgets) << "New resolution is " << res;
         }
       }
     }
@@ -1314,6 +1310,31 @@ void ScanEditor::scanOpenHasFailed()
 void ScanEditor::startScanning()
 {
   m_scan_lib->startScanning(m_current_scanner);
+}
+
+void ScanEditor::batchLoad()
+{
+  QString pref_filter("*.png");
+  QString title = tr("Load image files");
+  QString filters = tr("PNG Images (*.png);;JPEG images (*.jpg);;BMP Images (*.bmp)");
+  QStringList files = QFileDialog::getOpenFileNames(this, title,
+                      ".",
+                      filters,
+                      &pref_filter);
+
+  if (!files.isEmpty()) {
+    // TODO batch load
+  }
+}
+
+void ScanEditor::batchCrop()
+{
+  // TODO batch crop
+}
+
+void ScanEditor::batchOcr()
+{
+  // TODO batch OCR
 }
 
 void ScanEditor::adjustScrollbar(qreal factor)
@@ -1392,7 +1413,6 @@ void ScanEditor::scale()
 void ScanEditor::save()
 {
   m_scan_display->save();
-  // TODO save text.
 }
 
 void ScanEditor::saveAs()
@@ -1616,9 +1636,6 @@ void ScanEditor::initScannerMenu()
 
       m_scanners_menu->addAction(act);
       connect(act, &QAction::triggered, this, &ScanEditor::receiveScannerChange);
-      // TODO add appropriate connection
-      //      m_scanner_box->addItem(
-      //        s.arg(scanner->model, scanner->type, scanner->name));
     }
 
     m_current_scanner = scanners.at(0);
@@ -1649,6 +1666,18 @@ QList<QMenu*> ScanEditor::menus()
   connect(scan_act, &QAction::triggered, this, &ScanEditor::startScanning);
   scan_menu->addAction(scan_act);
 
+  m_batch_menu = new QMenu(tr("Batch"));
+  QAction* batch_load_act = new QAction(tr("Batch Load files"), this);
+  connect(batch_load_act, &QAction::trigger, this, &ScanEditor::batchLoad);
+  m_batch_menu->addAction(batch_load_act);
+  QAction* batch_crop_act = new QAction(tr("Batch Crop images"), this);
+  connect(batch_crop_act, &QAction::trigger, this, &ScanEditor::batchCrop);
+  m_batch_menu->addAction(batch_crop_act);
+  QAction* batch_ocr_act = new QAction(tr("Batch OCR images"), this);
+  connect(batch_ocr_act, &QAction::trigger, this, &ScanEditor::batchOcr);
+  m_batch_menu->addAction(batch_ocr_act);
+  scan_menu->addMenu(m_batch_menu);
+
   // scanners sub-menu
   m_scanners_menu = new QMenu(tr("Scanners"));
   scan_menu->addMenu(m_scanners_menu);
@@ -1672,7 +1701,7 @@ QList<QToolBar*> ScanEditor::toolbars()
 {
   QList<QToolBar*> toolbar_list;
 
-  // TODO build toolbar list
+  // no toolbar list as toolbars are only used internally to ScanEditor.
 
   return toolbar_list;
 }

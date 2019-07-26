@@ -29,6 +29,7 @@ signals:
   void convertedPage(const DocumentData& doc_data);
   void convertedImage(int page_no, const QString& text);
   void convertedImageRect(int page_no, const QString& text);
+  void ocrFailed(int page_no);
 
 protected:
   OcrWorker* m_ocr_worker;

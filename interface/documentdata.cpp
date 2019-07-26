@@ -3,11 +3,10 @@
 #include <utility>
 
 #include "documentdata.h"
+#include "style.h"
 
 #include <algorithm>
 
-#include <qyaml-cpp/QYamlCpp>
-#include <yaml-cpp/yaml.h>
 
 /* DocumentDataStore
    ============================================================================*/
@@ -139,7 +138,7 @@ void DocumentDataStore::load(const QString& filename)
 
                             YAML::Node style_node = styles_node[i];
                             Style style = Style(new StyleData());
-                            style->setStyle(StyleData::Type(style_node[TEXT_STYLE].as<int>()));
+                            style->setType(StyleData::Type(style_node[TEXT_STYLE].as<int>()));
                             style->setStart(style_node[TEXT_START].as<int>());
                             style->setLength(style_node[TEXT_LENGTH].as<int>());
                             text.appendStyle(style);
@@ -234,7 +233,7 @@ void DocumentDataStore::save(const QString& filename)
           emitter << YAML::Key << TEXT_LIST;
 
           if (doc_data->isRemoveTextLater()) {
-            emitter << YAML::Value << StyledString();
+            emitter << YAML::Value << StyledString().text();
 
           } else {
             emitter << YAML::Value;
@@ -248,6 +247,7 @@ void DocumentDataStore::save(const QString& filename)
                 emitter << YAML::BeginMap;
                 {
                   emitter << YAML::Key << TEXT_STRING;
+                  // Reimplement the cleanText method.
                   emitter << YAML::Value << Util::cleanText(string_it.value());
 
                   emitter << YAML::Key << TEXT_STYLES;
@@ -259,7 +259,7 @@ void DocumentDataStore::save(const QString& filename)
                     for (auto style_it = styles.begin(); style_it != styles.end(); style_it++) {
                       emitter << YAML::BeginMap;
                       emitter << YAML::Key << TEXT_STYLE;
-                      emitter << YAML::Value << (*style_it)->style();
+                      emitter << YAML::Value << (*style_it)->type();
                       emitter << YAML::Key << TEXT_START;
                       emitter << YAML::Value << (*style_it)->start();
                       emitter << YAML::Key << TEXT_LENGTH;
@@ -535,7 +535,7 @@ void DocData::setText(int index, const StyledString& text)
     m_text_initialised = true;
   }
 
-  QString cleaned = Util::cleanText(text);
+  QString cleaned = Util::cleanText(text.text());
   m_text_list.clear();
   m_text_list.insert(index, cleaned);
 }

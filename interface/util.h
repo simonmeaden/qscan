@@ -4,8 +4,6 @@
 #include <QObject>
 #include <QtMath>
 
-#include "style.h"
-
 namespace Util {
 
 qreal round(qreal value, quint8 places);

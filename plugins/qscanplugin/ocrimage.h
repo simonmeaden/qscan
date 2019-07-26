@@ -60,9 +60,7 @@ public:
   bool isInverted() const;
   void setInverted(bool isInverted);
 
-  bool hasImageChanges();
-
-  bool imageChanged() const;
+  bool isImageChanged() const;
   void setImageChanged(bool image_changed);
 
 signals:

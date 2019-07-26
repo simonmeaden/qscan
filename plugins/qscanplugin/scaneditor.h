@@ -49,14 +49,14 @@
 #include "pageview.h"
 #include "scanimage.h"
 #include "documentdata.h"
-#include "stackableframe.h"
+#include "baseeditor.h"
 
 class QScan;
 class OcrEditor;
 class DocumentDataStore;
 //class ScanImage;
 
-class QSCANPLUGINSHARED_EXPORT ScanEditor : public StackableFrame
+class QSCANPLUGINSHARED_EXPORT ScanEditor : public BaseEditor
 {
   Q_OBJECT
 public:
@@ -138,6 +138,7 @@ signals:
   void sendOcrRequest(int);
   void optionsSet(ScanDevice*);
   void sendWorkData(int page_no, QImage image, DocumentData doc_data, QString lang);
+  void goToOcrEditor();
 
 
 protected:
@@ -146,20 +147,16 @@ protected:
   QStackedLayout* m_scan_layout;
   QGridLayout* m_editor_layout;
   QAction*  m_open_act{}, *m_close_act{}, *m_set_docname_act{};
-  QMenu* m_scanners_menu{}, *m_modes_menu{}, *m_src_menu{}, *m_res_menu{};
+  QMenu* m_batch_menu{}, *m_scanners_menu{}, *m_modes_menu{}, *m_src_menu{}, *m_res_menu{};
   //  OcrFrame* m_ocr_frame;
 
   QString m_current_doc_name;
-  QString m_options_file;
   QString m_data_filename;
   DocumentDataStore* m_doc_data_store{};
   ScanImage* m_scan_display{};
   QProgressDialog* m_prog_dlg{};
   QScrollArea* m_scroller{};
   PageView* m_page_view{};
-  QString m_config_dir{};
-  QString m_data_dir{};
-  QString m_lang{};
   QPushButton* m_crop_btn{};
   QPushButton* m_left_btn{};
   QPushButton* m_move_up_btn{};
@@ -200,6 +197,10 @@ protected:
   void scanHasFailed();
   void scanOpenHasFailed();
   void startScanning();
+
+  void batchLoad();
+  void batchCrop();
+  void batchOcr();
 
   void adjustScrollbar(qreal factor);
   void initGui();
@@ -251,7 +252,6 @@ protected:
   static const QString OCR_IMAGE_FILTER;
   static const QString INTERNAL_IMAGE_FILTER;
 
-  static const QString OPTIONS_FILE;
   static const QString CURRENT_DOCUMENT;
   void initRightToolbar(QToolBar* r_toolbar);
   void initTopToolbar(QToolBar* t_toolbar);

@@ -25,7 +25,7 @@ void ScanList::appendText(const StyledString& text)
 
   if (m_model->insertRow(row)) {
     QModelIndex index = m_model->index(row, 0, QModelIndex());
-    m_model->setData(index, QVariant::fromValue<QString>(text), Qt::EditRole);
+    m_model->setData(index, QVariant::fromValue<StyledString>(text), Qt::EditRole);
     m_changes = true;
     emit dataHasChanged();
   }
@@ -56,7 +56,7 @@ void ScanList::replaceText(int row, const StyledString& text)
   QModelIndex index = m_model->index(row, 0);
 
   if (index.isValid()) {
-    m_model->setData(index, text);
+    m_model->setData(index, QVariant::fromValue<StyledString>(text));
     m_changes = true;
     emit dataHasChanged();
   }
@@ -107,7 +107,7 @@ void ScanList::setText(const StyledString& text)
   m_model->clearData();
   m_model->insertRow(0);
   const QModelIndex index = m_model->index(0, 0);
-  m_model->setData(index, text, Qt::EditRole);
+  m_model->setData(index, QVariant::fromValue<StyledString>(text), Qt::EditRole);
   m_changes = false;
   emit dataHasChanged();
 }

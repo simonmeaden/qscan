@@ -92,7 +92,7 @@ void BaseScanImage::clearToBackground()
     painter.drawRect(selected_rect);
     painter.end();
 
-    scaleModifiedImage();
+    scaleCurrentImage();
     clearSelection();
   }
 }
@@ -111,12 +111,12 @@ void BaseScanImage::cropToSelection()
 
     m_current_image = cropped;
     //    updateImage(/*cropped*/);
-    scaleModifiedImage();
+    scaleCurrentImage();
     clearSelection();
   }
 }
 
-void BaseScanImage::scaleModifiedImage()
+void BaseScanImage::scaleCurrentImage()
 {
   int w = int(m_current_image.width() * m_scale_by);
   int h = int(m_current_image.height() * m_scale_by);
@@ -200,7 +200,7 @@ void BaseScanImage::fitByType()
       break;
     }
 
-    scaleModifiedImage();
+    scaleCurrentImage();
   }
 }
 
@@ -721,7 +721,7 @@ void BaseScanImage::rotate180()
 {
   m_op_images.append(m_current_image);
   m_image_changed = true;
-  emit imageHasChanged(m_image_changed);
+  //  emit imageHasChanged(m_image_changed);
   rotateBy(180);
 }
 
@@ -729,7 +729,7 @@ void BaseScanImage::rotateCW()
 {
   m_op_images.append(m_current_image);
   m_image_changed = true;
-  emit imageHasChanged(m_image_changed);
+  //  emit imageHasChanged(m_image_changed);
   rotateBy(90.0);
 }
 
@@ -737,7 +737,7 @@ void BaseScanImage::rotateCCW()
 {
   m_op_images.append(m_current_image);
   m_image_changed = true;
-  emit imageHasChanged(m_image_changed);
+  //  emit imageHasChanged(m_image_changed);
   rotateBy(-90.0);
 }
 
@@ -753,7 +753,7 @@ void BaseScanImage::rotateBy(qreal angle)
   (m_current_image.rect().center()));
   setImage(rotated);
   m_image_changed = true;
-  emit imageHasChanged(m_image_changed);
+  //  emit imageHasChanged(m_image_changed);
   fitBest();
   update();
 }
@@ -776,6 +776,6 @@ void BaseScanImage::rotateUsingEdge()
   }
 
   m_image_changed = true;
-  emit imageHasChanged(m_image_changed);
+  //  emit imageHasChanged(m_image_changed);
   clearSelection();
 }
