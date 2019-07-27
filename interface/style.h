@@ -42,6 +42,7 @@ public:
   };
 
   StyleData();
+  StyleData(Type type);
   StyleData(Type type, int start, int length);
 
   int start() const;
@@ -77,11 +78,12 @@ public:
   QString text() const;
   int length();
   bool isEmpty();
-  StyledString mid();
+  StyledString mid(int position, int n = -1);
   StyledString left(int n);
   StyledString right(int n);
 
   void appendStyle(Style style);
+  void appendStyles(QList<Style> styles);
   void removeStyle(Style style);
   void removeStyle(int index);
   void insertStyle(int index, Style style);
@@ -90,14 +92,18 @@ public:
 
   QList<StyledString> splitParagraphs();
 
-  StyledString& operator=(const QString&);
-  StyledString& operator=(const StyledString&);
-  StyledString& operator+=(const StyledString&);
 
   void setText(const QString& text);
 
   QList<Style> styles() const;
   void setStyles(const QList<Style>& styles);
+
+  StyledString& operator=(const QString&);
+  StyledString& operator=(const StyledString&);
+  bool operator==(const StyledString&);
+  StyledString& operator+(const StyledString&);
+  StyledString& operator+=(const StyledString&);
+  friend const StyledString operator+(const StyledString&, const StyledString&);
 
 protected:
   QString m_text;

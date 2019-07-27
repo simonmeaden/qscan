@@ -74,10 +74,18 @@ StyleData::StyleData()
   , m_style(Normal)
 {}
 
-StyleData::StyleData(Type style, int start, int length)
+StyleData::StyleData(StyleData::Type type)
+  : m_start(0)
+  , m_length(0)
+  , m_style(type)
+{
+
+}
+
+StyleData::StyleData(Type type, int start, int length)
   : m_start(start)
   , m_length(length)
-  , m_style(style)
+  , m_style(type)
 {}
 
 int StyleData::start() const
@@ -196,14 +204,40 @@ bool StyledString::isEmpty()
   return m_text.isEmpty();
 }
 
+StyledString StyledString::mid(int position, int n)
+{
+  if (n < 0) {
+    int length_rqd = m_text.length() - position - 1;
+    StyledString str = right(length_rqd);
+    return str;
+
+  } else {
+    int left_len = m_text.length() - position;
+    StyledString str = right(left_len);
+    str = str.left(n);
+    return str;
+  }
+}
+
 StyledString StyledString::left(int n)
 {
   StyledString str = m_text.left(n);
 
   for (Style style : m_styles) {
+    Style s(new StyleData(style->type()));
+
     if (style->start() < str.length()) {
-      style->setLength(str.length() - style->start());
-      str.appendStyle(style);
+      s->setStart(style->start());
+      int available_len = str.length() - style->start();
+
+      if (style->length() < available_len) {
+        s->setLength(style->length());
+
+      } else {
+        s->setLength(str.length() - style->start());
+      }
+
+      str.appendStyle(s);
     }
   }
 
@@ -213,21 +247,35 @@ StyledString StyledString::left(int n)
 StyledString StyledString::right(int n)
 {
   StyledString str = m_text.right(n);
-  int start = length() - str.length() - 1;
-  int end = m_text.length() - 1;
+  int start, end;
 
-  for (Style style : m_styles) {
-    bool is_start_in = style->start() >= start && style->start() <= end ;
-    bool is_end_in = style->end() >= start && style->end() <= end;
+  if (n == length()) {
+    start = 0;
+    end = length() - 1;
+    str.appendStyles(styles());
 
-    if (is_start_in && is_end_in) {
-      style->setStart(style->start() - start);
-      str.appendStyle(style);
+  } else {
+    start = length() - str.length();
+    end = length() - 1;
 
-    } else if (is_end_in) {
-      style->setLength(style->length() - (start - style->start() + 1));
-      style->setStart(0);
-      str.appendStyle(style);
+    for (Style style : m_styles) {
+      Style s(new StyleData(style->type()));
+      bool is_start_in = style->start() > start && style->start() < end ;
+      bool is_end_in = style->end() >= start && style->end() < end;
+
+      if (!is_start_in && !is_end_in) {
+        continue;
+
+      } else if (is_start_in && is_end_in) {
+        s->setStart(style->start() - (start - 1));
+        s->setLength(style->length());
+        str.appendStyle(s);
+
+      } else if (is_end_in) {
+        s->setStart(0);
+        s->setLength(style->start() + style->length() - start);
+        str.appendStyle(s);
+      }
     }
   }
 
@@ -237,6 +285,11 @@ StyledString StyledString::right(int n)
 void StyledString::appendStyle(Style style)
 {
   m_styles.append(style);
+}
+
+void StyledString::appendStyles(QList<Style> styles)
+{
+  m_styles.append(styles);
 }
 
 void StyledString::removeStyle(Style style)
@@ -279,7 +332,7 @@ QList<StyledString> StyledString::splitParagraphs()
 {
   // TODO split string at paragraph boundaries.
   QMap<int, Style> paras;
-  QMap<int, Style> others;
+  QList<Style>others;
 
   // split out the paragraphs from the non-paragraphs.
   for (auto data : m_styles) {
@@ -287,57 +340,56 @@ QList<StyledString> StyledString::splitParagraphs()
       paras.insert(data->start(), data);
 
     } else {
-      others.insert(data->start(), data);
+      others.append(data);
     }
   }
 
-  StyledString centre = *this;
-  int end = centre.length();
+  StyledString styled_str(m_text);
+  styled_str.appendStyles(others);
+
   QList<StyledString> splits;
-  int p_start = -1, p_end = -1, p_length = -1, start = 0;
 
-  for (auto para : paras) {
-    if (para->start() == 0 && para->length() == this->length()) {
-      // a whole string paragraph. no further work required.
+  if (paras.isEmpty() ||
+      (paras.size() == 1 &&
+       paras.first()->start() == 0 &&
+       paras.first()->length() == length())) {
+    /* Special case of a StyledString without a Paragraph style
+      or a StyledString with a full length Paragraph style. */
+    styled_str.appendStyle(
+      Style(new StyleData(
+              StyleData::Paragraph,
+              0,
+              m_text.length())));
+    splits.append(styled_str);
+
+  } else {
+    StyledString before, centre, after;
+
+    for (Style style : paras) {
+      int start = style->start();
+      int len = style->length();
+
+      before = styled_str.left(start);
+      before.appendStyle(Style(new StyleData(StyleData::Paragraph, 0, before.length())));
+      splits.append(before);
+
+      centre = styled_str.mid(start, len);
+      centre.appendStyle(Style(new StyleData(StyleData::Paragraph, 0, centre.length())));
       splits.append(centre);
-      return splits;
+
+      if (start + len < m_text.length()) {
+        after = styled_str.right(length() - (start + len));
+        styled_str = after;
+
+      } else {
+        break;
+      }
     }
 
-    StyledString left, right;
-    p_start = para->start();
-    p_length = para->length();
-    p_end = para->end();
-
-    left = centre.m_text.left(p_start);
-    right = centre.m_text.mid(p_end + 1);
-    centre = centre.m_text.mid(p_start, p_length);
-
-    if (!left.isEmpty()) {
-      transferStyles(left, start, p_start - 1, others);
-      left.appendStyle(Style(new StyleData(StyleData::Paragraph, start, left.length())));
-      splits.append(left);
+    if (!styled_str.isEmpty()) {
+      styled_str.appendStyle(Style(new StyleData(StyleData::Paragraph, 0, styled_str.length())));
+      splits.append(styled_str);
     }
-
-    if (!centre.isEmpty()) {
-      transferStyles(centre, p_start, p_end, others);
-      centre.appendStyle(para);
-      splits.append(centre);
-    }
-
-    centre = right;
-    start = p_end;
-  }
-
-  if (!centre.isEmpty()) {
-    // if p_start is -1 then no paras were defined so just add a paragraph style
-    // with no style transfer as styles are already included.
-    if (p_start > -1) {
-      // what was left at the end.
-      transferStyles(centre, start, end, others);
-    }
-
-    centre.appendStyle(Style(new StyleData(StyleData::Paragraph, 0, centre.length())));
-    splits.append(centre);
   }
 
   return splits;
@@ -386,11 +438,58 @@ void StyledString::transferStyles(StyledString& data_str, int p_start, int p_end
   }
 }
 
+void StyledString::setText(const QString& text)
+{
+  m_text = text;
+}
+
+QList<Style> StyledString::styles() const
+{
+  return m_styles;
+}
+
+void StyledString::setStyles(const QList<Style>& styles)
+{
+  m_styles = styles;
+}
+
 StyledString& StyledString::operator=(const StyledString& other)
 {
   this->setText(other.m_text);
   m_styles = other.styles();
   return *this;
+}
+
+StyledString& StyledString::operator=(const QString& other)
+{
+  this->setText(other);
+  this->m_styles.clear();
+  return *this;
+}
+
+bool StyledString::operator==(const StyledString& other)
+{
+  if (m_text != other.m_text) {
+    return false;
+  }
+
+  if (m_styles.size() == other.styles().size()) {
+    for (int i = 0; i < m_styles.size(); i++) {
+      Style style = m_styles.at(i);
+      Style o_style = other.styles().at(i);
+
+      if (style->type() != o_style->type() ||
+          style->start() != o_style->start() ||
+          style->length() != o_style->length()) {
+        return false;
+      }
+    }
+
+  } else {
+    return false;
+  }
+
+  return true;
 }
 
 StyledString& StyledString::operator+=(const StyledString& other)
@@ -410,24 +509,17 @@ StyledString& StyledString::operator+=(const StyledString& other)
   return *this;
 }
 
-StyledString& StyledString::operator=(const QString& other)
+StyledString& StyledString::operator+(const StyledString& other)
 {
-  this->setText(other);
-  this->m_styles.clear();
+  m_text += other.m_text;
+  m_styles.append(other.styles());
   return *this;
 }
 
-void StyledString::setText(const QString& text)
+const StyledString operator+(const StyledString& lhs, const StyledString& rhs)
 {
-  m_text = text;
+  StyledString str = lhs;
+  str += rhs;
+  return str;
 }
 
-QList<Style> StyledString::styles() const
-{
-  return m_styles;
-}
-
-void StyledString::setStyles(const QList<Style>& styles)
-{
-  m_styles = styles;
-}
