@@ -18,3 +18,5 @@ Scanner.depends = document interface
 tests.subdir = tests
 tests.depends = interface document
 
+interface.subdir = interface
+interface.depends = document
