@@ -2,6 +2,6 @@
 
 TitleBlock::TitleBlock() {}
 
-TitleBlock::TitleBlock(const QString& title)
+TitleBlock::TitleBlock(const StyledString& title)
   : TextBlock(title)
 {}

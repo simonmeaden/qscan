@@ -5,12 +5,13 @@
 #include <QSharedPointer>
 
 #include "textblock.h"
+#include "styledstring.h"
 
 class ParagraphBlock : public TextBlock
 {
 public:
   ParagraphBlock();
-  explicit ParagraphBlock(const QString& text);
+  explicit ParagraphBlock(const StyledString& text);
 };
 using Paragraph = QSharedPointer<ParagraphBlock>;
 

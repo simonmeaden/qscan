@@ -6,10 +6,12 @@ CONFIG -= app_bundle
 TEMPLATE = app
 
 SOURCES +=  \
+  sslogging.cpp \
   tst_teststyledstring.cpp \
   testlogging.cpp
 
 HEADERS += \
+  sslogging.h \
   testlogging.h
 
 unix|win32: LIBS += -lqyaml-cpp

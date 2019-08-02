@@ -52,7 +52,7 @@ public:
   void setOcrText(int page_no, const QString& texts);
   void appendOcrText(int page_no, const QString& texts);
   void ocrFailed(int page_no);
-  QList<StyledString> texts();
+  StyledStringList texts();
 
   bool imageChanged() const;
 

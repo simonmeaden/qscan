@@ -1,5 +1,5 @@
 #include "util.h"
-#include "style.h"
+#include "styledstring.h"
 
 namespace Util {
 

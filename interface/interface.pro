@@ -42,9 +42,7 @@ SOURCES +=   \
   papersize.cpp \
   qmenuutils.cpp \
   qscanlogging.cpp \
-  stackableframe.cpp \
-  style.cpp \
-  util.cpp
+  stackableframe.cpp
 
 HEADERS += \
     baseeditor.h \
@@ -59,9 +57,7 @@ HEADERS += \
     papersize.h \
     qmenuutils.h \
     qscanlogging.h \
-    stackableframe.h \
-    style.h \
-    util.h
+    stackableframe.h
 
 DISTFILES += \
     plugininterface.json
@@ -70,3 +66,10 @@ INCLUDEPATH += /usr/local/include
 
 unix|win32: LIBS += -lqyaml-cpp
 unix|win32: LIBS += -lyaml-cpp
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../document/release/ -ldocument
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../document/debug/ -ldocument
+else:unix: LIBS += -L$$OUT_PWD/../document/ -ldocument
+
+INCLUDEPATH += $$PWD/../document
+DEPENDPATH += $$PWD/../document

@@ -119,7 +119,7 @@ void OcrEditor::ocrFailed(int page_no)
                           "Try tweaking the image and try again."), QMessageBox::Ok);
 }
 
-QList<StyledString> OcrEditor::texts()
+StyledStringList OcrEditor::texts()
 {
   return m_scan_list->texts();
 }
@@ -775,8 +775,9 @@ void OcrEditor::scanListWasDoubleClicked(const QModelIndex& index)
     dlg->setText(value.toString());
 
     if (dlg->exec() == QDialog::Accepted) {
-      StyledString text = dlg->text();
-      m_scan_list->replaceText(index.row(), text);
+      StyledStringList text_list = dlg->text();
+      // TODO use StyledStringList
+      //      m_scan_list->replaceText(index.row(), text);
     }
 
   } else if (value.type() == QVariant::Image) {

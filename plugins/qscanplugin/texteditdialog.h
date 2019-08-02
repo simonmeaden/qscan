@@ -13,8 +13,9 @@
 #include <QPixmapCache>
 #include <QList>
 #include <QPair>
+#include <QMessageBox>
 
-#include "style.h"
+#include "styledstring.h"
 
 class TextEditDialog : public QDialog
 {
@@ -26,7 +27,7 @@ public:
 
   void setText(const StyledString& text);
   void setText(const QString& text);
-  StyledString text();
+  StyledStringList text();
 
 protected:
   StyledString m_text;
@@ -45,7 +46,7 @@ protected:
   void initGui();
   void textSelectionChanged();
 
-  void setTextStyle(int start, int length, StyleData::Type type);
+  void setTextStyle(Style data);
 
   void setBoldClicked();
   void setUnderlineClicked();
@@ -58,8 +59,6 @@ protected:
   void makeParagraph();
 
   void acceptChanges();
-
-  void storeStyle(int start, int length, StyleData::Type style);
 };
 
 #endif  // TEXTEDITDIALOG_H

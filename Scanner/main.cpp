@@ -25,7 +25,7 @@
 #include <QtDebug>
 
 #include "documentdata.h"
-#include "style.h"
+#include "styledstring.h"
 
 using Image = QSharedPointer<QImage>;
 Q_DECLARE_METATYPE(Image)

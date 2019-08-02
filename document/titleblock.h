@@ -1,17 +1,17 @@
 #ifndef TITLEBLOCK_H
 #define TITLEBLOCK_H
 
-#include <QString>
 #include <QSharedPointer>
 
 #include "block.h"
 #include "textblock.h"
+#include "styledstring.h"
 
 class TitleBlock : public TextBlock
 {
 public:
   TitleBlock();
-  TitleBlock(const QString& title);
+  TitleBlock(const StyledString& title);
 
 protected:
 

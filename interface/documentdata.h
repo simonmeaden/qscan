@@ -9,7 +9,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "util.h"
-#include "style.h"
+#include "styledstring.h"
 
 class DocData
 {
@@ -59,7 +59,7 @@ public:
   void setImageNames(const QMap<int, QString>& image_names);
 
   int appendText(const StyledString& text);
-  //  void appendText(const QList<StyledString> &text_list);
+  //  void appendText(const StyledStringList &text_list);
   void removeText(int index);
   //  bool removeText(const StyledString &text);
   void insertText(int index, const StyledString& text);

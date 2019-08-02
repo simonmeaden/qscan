@@ -3,7 +3,7 @@
 #include <utility>
 
 #include "documentdata.h"
-#include "style.h"
+#include "styledstring.h"
 
 #include <algorithm>
 
@@ -137,7 +137,7 @@ void DocumentDataStore::load(const QString& filename)
                           for (std::size_t i = 0; i < styles_node.size(); i++) {
 
                             YAML::Node style_node = styles_node[i];
-                            Style style = Style(new StyleData());
+                            Style style = StyleData::getStyle();
                             style->setType(StyleData::Type(style_node[TEXT_STYLE].as<int>()));
                             style->setStart(style_node[TEXT_START].as<int>());
                             style->setLength(style_node[TEXT_LENGTH].as<int>());

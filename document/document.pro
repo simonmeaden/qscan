@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       -= gui
+#QT       -= gui
 
 TARGET = document
 TEMPLATE = lib
@@ -26,16 +26,20 @@ SOURCES += \
         block.cpp \
         document.cpp \
         paragraphblock.cpp \
+        styledstring.cpp \
         textblock.cpp \
-        titleblock.cpp
+        titleblock.cpp \
+        util.cpp
 
 HEADERS += \
         block.h \
         document.h \
         document_global.h  \
         paragraphblock.h \
+        styledstring.h \
         textblock.h \
-        titleblock.h
+        titleblock.h \
+        util.h
 
 unix {
     target.path = /usr/lib

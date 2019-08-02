@@ -2,6 +2,6 @@
 
 ParagraphBlock::ParagraphBlock() {}
 
-ParagraphBlock::ParagraphBlock(const QString& text)
+ParagraphBlock::ParagraphBlock(const StyledString& text)
   : TextBlock(text)
 {}

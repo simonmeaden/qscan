@@ -2,7 +2,7 @@
 
 TextBlock::TextBlock() {}
 
-TextBlock::TextBlock(const QString& text)
+TextBlock::TextBlock(const StyledString& text)
 {
   m_text = text;
 }

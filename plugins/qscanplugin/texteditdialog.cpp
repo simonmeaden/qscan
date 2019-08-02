@@ -34,11 +34,13 @@ void TextEditDialog::setText(const QString& text)
 
   \return a StyledString.
 */
-StyledString TextEditDialog::text()
+StyledStringList TextEditDialog::text()
 {
-  QString modified = m_editor->toPlainText();
-  m_text.setText(modified);
-  return m_text;
+  //  QString modified = m_editor->toPlainText();
+  //  m_text.setText(modified);
+  //  return m_text;
+  StyledStringList paras = m_text.splitParagraphs();
+  return paras;
 }
 
 void TextEditDialog::initGui()
@@ -186,15 +188,15 @@ void TextEditDialog::textSelectionChanged()
   }
 }
 
-void TextEditDialog::setTextStyle(int start, int length, StyleData::Type type)
+void TextEditDialog::setTextStyle(Style data)
 {
   QTextCursor* cursor = new QTextCursor(m_editor->document());
-  cursor->setPosition(start, QTextCursor::MoveAnchor);
-  cursor->movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, length);
+  cursor->setPosition(data->start(), QTextCursor::MoveAnchor);
+  cursor->movePosition(QTextCursor::Right, QTextCursor::KeepAnchor, data->length());
 
   QTextCharFormat format;
 
-  switch (type) {
+  switch (data->type()) {
   case StyleData::Bold:
     format.setFontWeight(QFont::Bold);
     break;
@@ -222,7 +224,7 @@ void TextEditDialog::setTextStyle(int start, int length, StyleData::Type type)
   case StyleData::Font_V_Large:
   case StyleData::Font_X_Large:
   case StyleData::Font_X_X_Large:
-    format.setFontStretch(StyleData::fontStretch(type));
+    format.setFontStretch(data->fontStretch());
     break;
 
   case StyleData::Paragraph:
@@ -236,16 +238,6 @@ void TextEditDialog::setTextStyle(int start, int length, StyleData::Type type)
   cursor->mergeCharFormat(format);
 }
 
-void TextEditDialog::storeStyle(int start, int length, StyleData::Type style)
-{
-  m_text.appendStyle(
-    Style(
-      new StyleData(
-        style,
-        start,
-        length)));
-}
-
 void TextEditDialog::setBoldClicked()
 {
   QTextCursor cursor = m_editor->textCursor();
@@ -254,10 +246,15 @@ void TextEditDialog::setBoldClicked()
   int length = qAbs(position - anchor);
   int start = qMin(anchor, position);
   StyleData::Type type = StyleData::Bold;
+  Style style = StyleData::getStyle(type, start, length);
 
   if (length != 0) {
-    setTextStyle(start, length, type);
-    storeStyle(start, length, type);
+    setTextStyle(style);
+
+    if (!m_text.appendStyle(style)) {
+      QMessageBox::warning(this, tr("Bold failed!"),
+                           tr("The bold command failed"), QMessageBox::Ok);
+    }
   }
 }
 
@@ -269,10 +266,15 @@ void TextEditDialog::setItalicClicked()
   int length = qAbs(position - anchor);
   int start = qMin(anchor, position);
   StyleData::Type type = StyleData::Italic;
+  Style style = StyleData::getStyle(type, start, length);
 
   if (length != 0) {
-    setTextStyle(start, length, type);
-    storeStyle(start, length, type);
+    setTextStyle(style);
+
+    if (!m_text.appendStyle(style)) {
+      QMessageBox::warning(this, tr("Italic failed!"),
+                           tr("The italic command failed"), QMessageBox::Ok);
+    }
   }
 }
 
@@ -284,10 +286,15 @@ void TextEditDialog::setNormalClicked()
   int length = qAbs(position - anchor);
   int start = qMin(anchor, position);
   StyleData::Type type = StyleData::Normal;
+  Style style = StyleData::getStyle(type, start, length);
 
   if (length != 0) {
-    setTextStyle(start, length, type);
-    storeStyle(start, length, type);
+    setTextStyle(style);
+
+    if (!m_text.appendStyle(style)) {
+      QMessageBox::warning(this, tr("Normal failed!"),
+                           tr("The command failed"), QMessageBox::Ok);
+    }
   }
 }
 
@@ -299,12 +306,17 @@ void TextEditDialog::setFontSizeSelected(int index)
   int length = qAbs(position - anchor);
   int start = qMin(anchor, position);
   StyleData::Type type = StyleData::Type(index + int(StyleData::Type::Font_X_X_Small));
+  Style style = StyleData::getStyle(type, start, length);
 
   if (length != 0) {
     // show the editor text as bold
-    setTextStyle(start, length, type);
+    setTextStyle(style);
+
     // set the QStyle format
-    storeStyle(start, length, type);
+    if (!m_text.appendStyle(style)) {
+      QMessageBox::warning(this, tr("Font Size failed!"),
+                           tr("The font size change failed"), QMessageBox::Ok);
+    }
   }
 }
 
@@ -321,14 +333,20 @@ void TextEditDialog::makeParagraph()
   if (!text.isEmpty()) {
     int start = cursor.anchor();
     int length = cursor.position() - start;
-    setTextStyle(start, length, StyleData::Paragraph);
-    storeStyle(start, length, StyleData::Paragraph);
+    Style style = StyleData::getStyle(StyleData::Paragraph, start, length);
+    setTextStyle(style);
+
+    if (!m_text.appendStyle(style)) {
+      QMessageBox::warning(this, tr("Paragraph failed!"),
+                           tr("The paragraph command failed.\n"
+                              "Probably caused by an overlapping paragraph."), QMessageBox::Ok);
+    }
   }
 }
 
 void TextEditDialog::acceptChanges()
 {
-  QList<StyledString> text_list;
+  StyledStringList text_list;
   QString text = m_editor->toPlainText();
 
   emit accept();
@@ -342,10 +360,15 @@ void TextEditDialog::setUnderlineClicked()
   int length = qAbs(position - anchor);
   int start = qMin(anchor, position);
   StyleData::Type type = StyleData::Underline;
+  Style style = StyleData::getStyle(type, start, length);
 
   if (length != 0) {
-    setTextStyle(start, length, type);
-    storeStyle(start, length, type);
+    setTextStyle(style);
+
+    if (!m_text.appendStyle(style)) {
+      QMessageBox::warning(this, tr("Underline failed!"),
+                           tr("The underline command failed"), QMessageBox::Ok);
+    }
   }
 }
 

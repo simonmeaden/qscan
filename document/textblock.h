@@ -5,17 +5,18 @@
 #include <QSharedPointer>
 
 #include "block.h"
+#include "styledstring.h"
 
 class TextBlock : public Block
 {
 public:
   TextBlock();
-  explicit TextBlock(const QString& title);
+  explicit TextBlock(const StyledString& title);
 
   void toHtml();
 
 protected:
-  QString m_text;
+  StyledString m_text;
 };
 using DocumentText = QSharedPointer<TextBlock>;
 

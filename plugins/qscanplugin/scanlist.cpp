@@ -112,6 +112,19 @@ void ScanList::setText(const StyledString& text)
   emit dataHasChanged();
 }
 
+void ScanList::setText(const StyledStringList& list)
+{
+  m_model->clearData();
+  m_model->insertRows(0, list.size());
+
+  for (int row = 0; row < list.size(); row++) {
+    const QModelIndex index = m_model->index(row, 0);
+    m_model->setData(index, QVariant::fromValue<StyledString>(list.at(row)), Qt::EditRole);
+    m_changes = false;
+    emit dataHasChanged();
+  }
+}
+
 void ScanList::setText(const QStringList& list)
 {
   m_model->clearData();
@@ -148,7 +161,7 @@ bool ScanList::hasDataChanges()
   return m_changes;
 }
 
-QList<StyledString> ScanList::texts()
+StyledStringList ScanList::texts()
 {
   return m_model->textList();
 }
@@ -198,9 +211,9 @@ QModelIndex ScanListModel::parent(const QModelIndex& /*index*/) const
   return {};
 }
 
-QList<StyledString> ScanListModel::textList()
+StyledStringList ScanListModel::textList()
 {
-  QList<StyledString> list;
+  StyledStringList list;
 
   for (auto key : m_strings) {
     list << m_data_list.at(key).value<StyledString>();

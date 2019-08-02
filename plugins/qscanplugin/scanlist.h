@@ -10,7 +10,7 @@
 #include <QTextEdit>
 #include <QVariant>
 
-#include "style.h"
+#include "styledstring.h"
 
 /* ScanItemDelegate
  **************************************************************************************/
@@ -41,7 +41,7 @@ public:
   ScanListModel(QObject* parent);
 
   void clearData();
-  QList<StyledString> textList();
+  StyledStringList textList();
   QList<QImage> imageList();
 
   int rowCount(const QModelIndex& parent = QModelIndex()) const override;
@@ -89,6 +89,7 @@ public:
   void setData(const QMap<int, QVariant>& data);
   void setText(const QString& texts);
   void setText(const StyledString& texts);
+  void setText(const StyledStringList& list);
   void setText(const QStringList& list);
   int setImage(const QImage& image);
 
@@ -96,7 +97,7 @@ public:
 
   bool hasDataChanges();
 
-  QList<StyledString> texts();
+  StyledStringList texts();
   QList<QImage> images();
 
   int size();
