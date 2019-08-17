@@ -31,7 +31,6 @@
 #include <sane/sane.h>
 #include <sane/saneopts.h>
 
-#include "qscanlogging.h"
 #include "iscanlibrary.h"
 #include "saneworker.h"
 #include "scanoptions.h"

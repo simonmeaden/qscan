@@ -30,7 +30,6 @@
 #include <QObject>
 #include <QtDebug>
 
-#include "qscanlogging.h"
 #include "iscanlibrary.h"
 #include "scanoptions.h"
 

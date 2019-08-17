@@ -8,6 +8,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "logging.h"
 #include "styledstring.h"
 
 namespace QScanner {

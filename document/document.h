@@ -3,6 +3,7 @@
 
 #include "document_global.h"
 
+#include "logging.h"
 #include "block.h"
 
 class DOCUMENTSHARED_EXPORT Document

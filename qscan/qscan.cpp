@@ -23,6 +23,7 @@
 */
 #include "qscan.h"
 #include "scandevice.h"
+#include "logging.h"
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
   #include "unix/sanelibrary.h"
@@ -76,7 +77,7 @@ bool QScan::openDevice(const QString& device_name)
   bool open = m_scan_lib->detectAvailableOptions(device_name);
 
   if (open) {
-    qCInfo(QscanSane) << tr("Scanner %1 open.").arg(device_name);
+    qCInfo(LogQScan) << tr("Scanner %1 open.").arg(device_name);
     m_scan_lib->getAvailableScannerOptions(device_name);
   }
 
@@ -88,7 +89,7 @@ bool QScan::startScanning(const QString& device_name)
   bool open = m_scan_lib->detectAvailableOptions(device_name);
 
   if (open) {
-    qCInfo(QscanSane) << tr("Starting scan");
+    qCInfo(LogQScan) << tr("Starting scan");
     return m_scan_lib->startScan(device_name);
   }
 
@@ -97,7 +98,7 @@ bool QScan::startScanning(const QString& device_name)
 
 void QScan::cancelScan(/*const QString& device_name*/)
 {
-  qCInfo(QscanSane) << tr("Cancelled scan");
+  qCInfo(LogQScan) << tr("Cancelled scan");
   m_scan_lib->cancelScan(/*device_name*/);
 }
 

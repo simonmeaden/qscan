@@ -4,6 +4,7 @@
 #include <QString>
 #include <QSharedPointer>
 
+#include "logging.h"
 #include "textblock.h"
 #include "styledstring.h"
 

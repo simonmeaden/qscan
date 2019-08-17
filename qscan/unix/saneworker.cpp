@@ -26,6 +26,7 @@
 #include <memory>
 #include <stdlib.h>
 
+#include "logging.h"
 #include "scandevice.h"
 
 namespace QScanner {
@@ -88,11 +89,11 @@ void SaneWorker::scan(ScanDevice* device)
         //        offset = parameters.format - SANE_FRAME_RED;
         format = QImage::Format_RGB32;
         full_size *= 3;
-        qCWarning(QscanSane) << tr("Sane frame RED/GREEN/BLUE");
+        qCWarning(LogQScan) << tr("Sane frame RED/GREEN/BLUE");
         break;
       }
 
-      qCWarning(QscanSane) << tr("Sane frame RED/GREEN/BLUE but depth not 8");
+      qCWarning(LogQScan) << tr("Sane frame RED/GREEN/BLUE but depth not 8");
 
       emit scanFailed();
       return;
@@ -100,12 +101,12 @@ void SaneWorker::scan(ScanDevice* device)
     case SANE_FRAME_RGB:
       if (parameters.depth == 8) {
         format = QImage::Format_RGB32;
-        qCWarning(QscanSane) << tr("Sane frame RGB depth 8");
+        qCWarning(LogQScan) << tr("Sane frame RGB depth 8");
         break;
 
       } else if (parameters.depth == 16) {
         format = QImage::QImage::Format_RGBX64;
-        qCWarning(QscanSane) << tr("Sane frame RGB depth 16");
+        qCWarning(LogQScan) << tr("Sane frame RGB depth 16");
         break;
       }
 
@@ -121,7 +122,7 @@ void SaneWorker::scan(ScanDevice* device)
         //            offset = 0;
         //          }
 
-        qCWarning(QscanSane) << tr("Sane frame Mono depth 1");
+        qCWarning(LogQScan) << tr("Sane frame Mono depth 1");
         break;
 
       } else if (parameters.depth == 8) {
@@ -134,7 +135,7 @@ void SaneWorker::scan(ScanDevice* device)
           //          offset = 0;
         }
 
-        qCWarning(QscanSane) << tr("Sane frame Grey depth 8");
+        qCWarning(LogQScan) << tr("Sane frame Grey depth 8");
         break;
 
       } else if (parameters.depth == 16) {
@@ -150,7 +151,7 @@ void SaneWorker::scan(ScanDevice* device)
           //          offset = 0;
         }
 
-        qCWarning(QscanSane) << tr("Sane frame Grey depth 16");
+        qCWarning(LogQScan) << tr("Sane frame Grey depth 16");
         break;
 
       } else {
@@ -213,7 +214,7 @@ void SaneWorker::scan(ScanDevice* device)
     }
   }
 
-  qCInfo(QscanSane) << tr("Scan has completed");
+  qCInfo(LogQScan) << tr("Scan has completed");
 
   sane_close(m_sane_handle);
   m_sane_handle = nullptr;
@@ -444,7 +445,7 @@ void SaneWorker::loadAvailableScannerOptions(ScanDevice* device)
           device->options->setOptionType(name, option->type);
         }
 
-        qCInfo(QscanSane) << tr("Name : %1, Title : %2").arg(name, title);
+        qCInfo(LogQScan) << tr("Name : %1, Title : %2").arg(name, title);
 
         if (name == SANE_NAME_SCAN_TL_X || name == SANE_NAME_SCAN_TL_Y || name == SANE_NAME_SCAN_BR_X ||
             name == SANE_NAME_SCAN_BR_Y || name == SANE_NAME_CONTRAST || name == SANE_NAME_BRIGHTNESS) {

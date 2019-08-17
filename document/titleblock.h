@@ -3,6 +3,7 @@
 
 #include <QSharedPointer>
 
+#include "logging.h"
 #include "block.h"
 #include "textblock.h"
 #include "styledstring.h"

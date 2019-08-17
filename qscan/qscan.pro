@@ -24,14 +24,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-VERSION_MAJOR = 0
-VERSION_MINOR = 1
-VERSION_BUILD = 0
-
-DEFINES += \
-       "QSCAN_VERSION_MAJOR=$$VERSION_MAJOR" \
-       "QSCAN_VERSION_MINOR=$$VERSION_MINOR" \
-       "QSCAN_VERSION_BUILD=$$VERSION_BUILD"
+include(qscan.pri)
 
 CONFIG(debug, debug|release) {
     DESTDIR = $$OUT_PWD/debug
@@ -45,90 +38,21 @@ MOC_DIR = $$DESTDIR/.moc
 RCC_DIR = $$DESTDIR/.qrc
 UI_DIR = $$DESTDIR/.ui
 
-SOURCES += \
-  book.pb.cc \
-  iscanlibrary.cpp \
-  qscan.cpp \
-  scandevice.cpp \
-  scanoptions.cpp \
-  version.cpp
-
-HEADERS += \
-  book.pb.h \
-  iscanlibrary.h \
-  qscan.h \
-  qscan_global.h  \
-  scandevice.h \
-  scanoptions.h \
-  version.h \
-
-TRANSLATIONS += \
-  ../translations/qscan_en-GB.ts \
-  ../translations/qscan_en-US.ts
-
-FORMS +=
-
-DISTFILES += \
-  book.proto
-
-unix {
-    SOURCES += \
-        unix/saneworker.cpp \
-        unix/sanelibrary.cpp
-
-    HEADERS += \
-        unix/saneworker.h \
-        unix/sanelibrary.h
-
-    LIBS += -lsane
-
-#    target.path = /usr/lib
-#    INSTALLS += target
-}
-
-win32:win64 {
-    SOURCES += \
-        win/twainlibrary.cpp \
-        win/twain-dsm/apps.cpp \
-        win/twain-dsm/dsm.cpp \
-        win/twain-dsm/hook.cpp \
-        win/twain-dsm/log.cpp \
-        win/twainlibrary.cpp
-
-    HEADERS += \
-        win/twainlibrary.h \
-        win/twain-dsm/dsm.h \
-        win/twain-dsm/dsm.rc \
-        win/twain-dsm/resource.h \
-        win/twain-dsm/twain.h \
-        win/twainlibrary.h
-
-    #= windows only twain library ======================================================================
-    LIBS += -ltwain_32.dll
-
-    DISTFILES += \
-        win/twain-dsm/DSM_Translations.txt \
-        win/twain-dsm/dsm.def \
-        win/twain-dsm/readme.doc
-
-}
-
-
 #= logging library =================================================================================
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../logging/release/ -llogging
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../logging/debug/ -llogging
-else:unix:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../logging/release -llogging
-else:unix:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../logging/debug -llogging
+#win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../logging/release/ -llogging
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../logging/debug/ -llogging
+#else:unix:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../logging/release -llogging
+#else:unix:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../logging/debug -llogging
 
-INCLUDEPATH += $$PWD/../logging
-DEPENDPATH += $$PWD/../logging
+#INCLUDEPATH += $$PWD/../logging
+#DEPENDPATH += $$PWD/../logging
 
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/release/liblogging.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/debug/liblogging.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/release/logging.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/debug/logging.lib
-else:unix:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/release/liblogging.a
-else:unix:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/debug/liblogging.a
+#win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/release/liblogging.a
+#else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/debug/liblogging.a
+#else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/release/logging.lib
+#else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/debug/logging.lib
+#else:unix:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/release/liblogging.a
+#else:unix:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/debug/liblogging.a
 
 #= utilities library ===============================================================================
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../utilities/release/ -lutilities

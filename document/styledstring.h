@@ -10,6 +10,7 @@
 #include <qyaml-cpp/QYamlCpp>
 #include <yaml-cpp/yaml.h>
 
+#include "logging.h"
 #include "docutil.h"
 
 /*!

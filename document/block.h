@@ -4,6 +4,8 @@
 #include <QSharedPointer>
 #include <QMap>
 
+#include "logging.h"
+
 class Block
 {
 public:
