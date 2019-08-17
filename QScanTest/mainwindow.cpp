@@ -71,10 +71,10 @@ void MainWindow::loadPlugins()
         m_loaded_plugins.append(basename);
         QString name = iplugin->pluginName();
 
-        if (name == QStringLiteral("QScan Plugin")) {
-//          m_qscan
-//            = new (QScan())
-        }
+        //        if (name == QStringLiteral("QScan Plugin")) {
+        ////          m_qscan
+        ////            = new (QScan())
+        //        }
       }
     }
   }

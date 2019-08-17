@@ -31,14 +31,14 @@
 #include "iscanwidgetinterface.h"
 #include "docutil.h"
 #include "ocrtools.h"
-#include "qscanplugin_global.h"
+#include "widgets_global.h"
 
 namespace QScanner {
 
 class OcrImage;
 class ScanList;
 
-class QSCANPLUGINSHARED_EXPORT OcrEditor : public BaseEditor, public IScanWidgetInterface
+class WIDGETSSHARED_EXPORT OcrEditor : public BaseEditor, public IScanWidgetInterface
 {
   Q_OBJECT
 public:

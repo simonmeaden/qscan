@@ -1,18 +1,17 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2019-04-06T10:05:27
+# Project created by QtCreator 2019-08-17T08:07:12
 #
 #-------------------------------------------------
 
-DEFINES += LOGGER_ENABLE
+QT       += widgets
 
-QT       += core gui
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
-TARGET = Scanner
-TEMPLATE = app
-
+TARGET = widgets
+TEMPLATE = lib
+CONFIG += staticlib
 CONFIG += c++14
+
+DEFINES += WIDGETS_LIBRARY
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -38,35 +37,48 @@ RCC_DIR = $$DESTDIR/.qrc
 UI_DIR = $$DESTDIR/.ui
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp
+  baseeditor.cpp \
+  basescanimage.cpp \
+  imagedelegate.cpp \
+  imageeditdialog.cpp \
+  imagelistmodel.cpp \
+  imageview.cpp \
+  ocreditor.cpp \
+  ocrimage.cpp \
+  ocrtools.cpp \
+  ocrworker.cpp \
+  pageview.cpp \
+  scaneditor.cpp \
+  scanimage.cpp \
+  scanlist.cpp \
+  stackableframe.cpp \
+  tesstools.cpp \
+  texteditdialog.cpp
 
 HEADERS += \
-        mainwindow.h
+        baseeditor.h \
+        basescanimage.h \
+        imagedelegate.h \
+        imageeditdialog.h \
+        imagelistmodel.h \
+        imageview.h \
+        ocreditor.h \
+        ocrimage.h \
+        ocrtools.h \
+        ocrworker.h \
+        pageview.h \
+        scaneditor.h \
+        scanimage.h \
+        scanlist.h \
+        stackableframe.h \
+        tesstools.h \
+        texteditdialog.h \
+        widgets_global.h 
 
-FORMS +=
-
-TRANSLATIONS += \
-  ../translations/Scanner_en-GB.ts \
-  ../translations/Scanner_en-US.ts
-
-
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
-
-RESOURCES += \
-    icons.qrc
-
-#= System libraries ================================================================================
-unix|win32: LIBS += -lyaml-cpp
-unix|win32: LIBS += -lqyaml-cpp
-unix|win32: LIBS += -ltesseract
-unix|win32: LIBS += -lopencv_core
-unix|win32: LIBS += -lopencv_photo
-unix|win32: LIBS += -L/usr/local/qwt-6.1.4/lib -lqwt
-INCLUDEPATH += /usr/local/qwt-6.1.4/include
+unix {
+    target.path = /usr/lib
+    INSTALLS += target
+}
 
 #= logging library =================================================================================
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../logging/release/ -llogging
@@ -148,20 +160,5 @@ else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/
 else:unix:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../qscan/release/libqscan.a
 else:unix:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../qscan/debug/libqscan.a
 
-#= widgets library =================================================================================
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../widgets/release/ -lwidgets
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../widgets/debug/ -lwidgets
-else:unix:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../widgets/release -lwidgets
-else:unix:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../widgets/debug -lwidgets
-
-INCLUDEPATH += $$PWD/../widgets
-DEPENDPATH += $$PWD/../widgets
-
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../widgets/release/libwidgets.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../widgets/debug/libwidgets.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../widgets/release/widgets.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../widgets/debug/widgets.lib
-else:unix:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../widgets/release/libwidgets.a
-else:unix:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../widgets/debug/libwidgets.a
-
 #===================================================================================================
+

@@ -1,18 +1,17 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2019-04-06T10:05:27
+# Project created by QtCreator 2019-08-17T08:11:47
 #
 #-------------------------------------------------
 
-DEFINES += LOGGER_ENABLE
+#QT       -= gui
 
-QT       += core gui
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
-TARGET = Scanner
-TEMPLATE = app
-
+TARGET = qscan
+TEMPLATE = lib
+CONFIG += staticlib
 CONFIG += c++14
+
+DEFINES += QSCAN_LIBRARY
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -24,6 +23,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+
+VERSION_MAJOR = 0
+VERSION_MINOR = 1
+VERSION_BUILD = 0
+
+DEFINES += \
+       "QSCAN_VERSION_MAJOR=$$VERSION_MAJOR" \
+       "QSCAN_VERSION_MINOR=$$VERSION_MINOR" \
+       "QSCAN_VERSION_BUILD=$$VERSION_BUILD"
 
 CONFIG(debug, debug|release) {
     DESTDIR = $$OUT_PWD/debug
@@ -38,35 +46,73 @@ RCC_DIR = $$DESTDIR/.qrc
 UI_DIR = $$DESTDIR/.ui
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp
+  book.pb.cc \
+  iscanlibrary.cpp \
+  qscan.cpp \
+  scandevice.cpp \
+  scanoptions.cpp \
+  version.cpp
 
 HEADERS += \
-        mainwindow.h
+  book.pb.h \
+  iscanlibrary.h \
+  qscan.h \
+  qscan_global.h  \
+  scandevice.h \
+  scanoptions.h \
+  version.h \
+
+TRANSLATIONS += \
+  ../translations/qscan_en-GB.ts \
+  ../translations/qscan_en-US.ts
 
 FORMS +=
 
-TRANSLATIONS += \
-  ../translations/Scanner_en-GB.ts \
-  ../translations/Scanner_en-US.ts
+DISTFILES += \
+  book.proto
 
+unix {
+    SOURCES += \
+        unix/saneworker.cpp \
+        unix/sanelibrary.cpp
 
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
+    HEADERS += \
+        unix/saneworker.h \
+        unix/sanelibrary.h
 
-RESOURCES += \
-    icons.qrc
+    LIBS += -lsane
 
-#= System libraries ================================================================================
-unix|win32: LIBS += -lyaml-cpp
-unix|win32: LIBS += -lqyaml-cpp
-unix|win32: LIBS += -ltesseract
-unix|win32: LIBS += -lopencv_core
-unix|win32: LIBS += -lopencv_photo
-unix|win32: LIBS += -L/usr/local/qwt-6.1.4/lib -lqwt
-INCLUDEPATH += /usr/local/qwt-6.1.4/include
+#    target.path = /usr/lib
+#    INSTALLS += target
+}
+
+win32:win64 {
+    SOURCES += \
+        win/twainlibrary.cpp \
+        win/twain-dsm/apps.cpp \
+        win/twain-dsm/dsm.cpp \
+        win/twain-dsm/hook.cpp \
+        win/twain-dsm/log.cpp \
+        win/twainlibrary.cpp
+
+    HEADERS += \
+        win/twainlibrary.h \
+        win/twain-dsm/dsm.h \
+        win/twain-dsm/dsm.rc \
+        win/twain-dsm/resource.h \
+        win/twain-dsm/twain.h \
+        win/twainlibrary.h
+
+    #= windows only twain library ======================================================================
+    LIBS += -ltwain_32.dll
+
+    DISTFILES += \
+        win/twain-dsm/DSM_Translations.txt \
+        win/twain-dsm/dsm.def \
+        win/twain-dsm/readme.doc
+
+}
+
 
 #= logging library =================================================================================
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../logging/release/ -llogging
@@ -131,37 +177,5 @@ else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PW
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../interface/debug/interface.lib
 else:unix:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../interface/release/libinterface.a
 else:unix:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../interface/debug/libinterface.a
-
-#= qscan library ===================================================================================
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qscan/release/ -lqscan
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../qscan/debug/ -lqscan
-else:unix:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qscan/release -lqscan
-else:unix:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../qscan/debug -lqscan
-
-INCLUDEPATH += $$PWD/../qscan
-DEPENDPATH += $$PWD/../qscan
-
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../qscan/release/libqscan.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../qscan/debug/libqscan.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../qscan/release/qscan.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../qscan/debug/qscan.lib
-else:unix:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../qscan/release/libqscan.a
-else:unix:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../qscan/debug/libqscan.a
-
-#= widgets library =================================================================================
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../widgets/release/ -lwidgets
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../widgets/debug/ -lwidgets
-else:unix:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../widgets/release -lwidgets
-else:unix:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../widgets/debug -lwidgets
-
-INCLUDEPATH += $$PWD/../widgets
-DEPENDPATH += $$PWD/../widgets
-
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../widgets/release/libwidgets.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../widgets/debug/libwidgets.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../widgets/release/widgets.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../widgets/debug/widgets.lib
-else:unix:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../widgets/release/libwidgets.a
-else:unix:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../widgets/debug/libwidgets.a
 
 #===================================================================================================

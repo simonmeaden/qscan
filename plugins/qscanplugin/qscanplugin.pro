@@ -85,8 +85,6 @@ TRANSLATIONS += \
 
 DISTFILES += \
     book.proto \
-    plugininterface.json \
-    scaninterface.json \
     win/twain-dsm/dsm.def
 
 FORMS +=
