@@ -11,7 +11,7 @@ TEMPLATE = lib
 
 DEFINES += INTERFACE_LIBRARY
 
-CONFIG += staticlib
+#CONFIG += staticlib
 CONFIG += c++14
 
 # The following define makes your compiler emit warnings if you use
@@ -32,45 +32,38 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES +=   \
-  baseeditor.cpp \
-  basescanimage.cpp \
-  documentdata.cpp \
-  imageconverter.cpp \
-  imagedelegate.cpp \
-  imagelistmodel.cpp \
-  imageview.cpp \
-  papersize.cpp \
-  qmenuutils.cpp \
-  qscanlogging.cpp \
-  stackableframe.cpp
+  qscanlogging.cpp
 
 HEADERS += \
-    baseeditor.h \
-    basescanimage.h \
-    documentdata.h \
-    imageconverter.h \
-    imagedelegate.h \
-    imagelistmodel.h \
-    imageview.h \
     interface_global.h \
     iplugininterface.h  \
-    papersize.h \
-    qmenuutils.h \
-    qscanlogging.h \
-    stackableframe.h
+    iscaninterface.h \
+    iscanwidgetinterface.h \
+    qscanlogging.h
 
-DISTFILES += \
-    plugininterface.json
+DISTFILES +=
 
 INCLUDEPATH += /usr/local/include
 
 unix|win32: LIBS += -lqyaml-cpp
 unix|win32: LIBS += -lyaml-cpp
 
+#===================================================================================================
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../utilities/release/ -lutilities
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../utilities/debug/ -lutilities
+else:unix: LIBS += -L$$OUT_PWD/../utilities/ -lutilities
 
+INCLUDEPATH += $$PWD/../utilities
+DEPENDPATH += $$PWD/../utilities
+
+#===================================================================================================
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../document/release/ -ldocument
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../document/debug/ -ldocument
 else:unix: LIBS += -L$$OUT_PWD/../document/ -ldocument
 
 INCLUDEPATH += $$PWD/../document
 DEPENDPATH += $$PWD/../document
+
+#===================================================================================================
+
+

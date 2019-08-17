@@ -1,30 +1,39 @@
 /*
-    Copyright © Simon Meaden 2019.
-    This file was developed as part of the QScan cpp library but could
-    easily be used elsewhere.
+  Copyright © Simon Meaden 2019.
+  This file was developed as part of the Biblios application but could
+  easily be used elsewhere.
 
-    QScan is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
 
-    QScan is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
 
-    You should have received a copy of the GNU General Public License
-    along with QScan.  If not, see <http://www.gnu.org/licenses/>.
-    It is also available on request from Simon Meaden simonmeaden@sky.com.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
 */
 #include "saneworker.h"
 
 #include <memory>
 #include <stdlib.h>
 
+#include "scandevice.h"
+
+namespace QScanner {
+
 SaneWorker::SaneWorker(QObject* parent)
   : QObject(parent)
-{}
+{
+}
 
 void SaneWorker::scan(ScanDevice* device)
 {
@@ -66,17 +75,17 @@ void SaneWorker::scan(ScanDevice* device)
   full_size = parameters.bytes_per_line * parameters.lines;
 
   if (first_frame) {
-    int offset = 0;
-    bool must_buffer = true;
-    bool greyscale = false;
+    //    int offset = 0;
+    //    bool must_buffer = true;
+    //    bool greyscale = false;
 
     switch (parameters.format) {
     case SANE_FRAME_RED:
     case SANE_FRAME_GREEN:
     case SANE_FRAME_BLUE:
       if (parameters.depth == 8) {
-        must_buffer = true;
-        offset = parameters.format - SANE_FRAME_RED;
+        //        must_buffer = true;
+        //        offset = parameters.format - SANE_FRAME_RED;
         format = QImage::Format_RGB32;
         full_size *= 3;
         qCWarning(QscanSane) << tr("Sane frame RED/GREEN/BLUE");
@@ -117,11 +126,12 @@ void SaneWorker::scan(ScanDevice* device)
 
       } else if (parameters.depth == 8) {
         format = QImage::Format_Grayscale8;
-        greyscale = true;
+
+        //        greyscale = true;
 
         if (parameters.lines < 0) {
-          must_buffer = true;
-          offset = 0;
+          //          must_buffer = true;
+          //          offset = 0;
         }
 
         qCWarning(QscanSane) << tr("Sane frame Grey depth 8");
@@ -132,11 +142,12 @@ void SaneWorker::scan(ScanDevice* device)
         // so use RGB and set all three channels
         // to the same value.
         format = QImage::Format_RGBX64;
-        greyscale = true;
+
+        //        greyscale = true;
 
         if (parameters.lines < 0) {
-          must_buffer = true;
-          offset = 0;
+          //          must_buffer = true;
+          //          offset = 0;
         }
 
         qCWarning(QscanSane) << tr("Sane frame Grey depth 16");
@@ -214,9 +225,7 @@ void SaneWorker::scan(ScanDevice* device)
   //  return;
 }
 
-void SaneWorker::setResolution(ScanDevice* device,
-                               const SANE_Option_Descriptor* option,
-                               SANE_Int option_id)
+void SaneWorker::setResolution(ScanDevice* device, const SANE_Option_Descriptor* option, SANE_Int option_id)
 {
   switch (option->unit) {
   case SANE_UNIT_MM:
@@ -279,14 +288,12 @@ void SaneWorker::setResolution(ScanDevice* device,
     }
 
     scan_range.range_data = QVariant::fromValue<QList<int>>(list);
-
   }
 
   device->options->setResulutionRange(scan_range);
 
   int value = -1;
-  SANE_Status status =
-    sane_control_option(device->sane_handle, option_id, SANE_ACTION_GET_VALUE, &value, nullptr);
+  SANE_Status status = sane_control_option(device->sane_handle, option_id, SANE_ACTION_GET_VALUE, &value, nullptr);
 
   if (status == SANE_STATUS_GOOD) {
     switch (option->type) {
@@ -304,9 +311,7 @@ void SaneWorker::setResolution(ScanDevice* device,
   }
 }
 
-void SaneWorker::setSource(ScanDevice* device,
-                           const SANE_Option_Descriptor* option,
-                           SANE_Int option_id)
+void SaneWorker::setSource(ScanDevice* device, const SANE_Option_Descriptor* option, SANE_Int /*option_id*/)
 {
   QStringList list;
 
@@ -355,9 +360,7 @@ void SaneWorker::setSource(ScanDevice* device,
   //  }
 }
 
-void SaneWorker::setMode(ScanDevice* device,
-                         const SANE_Option_Descriptor* option,
-                         SANE_Int option_id)
+void SaneWorker::setMode(ScanDevice* device, const SANE_Option_Descriptor* option, SANE_Int /*option_id*/)
 {
   QStringList list;
 
@@ -443,9 +446,8 @@ void SaneWorker::loadAvailableScannerOptions(ScanDevice* device)
 
         qCInfo(QscanSane) << tr("Name : %1, Title : %2").arg(name, title);
 
-        if (name == SANE_NAME_SCAN_TL_X || name == SANE_NAME_SCAN_TL_Y ||
-            name == SANE_NAME_SCAN_BR_X || name == SANE_NAME_SCAN_BR_Y ||
-            name == SANE_NAME_CONTRAST || name == SANE_NAME_BRIGHTNESS) {
+        if (name == SANE_NAME_SCAN_TL_X || name == SANE_NAME_SCAN_TL_Y || name == SANE_NAME_SCAN_BR_X ||
+            name == SANE_NAME_SCAN_BR_Y || name == SANE_NAME_CONTRAST || name == SANE_NAME_BRIGHTNESS) {
           getIntValue(device, option_id, name);
 
         } else if (name == SANE_NAME_SCAN_RESOLUTION) {
@@ -509,8 +511,7 @@ void SaneWorker::setIntValue(ScanDevice* device, int option_id, const QString& n
       if (status == SANE_STATUS_GOOD) {
         // check that the value has actually been set.
         int recovered_val = -1;
-        status =
-          sane_control_option(sane_handle, option_id, SANE_ACTION_GET_VALUE, &recovered_val, &info);
+        status = sane_control_option(sane_handle, option_id, SANE_ACTION_GET_VALUE, &recovered_val, &info);
 
         if (status == SANE_STATUS_GOOD) {
           if (recovered_val == value) {
@@ -601,9 +602,8 @@ void SaneWorker::getIntValue(ScanDevice* device, int option_id, const QString& n
   SANE_Int v;
   SANE_Status status;
 
-  if (option_id > 0) { // 0 is a special case already dealt with
-    status =
-      sane_control_option(device->sane_handle, option_id, SANE_ACTION_GET_VALUE, &v, nullptr);
+  if (option_id > 0) {  // 0 is a special case already dealt with
+    status = sane_control_option(device->sane_handle, option_id, SANE_ACTION_GET_VALUE, &v, nullptr);
 
     if (status == SANE_STATUS_GOOD) {
       //        value = v;
@@ -639,17 +639,13 @@ void SaneWorker::getIntValue(ScanDevice* device, int option_id, const QString& n
   }
 }
 
-void SaneWorker::getListValue(ScanDevice* device,
-                              int option_id,
-                              const QString& name,
-                              const SANE_Option_Descriptor* opt)
+void SaneWorker::getListValue(ScanDevice* device, int option_id, const QString& name, const SANE_Option_Descriptor* opt)
 {
-  if (option_id > 0) { // 0 is a special case already dealt with
+  if (option_id > 0) {  // 0 is a special case already dealt with
     SANE_Word value;
     SANE_Status status;
 
-    status =
-      sane_control_option(device->sane_handle, option_id, SANE_ACTION_GET_VALUE, &value, nullptr);
+    status = sane_control_option(device->sane_handle, option_id, SANE_ACTION_GET_VALUE, &value, nullptr);
 
     if (status == SANE_STATUS_GOOD) {
       QStringList list;
@@ -738,8 +734,7 @@ QVariant SaneWorker::getOptionValue(ScanDevice* device, const QString& option_na
   QVariant v;
 
   optval = guardedMalloc(option_size);
-  status =
-    sane_control_option(device->sane_handle, option_id, SANE_ACTION_GET_VALUE, optval, nullptr);
+  status = sane_control_option(device->sane_handle, option_id, SANE_ACTION_GET_VALUE, optval, nullptr);
 
   if (status == SANE_STATUS_GOOD) {
     switch (option_type) {
@@ -769,3 +764,5 @@ QVariant SaneWorker::getOptionValue(ScanDevice* device, const QString& option_na
 
   return v;
 }
+
+} // end of namespace QScanner

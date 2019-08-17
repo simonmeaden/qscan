@@ -11,6 +11,9 @@ TEMPLATE = lib
 
 DEFINES += DOCUMENT_LIBRARY
 
+#CONFIG += staticlib
+CONFIG += c++14
+
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -25,23 +28,30 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         block.cpp \
         document.cpp \
+        documentdata.cpp \
         paragraphblock.cpp \
         styledstring.cpp \
         textblock.cpp \
-        titleblock.cpp \
-        util.cpp
+        titleblock.cpp
 
 HEADERS += \
         block.h \
         document.h \
         document_global.h  \
+        documentdata.h \
         paragraphblock.h \
         styledstring.h \
         textblock.h \
-        titleblock.h \
-        util.h
+        titleblock.h
 
-unix {
-    target.path = /usr/lib
-    INSTALLS += target
-}
+
+
+#===================================================================================================
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../utilities/release/ -lutilities
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../utilities/debug/ -lutilities
+else:unix: LIBS += -L$$OUT_PWD/../utilities/ -lutilities
+
+INCLUDEPATH += $$PWD/../utilities
+DEPENDPATH += $$PWD/../utilities
+#===================================================================================================

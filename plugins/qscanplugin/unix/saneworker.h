@@ -1,21 +1,25 @@
 /*
-    Copyright © Simon Meaden 2019.
-    This file was developed as part of the QScan cpp library but could
-    easily be used elsewhere.
+  Copyright © Simon Meaden 2019.
+  This file was developed as part of the Biblios application but could
+  easily be used elsewhere.
 
-    QScan is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
 
-    QScan is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
 
-    You should have received a copy of the GNU General Public License
-    along with QScan.  If not, see <http://www.gnu.org/licenses/>.
-    It is also available on request from Simon Meaden simonmeaden@sky.com.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
 */
 #ifndef SANESCANETHREAD_H
 #define SANESCANETHREAD_H
@@ -27,8 +31,10 @@
 #include <QtDebug>
 
 #include "qscanlogging.h"
-#include "scaninterface.h"
+#include "iscanlibrary.h"
 #include "scanoptions.h"
+
+namespace QScanner {
 
 class SaneWorker : public QObject
 {
@@ -38,17 +44,9 @@ public:
 
   void scan(ScanDevice* device);
   void loadAvailableScannerOptions(ScanDevice* device);
-  void setBoolValue(ScanDevice* device,
-                    int option_id,
-                    const QString&,
-                    bool value);
-  void setIntValue(ScanDevice* device,
-                   int option_id,
-                   const QString& name,
-                   int value);
-  void setStringValue(ScanDevice* device,
-                      const QString& name,
-                      const QString& value);
+  void setBoolValue(ScanDevice* device, int option_id, const QString&, bool value);
+  void setIntValue(ScanDevice* device, int option_id, const QString& name, int value);
+  void setStringValue(ScanDevice* device, const QString& name, const QString& value);
   void cancelScan();
 
 signals:
@@ -69,20 +67,17 @@ protected:
   SANE_Handle m_sane_handle{};
 
   void getIntValue(ScanDevice* device, int option_id, const QString& name);
-  void getListValue(ScanDevice* device,
-                    int option_id,
-                    const QString& name,
-                    const SANE_Option_Descriptor* opt);
-  void setResolution(ScanDevice* device,
-                     const SANE_Option_Descriptor* current_option,
-                     SANE_Int option_id);
-  void setSource(ScanDevice* device, const SANE_Option_Descriptor* option, SANE_Int option_id);
+  void getListValue(ScanDevice* device, int option_id, const QString& name, const SANE_Option_Descriptor* opt);
+  void setResolution(ScanDevice* device, const SANE_Option_Descriptor* current_option, SANE_Int option_id);
+  void setSource(ScanDevice* device, const SANE_Option_Descriptor* option, SANE_Int);
+  void setMode(ScanDevice* device, const SANE_Option_Descriptor* option, SANE_Int);
 
   static const int GUARDS_SIZE = 4; /* 4 bytes */
   void* guardedMalloc(size_t size);
   void guardedFree(void* ptr);
   QVariant getOptionValue(ScanDevice* device, const QString& option_name);
-  void setMode(ScanDevice* device, const SANE_Option_Descriptor* option, SANE_Int option_id);
 };
 
-#endif // SANESCANETHREAD_H
+} // end of namespace QScanner
+
+#endif  // SANESCANETHREAD_H

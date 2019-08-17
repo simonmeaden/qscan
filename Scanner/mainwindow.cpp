@@ -19,12 +19,14 @@
 #include "mainwindow.h"
 
 #include <opencv2/opencv.hpp>
-#include <yaml-cpp/yaml.h>
 #include <qyaml-cpp/QYamlCpp>
+#include <yaml-cpp/yaml.h>
 
 #include "iplugininterface.h"
-#include "stackableframe.h"
+#include "iscaninterface.h"
+#include "iscanwidgetinterface.h"
 #include "qmenuutils.h"
+#include "stackableframe.h"
 
 /*MainWindow
   =============================================================================*/
@@ -32,6 +34,8 @@ const QString MainWindow::OPTIONS_FILE = QStringLiteral("scanoptions.yaml");
 const QString MainWindow::CURRENT_DOCUMENT = QStringLiteral("current document");
 const QString MainWindow::TESSERACT = "tesseract";
 const QString MainWindow::LANGUAGE = "language";
+
+using namespace QScanner;
 
 MainWindow::MainWindow(QWidget* parent)
   : QMainWindow(parent)
@@ -57,21 +61,17 @@ MainWindow::MainWindow(QWidget* parent)
   loadPlugins();
   makeConnections();
 
-
-
   //  makeDelayedConnections();
 }
 
-MainWindow::~MainWindow()
-{
-}
+MainWindow::~MainWindow() {}
 
-bool MainWindow::close()
+bool
+MainWindow::close()
 {
   //  if (!m_scan_lib->isScanning()) {
   return QMainWindow::close();
   //  }
-
 
   //  auto* msg_box = new QMessageBox(QMessageBox::Warning,
   //                                  tr("Scanning"),
@@ -87,7 +87,8 @@ bool MainWindow::close()
   //  return true;
 }
 
-void MainWindow::initGui()
+void
+MainWindow::initGui()
 {
   QScreen* screen = QGuiApplication::primaryScreen();
   QSize size = screen->availableSize();
@@ -105,7 +106,8 @@ void MainWindow::initGui()
   initStatusbar();
 }
 
-QToolBar* MainWindow::initMainToolbar()
+QToolBar*
+MainWindow::initMainToolbar()
 {
   QToolBar* toolbar = addToolBar("action");
   addToolBar(Qt::TopToolBarArea, toolbar);
@@ -131,8 +133,7 @@ QToolBar* MainWindow::initMainToolbar()
   return toolbar;
 }
 
-
-//QToolBar* MainWindow::initRightToolbar()
+// QToolBar* MainWindow::initRightToolbar()
 //{
 //  QToolBar* toolbar = addToolBar("Right");
 //  addToolBar(Qt::RightToolBarArea, toolbar);
@@ -158,15 +159,16 @@ QToolBar* MainWindow::initMainToolbar()
 //  return toolbar;
 //}
 
-void MainWindow::loadPlugins()
+void
+MainWindow::loadPlugins()
 {
   QDir plugins_dir = QDir(qApp->applicationDirPath());
   plugins_dir.cd("../plugins");
   QList<QString> loaded_plugins;
 
   foreach (QString filename, plugins_dir.entryList(QDir::Files)) {
-    if (filename == "Makefile"  || filename.endsWith(".o") ||
-        filename.endsWith(".cpp") || filename.endsWith(".h")) { // can remove this in installed versions.
+    if (filename == "Makefile" || filename.endsWith(".o") || filename.endsWith(".cpp") ||
+        filename.endsWith(".h")) {  // can remove this in installed versions.
       continue;
     }
 
@@ -188,49 +190,50 @@ void MainWindow::loadPlugins()
 
     if (plugin) {
       IPluginInterface* plugins = dynamic_cast<IPluginInterface*>(plugin);
+      IScanWidgetInterface* scan_widgets = dynamic_cast<IScanWidgetInterface*>(plugin);
 
       if (plugins) {
-        QList<StackableFrame*> frames = plugins->editors(centralWidget());
+//        QList<StackableFrame*> frames = plugins->editors(centralWidget());
 
-        if (!frames.isEmpty()) {
-          for (auto* frame : frames) {
-            int id = m_main_layout->addWidget(frame);
-            frame->setId(id);
-            connect(frame, &StackableFrame::setTop, m_main_layout, &QStackedLayout::setCurrentIndex);
-          }
-        }
+//        if (!frames.isEmpty()) {
+//          for (auto* frame : frames) {
+//            int id = m_main_layout->addWidget(frame);
+//            frame->setId(id);
+//            connect(frame, &StackableFrame::setTop, m_main_layout, &QStackedLayout::setCurrentIndex);
+//          }
+//        }
 
-        QList<QMenu*> menus = plugins->menus();
-        QMenu* help_menu = nullptr;
+//        QList<QMenu*> menus = scan_widgets->menus();
+//        QMenu* help_menu = nullptr;
 
-        if (!menus.isEmpty()) {
-          QMenuUtils::mergeMenus(menus, m_menus);
-        }
+//        if (!menus.isEmpty()) {
+//          QMenuUtils::mergeMenus(menus, m_menus);
+//        }
 
-        menuBar()->clear();
+//        menuBar()->clear();
 
-        for (QMenu* menu : m_menus) {
-          if (menu->title() == tr("&Help")) {
-            // stores help menu so that it can be placed at the end.
-            help_menu = menu;
-            continue;
+//        for (QMenu* menu : m_menus) {
+//          if (menu->title() == tr("&Help")) {
+//            // stores help menu so that it can be placed at the end.
+//            help_menu = menu;
+//            continue;
 
-          } else {
-            menuBar()->addMenu(menu);
-          }
-        }
+//          } else {
+//            menuBar()->addMenu(menu);
+//          }
+//        }
 
-        if (help_menu) {
-          menuBar()->addMenu(help_menu);
-        }
+//        if (help_menu) {
+//          menuBar()->addMenu(help_menu);
+//        }
 
-        QList<QToolBar*> toolbars = plugins->toolbars();
+//        QList<QToolBar*> toolbars = scan_widgets->toolbars();
 
-        if (!toolbars.isEmpty()) {
-          for (auto* toolbar : toolbars) {
-            // TODO add toolbars to system.
-          }
-        }
+//        if (!toolbars.isEmpty()) {
+//          //          for (auto* toolbar : toolbars) {
+//          //            // TODO add toolbars to system.
+//          //          }
+//        }
 
       } else {
         qDebug() << tr("Plugin error : %1").arg(loader.errorString());
@@ -239,13 +242,15 @@ void MainWindow::loadPlugins()
   }
 }
 
-void MainWindow::initToolbar()
+void
+MainWindow::initToolbar()
 {
   initMainToolbar();
   //  initRightToolbar();
 }
 
-void MainWindow::initMenu()
+void
+MainWindow::initMenu()
 {
   QString menu_name = tr("&File");
   QMenu* file_menu = menuBar()->addMenu(menu_name);
@@ -258,7 +263,8 @@ void MainWindow::initMenu()
   m_menus.append(file_menu);
 }
 
-void MainWindow::initStatusbar()
+void
+MainWindow::initStatusbar()
 {
   QStatusBar* status_bar = statusBar();
 
@@ -275,11 +281,12 @@ void MainWindow::initStatusbar()
   status_bar->addPermanentWidget(m_scanner_lbl);
 }
 
-void MainWindow::initActions()
+void
+MainWindow::initActions()
 {
-  QPixmap scan_icon, rot_left_icon, rot_right_icon, rot_angle_icon, rot_edge_icon, copy_icon,
-          scale_icon, crop_icon, close_icon, save_icon, save_as_icon, zoom_in_icon, zoom_out_icon,
-          fit_best_icon, fit_width_icon, fit_height_icon, help_icon;
+  QPixmap scan_icon, rot_left_icon, rot_right_icon, rot_angle_icon, rot_edge_icon, copy_icon, scale_icon, crop_icon,
+    close_icon, save_icon, save_as_icon, zoom_in_icon, zoom_out_icon, fit_best_icon, fit_width_icon, fit_height_icon,
+    help_icon;
   //  QPixmapCache::find(help_key, &help_icon);
   //  QPixmapCache::find(scan_key, &scan_icon);
   //  QPixmapCache::find(rot_left_key, &rot_left_icon);
@@ -320,7 +327,8 @@ void MainWindow::initActions()
   m_doc_completed_act->setToolTip(tr("This completes the document and prepares to start another."));
 }
 
-void MainWindow::initPixmaps()
+void
+MainWindow::initPixmaps()
 {
   //  help_key = QPixmapCache::insert(QPixmap(":/qscan_icons/help-contents"));
   //  rot_left_key = QPixmapCache::insert(QPixmap(":/qscan_icons/rotate-left"));
@@ -340,27 +348,32 @@ void MainWindow::initPixmaps()
   //  fit_height_key = QPixmapCache::insert(QPixmap(":/qscan_icons/fit-height"));
 }
 
-void MainWindow::setScanner(const QString& text)
+void
+MainWindow::setScanner(const QString& text)
 {
   m_scanner_lbl->setText(text);
 }
 
-void MainWindow::setMode(const QString& text)
+void
+MainWindow::setMode(const QString& text)
 {
   m_mode_lbl->setText(text);
 }
 
-void MainWindow::setSource(const QString& text)
+void
+MainWindow::setSource(const QString& text)
 {
   m_src_lbl->setText(text);
 }
 
-void MainWindow::setResolution(const QString& text)
+void
+MainWindow::setResolution(const QString& text)
 {
   m_res_lbl->setText(text);
 }
 
-void MainWindow::makeConnections()
+void
+MainWindow::makeConnections()
 {
   connect(m_close_act, &QAction::triggered, this, &MainWindow::close);
   //  connect(m_scan_act, &QAction::triggered, this, &MainWindow::startScanning);
@@ -380,10 +393,9 @@ void MainWindow::makeConnections()
   //  connect(m_fit_height_act, &QAction::triggered, m_image_editor, &ScanEditor::fitHeight);
   //  connect(m_set_docname_act, &QAction::triggered, this, &MainWindow::createDocumentName);
   //  connect(m_doc_completed_act, &QAction::triggered, this, &MainWindow::completeDocument);
-
 }
 
-//void MainWindow::makeDelayedConnections()
+// void MainWindow::makeDelayedConnections()
 //{
 // These have been delayed until scanners have been properly detected.
 //  connect(m_scanner_box,
@@ -418,7 +430,7 @@ void MainWindow::makeConnections()
 //          &MainWindow::editorHasNoSelection);
 //}
 
-//void MainWindow::scannerSelectionChanged(int index)
+// void MainWindow::scannerSelectionChanged(int index)
 //{
 //  if (!m_scan_lib->devices().isEmpty()) {
 //    QString name = m_scan_lib->devices().at(index);
@@ -435,17 +447,17 @@ void MainWindow::makeConnections()
 //  }
 //}
 
-//void MainWindow::startScanning()
+// void MainWindow::startScanning()
 //{
 //  m_scan_lib->startScanning(m_selected_name);
 //}
 
-//void MainWindow::cancelScanning()
+// void MainWindow::cancelScanning()
 //{
 //  m_scan_lib->cancelScan(/*m_selected_name*/);
 //}
 
-//void MainWindow::scanHasFailed()
+// void MainWindow::scanHasFailed()
 //{
 //  QMessageBox::warning(this,
 //                       tr("Scan failed"),
@@ -453,13 +465,15 @@ void MainWindow::makeConnections()
 //                       QMessageBox::Ok);
 //}
 
-void MainWindow::scanProgressed(const int&)
-{}
+void
+MainWindow::scanProgressed(const int&)
+{
+}
 
 // void MainWindow::geometry()
 //{}
 
-//void MainWindow::receiveOptionsSet(ScanDevice* device)
+// void MainWindow::receiveOptionsSet(ScanDevice* device)
 //{
 //  // These objects are having their values set so we don't want to trigger a changed signal.
 //  disconnect(m_mode_box, &QComboBox::currentTextChanged, this, &MainWindow::modeChangeSelected);
@@ -511,64 +525,65 @@ void MainWindow::scanProgressed(const int&)
 //  connect(m_res_combo, &QComboBox::currentTextChanged, this, &MainWindow::resolutionEdited);
 //}
 
-//void MainWindow::receiveModeChange(ScanDevice* device)
+// void MainWindow::receiveModeChange(ScanDevice* device)
 //{
 //  m_curr_mode->setText(device->options->mode());
 //}
 
-//void MainWindow::receiveSourceChange(ScanDevice* device)
+// void MainWindow::receiveSourceChange(ScanDevice* device)
 //{
 //  m_curr_src->setText(device->options->source());
 //}
 
-//void MainWindow::receiveEditingImage()
+// void MainWindow::receiveEditingImage()
 //{
 //  enableScanningToolbars(false);
 //}
 
-//void MainWindow::resolutionEdited(const QString& value)
+// void MainWindow::resolutionEdited(const QString& value)
 //{
 //  ScanDevice* device = m_scan_lib->device(m_selected_name);
 //  m_scan_lib->setResolution(device, value.toInt());
 //}
 
-//void MainWindow::modeChangeSelected(const QString& mode)
+// void MainWindow::modeChangeSelected(const QString& mode)
 //{
 //  ScanDevice* device = m_scan_lib->device(m_selected_name);
 //  m_scan_lib->setScanMode(device, mode);
 //}
 
-//void MainWindow::sourceChangeSelected(const QString& source)
+// void MainWindow::sourceChangeSelected(const QString& source)
 //{
 //  ScanDevice* device = m_scan_lib->device(m_selected_name);
 //  m_scan_lib->setSource(device, source);
 //}
 
-//void MainWindow::modifyingSelection()
+// void MainWindow::modifyingSelection()
 //{
 //  disableSelectionActions();
 //}
 
-//void MainWindow::editorHasSelection()
+// void MainWindow::editorHasSelection()
 //{
 //  enableSelectionActions();
 //  disableNoSelectionActions();
 //}
 
-//void MainWindow::editorHasNoSelection()
+// void MainWindow::editorHasNoSelection()
 //{
 //  disableSelectionActions();
 //  enableNoSelectionActions();
 //}
 
-void MainWindow::imageLoaded()
+void
+MainWindow::imageLoaded()
 {
   enableImageLoadedActions();
   //  enableNoSelectionActions();
   //  disableSelectionActions();
 }
 
-//void MainWindow::disableNoSelectionActions()
+// void MainWindow::disableNoSelectionActions()
 //{
 //  m_rot_left_act->setEnabled(false);
 //  m_rot_right_act->setEnabled(false);
@@ -577,7 +592,7 @@ void MainWindow::imageLoaded()
 //  m_scale_act->setEnabled(false);
 //}
 
-//void MainWindow::enableNoSelectionActions()
+// void MainWindow::enableNoSelectionActions()
 //{
 //  m_rot_left_act->setEnabled(true);
 //  m_rot_right_act->setEnabled(true);
@@ -586,13 +601,13 @@ void MainWindow::imageLoaded()
 //  m_scale_act->setEnabled(true);
 //}
 
-//void MainWindow::enableSelectionActions()
+// void MainWindow::enableSelectionActions()
 //{
 //  m_crop_act->setEnabled(true);
 //  m_copy_act->setEnabled(true);
 //}
 
-//void MainWindow::enableScanningToolbars(bool enable)
+// void MainWindow::enableScanningToolbars(bool enable)
 //{
 //  //  if (enable) {
 //  //    removeToolBar(m_source_bar);
@@ -612,7 +627,8 @@ void MainWindow::imageLoaded()
 ////  m_copy_act->setEnabled(false);
 ////}
 
-void MainWindow::enableImageLoadedActions()
+void
+MainWindow::enableImageLoadedActions()
 {
   m_save_act->setEnabled(true);
   m_save_as_act->setEnabled(true);
@@ -623,7 +639,7 @@ void MainWindow::enableImageLoadedActions()
   //  m_fit_height_act->setEnabled(true);
 }
 
-//void MainWindow::disableImageLoadedActions()
+// void MainWindow::disableImageLoadedActions()
 //{
 //  m_save_act->setEnabled(false);
 //  m_save_as_act->setEnabled(false);
@@ -640,7 +656,7 @@ void MainWindow::enableImageLoadedActions()
 //  asks if you are sure, then if you are it asks for the new document
 //  name, renaming the document directory if necessary.
 //*/
-//void MainWindow::createDocumentName()
+// void MainWindow::createDocumentName()
 //{
 //  QString doc_name;
 //  QString old_doc_name = m_image_editor->documentName();
@@ -701,7 +717,7 @@ void MainWindow::enableImageLoadedActions()
 //  }
 //}
 
-//void MainWindow::completeDocument()
+// void MainWindow::completeDocument()
 //{
 //  m_image_editor->completeDocument();
 //}

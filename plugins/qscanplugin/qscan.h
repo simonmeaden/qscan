@@ -1,21 +1,25 @@
 /*
-    Copyright © Simon Meaden 2019.
-    This file was developed as part of the QScan cpp library but could
-    easily be used elsewhere.
+  Copyright © Simon Meaden 2019.
+  This file was developed as part of the Biblios application but could
+  easily be used elsewhere.
 
-    QScan is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
 
-    QScan is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
 
-    You should have received a copy of the GNU General Public License
-    along with QScan.  If not, see <http://www.gnu.org/licenses/>.
-    It is also available on request from Simon Meaden simonmeaden@sky.com.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
 */
 #ifndef SCAN_H
 #define SCAN_H
@@ -24,7 +28,9 @@
 #include <QtDebug>
 
 #include "qscan_global.h"
-#include "scaninterface.h"
+#include "iscanlibrary.h"
+
+namespace QScanner {
 
 class SCANSHARED_EXPORT QScan : public QObject
 {
@@ -76,12 +82,14 @@ signals:
 
 protected:
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
-  ScanInterface* m_scan_lib;
+  IScanLibrary* m_scan_lib;
 
 #elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
 #include "win/scantwain.h"
   // TODO handle special twain shit
 #endif
 };
+
+} // end of namespace QScanner
 
 #endif // SCAN_H

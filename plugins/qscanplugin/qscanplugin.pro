@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += widgets svg
+QT       += core widgets svg
 
 TEMPLATE = lib
 TARGET = qscanplugin
@@ -35,44 +35,24 @@ DEFINES += \
 
 
 SOURCES += \
-        iscaninterface.cpp \
-        pageview.cpp \
+#        book.pb.cc \
+        iscanlibrary.cpp \
         qscan.cpp \
         qscanplugin.cpp \
-        scaneditor.cpp \
-        scanimage.cpp \
-        scaninterface.cpp \
-        scanlist.cpp \
+        scandevice.cpp \
         scanoptions.cpp \
-        version.cpp \
-        imageeditdialog.cpp \
-        ocreditor.cpp \
-        ocrimage.cpp \
-        ocrtools.cpp \
-        ocrworker.cpp \
-        tesstools.cpp \
-        texteditdialog.cpp
+        version.cpp
 
 HEADERS += \
-        iscaninterface.h \
-        pageview.h \
+#        book.pb.h \
+        iscanlibrary.h \
         qscan.h \
         qscan_global.h \
         qscanplugin.h \
         qscanplugin_global.h  \
-        scaneditor.h \
-        scanimage.h \
-        scaninterface.h \
-        scanlist.h \
+        scandevice.h \
         scanoptions.h \
-        version.h \
-        imageeditdialog.h \
-        ocreditor.h \
-        ocrimage.h \
-        ocrtools.h \
-        ocrworker.h \
-        tesstools.h \
-        texteditdialog.h
+        version.h
 
 unix {
     SOURCES += \
@@ -84,9 +64,11 @@ unix {
         unix/sanelibrary.h \
 
     LIBS += -lsane
+#    INCLUDEPATH += /usr/include
+#    INCLUDEPATH += /usr/local/include
 
-    target.path = /usr/lib
-    INSTALLS += target
+#    target.path = /usr/lib
+#    INSTALLS += target
 }
 
 win32:win64 {
@@ -102,10 +84,31 @@ TRANSLATIONS += \
   ../translations/qscan_en-US.ts
 
 DISTFILES += \
-
+    book.proto \
+    plugininterface.json \
+    scaninterface.json \
+    win/twain-dsm/dsm.def
 
 FORMS +=
 
+
+#= utilities library ===============================================================================
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../utilities/release/ -lutilities
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../utilities/debug/ -lutilities
+else:unix: LIBS += -L$$OUT_PWD/../../utilities/ -lutilities
+
+INCLUDEPATH += $$PWD/../../utilities
+DEPENDPATH += $$PWD/../../utilities
+
+#= document library =================================================================================
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../document/release/ -ldocument
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../document/debug/ -ldocument
+else:unix: LIBS += -L$$OUT_PWD/../../document/ -ldocument
+
+INCLUDEPATH += $$PWD/../../document
+DEPENDPATH += $$PWD/../../document
+
+#= interface library ===============================================================================
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../interface/release/ -linterface
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../interface/debug/ -linterface
 else:unix: LIBS += -L$$OUT_PWD/../../interface/ -linterface
@@ -113,18 +116,14 @@ else:unix: LIBS += -L$$OUT_PWD/../../interface/ -linterface
 INCLUDEPATH += $$PWD/../../interface
 DEPENDPATH += $$PWD/../../interface
 
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../../interface/release/libinterface.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../../interface/debug/libinterface.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../../interface/release/interface.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../../interface/debug/interface.lib
-else:unix: PRE_TARGETDEPS += $$OUT_PWD/../../interface/libinterface.a
+#= windows only twain library ======================================================================
 
-unix|win32: LIBS += -L/usr/local/qwt-6.1.4/lib -lqwt
-INCLUDEPATH += /usr/local/qwt-6.1.4/include
+#win32:win64: LIBS += -L$$PWD/../../../../../../usr/x86_64-w64-mingw32/sys-root/mingw/lib/ -ltwaindsm.dll
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../../document/release/ -ldocument
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../../document/debug/ -ldocument
-else:unix: LIBS += -L$$OUT_PWD/../../document/ -ldocument
+#INCLUDEPATH += $$PWD/../../../../../../usr/x86_64-w64-mingw32/sys-root/mingw/include
+#DEPENDPATH += $$PWD/../../../../../../usr/x86_64-w64-mingw32/sys-root/mingw/include
 
-INCLUDEPATH += $$PWD/../../document
-DEPENDPATH += $$PWD/../../document
+#win32:win64:!win32-g++: PRE_TARGETDEPS += $$PWD/../../../../../../usr/x86_64-w64-mingw32/sys-root/mingw/lib/twaindsm.dll.lib
+#else:win32-g++: PRE_TARGETDEPS += $$PWD/../../../../../../usr/x86_64-w64-mingw32/sys-root/mingw/lib/libtwaindsm.dll.a
+
+#===================================================================================================

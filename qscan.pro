@@ -1,22 +1,32 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
+#    tests \
     interface \
     plugins \
     document \
-    Scanner \
-    tests
+    utilities \
+    QScanTest \
+    Scanner
+
+
+utilities.subdir = utilities
 
 document.subdir = document
-
-plugins.subdir = plugins
-plugins.depends = interface
-
-Scanner.subdir = Scanner
-Scanner.depends = document interface
-
-tests.subdir = tests
-tests.depends = interface document
+document.depends = utilities
 
 interface.subdir = interface
-interface.depends = document
+interface.depends = document utilities
+
+plugins.subdir = plugins
+plugins.depends = interface document utilities
+
+QScanTest.subdir = QScanTest
+QScanTest.depends = interface document utilities
+
+Scanner.subdir = Scanner
+Scanner.depends = interface document utilities
+
+tests.subdir = tests
+tests.depends = interface document utilities plugins
+

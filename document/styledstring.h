@@ -10,7 +10,7 @@
 #include <qyaml-cpp/QYamlCpp>
 #include <yaml-cpp/yaml.h>
 
-#include "util.h"
+#include "docutil.h"
 
 /*!
    \class StyledString
@@ -18,7 +18,6 @@
 
    A StyledString comprises a string plus a set of StyleData objects which define
    certain style data for the string.
-
 
 */
 
@@ -48,7 +47,7 @@
 
 class StyledString;
 
-namespace Util {
+namespace DocUtil {
 StyledString cleanText(const StyledString& text);
 }
 
@@ -70,7 +69,7 @@ public:
      Defines certain types of styling. All types with the exception of Paragraph
      can be overlain. For example you could define string "A test string" for example
      and set the whole thing to Italic and set the test section to Bold. The result
-     would be \em A \b test \b string \em.
+     would be \em A \b test \b string \em .
 
      \code
      StyledString s(tr("A test string"));
@@ -90,7 +89,7 @@ public:
      \li \em A \em - in italics
      \li \b \em test \em \b - in bold italics
      \li \em string \em
-     Empty strings or strings comprising only whitespace (' ', '\t', '\r', '\n' etc)
+     Empty strings or strings comprising only whitespace, tabs, space, newline etc.
      are thrown away.
 
      If you try to appendStyle() a paragraph, overlaying all or part of an existing
@@ -99,7 +98,7 @@ public:
   */
   enum Type
   {
-    NoType, /**< enum value NoType. Primarily used to hit the default in a switch.*/
+    NoType = 0, /**< enum value NoType. Primarily used to hit the default in a switch.*/
     Normal, /**< enum value Normal - just normal unstyled text. */
     Bold, /**< enum value Bold. Bold text. */
     Italic, /**< enum value Italic. Italic text */
@@ -115,7 +114,7 @@ public:
     Font_V_Large, /**< enum value Font size. By default 129% normal. */
     Font_X_Large, /**< enum value Font size. By default 148% normal. */
     Font_X_X_Large, /**< enum value Font size. By default 200% normal. */
-    Paragraph, /**< enum value Paragraph. Defines a separate paragrph block*/
+    Paragraph = 100, /**< enum value Paragraph. Defines a separate paragraph block*/
   };
 
   /*!
@@ -235,7 +234,7 @@ public:
   */
   bool operator==(const StyleData&);
 
-protected:
+private:
   QList<int> font_sizes = {33, 45, 58, 83, 100, 113, 129, 148, 200};
 
   int m_start, m_length;
@@ -289,7 +288,16 @@ public:
   friend const StyledString operator+(const StyledString&, const StyledString&);
 
 protected:
+  //! The actual string.
+  /*!
+    Stores the string as a QString object..
+  */
   QString m_text;
+  //! A list of Style objects.
+  /*!
+    Style objects are QSharedPointer's to StyleData objects. They hold
+    individual style data.
+  */
   QList<Style> m_styles;
 
   //  void transferStyles(StyledString& data_str, int p_start, int p_end, QMap<int, Style> others);

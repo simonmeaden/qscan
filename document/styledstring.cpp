@@ -40,7 +40,7 @@ Emitter& operator<<(Emitter& emitter, const StyledString& v)
 
 } // end of namespace YAML
 
-namespace Util {
+namespace DocUtil {
 
 /*!
   \brief Cleans text of dodgy characters and un-escaped single and double quotes..
@@ -54,7 +54,7 @@ namespace Util {
 */
 StyledString cleanText(const StyledString& styled_str)
 {
-  QString str = Util::cleanText(styled_str.text());
+  QString str = DocUtil::cleanText(styled_str.text());
 
   StyledString text(str);
   text.setStyles(styled_str.styles());
@@ -96,7 +96,7 @@ StyleData::StyleData(Type type, int start, int length)
 {}
 
 /*!
-   \brief Get the start value.
+   \brief Get the start position of the style.
 
    \see length()
 */
@@ -106,7 +106,7 @@ int StyleData::start() const
 }
 
 /*!
-   \brief Set the start value to start.
+   \brief Set the start position of the style to start.
 
    \see setLength()
 */
@@ -116,7 +116,7 @@ void StyleData::setStart(int start)
 }
 
 /*!
-   \brief Get the length value.
+   \brief Get the length of the style.
 
    \see start()
    \see end()
@@ -127,7 +127,7 @@ int StyleData::length() const
 }
 
 /*!
-   \brief Set the length value to length.
+   \brief Set the length of the style to length.
 
    \see length()
    \see start()
@@ -139,7 +139,7 @@ void StyleData::setLength(int length)
 }
 
 /*!
-   \brief Get the end value.
+   \brief Get the end position of the style.
 
    \see start()
    \see length()
@@ -150,7 +150,7 @@ int StyleData::end() const
 }
 
 /*!
-   \brief set the end point of the StyledString.
+   \brief set the end point of the style.
 
    \see setStart()
    \see setLength()
@@ -161,7 +161,7 @@ void StyleData::setEnd(int end)
 }
 
 /*!
-   \brief Get the StyleData Type
+   \brief Get the StyleData Type of the style.
 */
 StyleData::Type StyleData::type() const
 {
@@ -169,7 +169,7 @@ StyleData::Type StyleData::type() const
 }
 
 /*!
-   \brief Set the StyleData Type
+   \brief Set the StyleData Type of the style.
 */
 void StyleData::setType(const StyleData::Type& style)
 {
@@ -181,14 +181,14 @@ void StyleData::setType(const StyleData::Type& style)
 */
 bool StyleData::isValid()
 {
-  return (m_start >= 0 && m_length >= 0 && m_type != Normal);
+  return (m_start >= 0 && m_length > 0 && m_type != NoType);
 }
 
 /*!
    \brief Returns the font_stretch value for the appropriate style.
 
    Font sizes in a webpage and Qt WebEngine are defined as percentages of the
-   default size for the webpage. Hence this returns values ± 100% and by
+   default size for the webpage. Hence this returns values ± 100 and by
    default range from 33% to 200%. There are 9 value steps and they can be
    reset using the setFontStretch() method.
 
@@ -230,6 +230,8 @@ int StyleData::fontStretch()
 
 /*!
    \brief Sets one of the nine font stretch range values.
+
+   \see fontStretch()
 */
 void StyleData::setFontStretch(int index, int value)
 {
@@ -281,6 +283,8 @@ bool StyleData::operator==(const StyleData& other)
       m_length == other.length()) {
     return true;
   }
+
+  return false;
 }
 
 /* StyledString
@@ -386,8 +390,9 @@ bool StyledString::isEmptyOrWhitespace()
    \code
    StyledString s = "A basic string";
    s.appendStyle(StyledString::getStyle(StyleData::Italic, 2, 5);
-   StyledString sub = s.mid(2, 5); // sub == \em basic \em
+   StyledString sub = s.mid(2, 5);
    \endcode
+   sub == \em basic \em .
 
    \see right()
    \see left()

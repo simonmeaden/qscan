@@ -1,25 +1,30 @@
 /*
-    Copyright © Simon Meaden 2019.
-    This file was developed as part of the QScan cpp library but could
-    easily be used elsewhere.
+  Copyright © Simon Meaden 2019.
+  This file was developed as part of the Biblios application but could
+  easily be used elsewhere.
 
-    QScan is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
 
-    QScan is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
 
-    You should have received a copy of the GNU General Public License
-    along with QScan.  If not, see <http://www.gnu.org/licenses/>.
-    It is also available on request from Simon Meaden simonmeaden@sky.com.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
 */
 #include "sanelibrary.h"
+#include <QThread>
 
-QMutex SaneLibrary::_mutex;
+namespace QScanner {
 
 SaneLibrary::SaneLibrary(QObject* parent)
   : ScanLibrary(parent)
@@ -35,35 +40,19 @@ SaneLibrary::SaneLibrary(QObject* parent)
 
   // worker
   connect(this, &SaneLibrary::startScanning, scan_worker, &SaneWorker::scan);
-  connect(this,
-          &SaneLibrary::getAvailableOptions,
-          scan_worker,
-          &SaneWorker::loadAvailableScannerOptions);
-  connect(
-    this, &SaneLibrary::cancelScanning, scan_worker, &SaneWorker::cancelScan);
-  connect(
-    this, &SaneLibrary::setBoolValue, scan_worker, &SaneWorker::setBoolValue);
-  connect(
-    this, &SaneLibrary::setIntValue, scan_worker, &SaneWorker::setIntValue);
-  connect(this,
-          &SaneLibrary::setStringValue,
-          scan_worker,
-          &SaneWorker::setStringValue);
+  connect(this, &SaneLibrary::getAvailableOptions, scan_worker, &SaneWorker::loadAvailableScannerOptions);
+  connect(this, &SaneLibrary::cancelScanning, scan_worker, &SaneWorker::cancelScan);
+  connect(this, &SaneLibrary::setBoolValue, scan_worker, &SaneWorker::setBoolValue);
+  connect(this, &SaneLibrary::setIntValue, scan_worker, &SaneWorker::setIntValue);
+  connect(this, &SaneLibrary::setStringValue, scan_worker, &SaneWorker::setStringValue);
   connect(scan_worker, &SaneWorker::optionsSet, this, &ScanLibrary::optionsSet);
-  connect(
-    scan_worker, &SaneWorker::sourceChanged, this, &ScanLibrary::sourceChanged);
-  connect(
-    scan_worker, &SaneWorker::modeChanged, this, &ScanLibrary::modeChanged);
-  connect(
-    scan_worker, &SaneWorker::scanCompleted, this, &ScanLibrary::scanCompleted);
-  connect(scan_worker,
-          &SaneWorker::scanCompleted,
-          this,
-          &SaneLibrary::scanIsCompleted);
+  connect(scan_worker, &SaneWorker::sourceChanged, this, &ScanLibrary::sourceChanged);
+  connect(scan_worker, &SaneWorker::modeChanged, this, &ScanLibrary::modeChanged);
+  connect(scan_worker, &SaneWorker::scanCompleted, this, &ScanLibrary::scanCompleted);
+  connect(scan_worker, &SaneWorker::scanCompleted, this, &SaneLibrary::scanIsCompleted);
   connect(scan_worker, &SaneWorker::scanFailed, this, &ScanLibrary::scanFailed);
   connect(scan_worker, &SaneWorker::scanOpenFailed, this, &ScanLibrary::scanOpenFailed);
-  connect(
-    scan_worker, &SaneWorker::scanProgress, this, &ScanLibrary::scanProgress);
+  connect(scan_worker, &SaneWorker::scanProgress, this, &ScanLibrary::scanProgress);
 
   scan_worker->moveToThread(thread);
   thread->start();
@@ -76,7 +65,6 @@ SaneLibrary::~SaneLibrary()
 
 bool SaneLibrary::init()
 {
-  QMutexLocker locker(&_mutex);
   SANE_Int version_code = 0;
   SANE_Status status;
   status = sane_init(&version_code, callbackWrapper);
@@ -95,15 +83,13 @@ bool SaneLibrary::init()
 
 QStringList SaneLibrary::devices()
 {
-  QMutexLocker locker(&_mutex);
   QStringList list;
   SANE_Status sane_status = SANE_STATUS_GOOD;
   const SANE_Device** device_list = nullptr;
   sane_status = sane_get_devices(&device_list, SANE_FALSE);
 
   if (device_list) {
-    qCDebug(QscanSane) <<
-                       tr("sane_get_devices status: %1").arg(sane_strstatus(sane_status));
+    qCDebug(QscanSane) << tr("sane_get_devices status: %1").arg(sane_strstatus(sane_status));
 
     const SANE_Device* current_device;
     size_t current_device_index = 0;
@@ -131,7 +117,6 @@ QStringList SaneLibrary::devices()
 
 ScanDevice* SaneLibrary::device(QString device_name)
 {
-  QMutexLocker locker(&_mutex);
   return m_scanners.value(device_name);
 }
 
@@ -143,7 +128,6 @@ ScanDevice* SaneLibrary::device(QString device_name)
 
 bool SaneLibrary::detectAvailableOptions(QString device_name)
 {
-  QMutexLocker locker(&_mutex);
   SANE_Status sane_status;
   SANE_Handle sane_handle;
   sane_status = sane_open(device_name.toStdString().c_str(), &sane_handle);
@@ -151,8 +135,7 @@ bool SaneLibrary::detectAvailableOptions(QString device_name)
   if (sane_status == SANE_STATUS_GOOD) {
     //    ScanDevice* device = m_scanners.value(device_name);
 
-    qCDebug(QscanSane) <<
-                       tr("sane_open status: %1").arg(sane_strstatus(sane_status));
+    qCDebug(QscanSane) << tr("sane_open status: %1").arg(sane_strstatus(sane_status));
 
     sane_close(sane_handle);
 
@@ -164,7 +147,6 @@ bool SaneLibrary::detectAvailableOptions(QString device_name)
 
 bool SaneLibrary::startScan(QString device_name)
 {
-  QMutexLocker locker(&_mutex);
   ScanDevice* device = m_scanners.value(device_name);
 
   m_scanning = true;
@@ -175,7 +157,6 @@ bool SaneLibrary::startScan(QString device_name)
 
 void SaneLibrary::cancelScan(/*QString device_name*/)
 {
-  QMutexLocker locker(&_mutex);
   //  ScanDevice* device = m_scanners.value(device_name);
   emit cancelScanning();
   m_scanning = false;
@@ -259,7 +240,7 @@ void SaneLibrary::setTopLeftX(ScanDevice* device, int value)
 //{
 //  int option_id = device->options->optionId(SANE_NAME_SCAN_TL_Y);
 //  device->op_name = QString(SANE_NAME_SCAN_TL_Y);
-//  emit getIntValue(device, option_id, value);
+//  emit getInt#define PAPERSIZE_H
 //}
 
 void SaneLibrary::setTopLeftY(ScanDevice* device, int value)
@@ -335,8 +316,7 @@ void SaneLibrary::setBrightness(ScanDevice* device, int value)
 void SaneLibrary::setResolution(ScanDevice* device, int value)
 {
   int option_id = device->options->optionId(SANE_NAME_SCAN_RESOLUTION);
-  emit setIntValue(
-    device, option_id, QString(SANE_NAME_SCAN_RESOLUTION), value);
+  emit setIntValue(device, option_id, QString(SANE_NAME_SCAN_RESOLUTION), value);
 }
 
 // void
@@ -350,8 +330,7 @@ void SaneLibrary::setResolution(ScanDevice* device, int value)
 void SaneLibrary::setResolutionX(ScanDevice* device, int value)
 {
   int option_id = device->options->optionId(SANE_NAME_SCAN_X_RESOLUTION);
-  emit setIntValue(
-    device, option_id, QString(SANE_NAME_SCAN_X_RESOLUTION), value);
+  emit setIntValue(device, option_id, QString(SANE_NAME_SCAN_X_RESOLUTION), value);
 }
 
 // void
@@ -365,8 +344,7 @@ void SaneLibrary::setResolutionX(ScanDevice* device, int value)
 void SaneLibrary::setResolutionY(ScanDevice* device, int value)
 {
   int option_id = device->options->optionId(SANE_NAME_SCAN_Y_RESOLUTION);
-  emit setIntValue(
-    device, option_id, QString(SANE_NAME_SCAN_Y_RESOLUTION), value);
+  emit setIntValue(device, option_id, QString(SANE_NAME_SCAN_Y_RESOLUTION), value);
 }
 
 void SaneLibrary::setPreview(ScanDevice* device)
@@ -390,7 +368,7 @@ void SaneLibrary::setMode(ScanDevice* device, const QString& value)
 
 void SaneLibrary::setSource(ScanDevice* device, const QString& value)
 {
-  int option_id = device->options->optionId(SANE_NAME_SCAN_SOURCE);
+  //  int option_id = device->options->optionId(SANE_NAME_SCAN_SOURCE);
 
   emit setStringValue(device, QString(SANE_NAME_SCAN_SOURCE), value);
 }
@@ -400,9 +378,7 @@ bool SaneLibrary::isScanning() const
   return m_scanning;
 }
 
-void SaneLibrary::callbackWrapper(SANE_String_Const resource,
-                                  SANE_Char* name,
-                                  SANE_Char* password)
+void SaneLibrary::callbackWrapper(SANE_String_Const /*resource*/, SANE_Char* /*name*/, SANE_Char* /*password*/)
 {
   // TODO some form of authorisation ???
   //  std::string name_destination;
@@ -416,18 +392,19 @@ void SaneLibrary::callbackWrapper(SANE_String_Const resource,
   //  password_destination.size());
 }
 
-static void auth_callback(SANE_String_Const resource,
-                          SANE_Char* username,
-                          SANE_Char* password)
-{
-  // TODO some form of authorisation ???
-  //  std::string name_destination;
-  //  std::string password_destination;
-  //  _callback(std::string(resource), name_destination,
-  //  password_destination);
-  //  assert(name_destination.size() < SANE_MAX_USERNAME_LEN);
-  //  assert(password_destination.size() < SANE_MAX_PASSWORD_LEN);
-  //  strncpy(username, name_destination.c_str(), name_destination.size());
-  //  strncpy(password, password_destination.c_str(),
-  //  password_destination.size());
-}
+//static void
+//auth_callback(SANE_String_Const /*resource*/, SANE_Char* /*username*/, SANE_Char* /*password*/)
+//{
+//  // TODO some form of authorisation ???
+//  //  std::string name_destination;
+//  //  std::string password_destination;
+//  //  _callback(std::string(resource), name_destination,
+//  //  password_destination);
+//  //  assert(name_destination.size() < SANE_MAX_USERNAME_LEN);
+//  //  assert(password_destination.size() < SANE_MAX_PASSWORD_LEN);
+//  //  strncpy(username, name_destination.c_str(), name_destination.size());
+//  //  strncpy(password, password_destination.c_str(),
+//  //  password_destination.size());
+//}
+
+} // end of namespace QScanner
