@@ -12,7 +12,7 @@
 #include <QPoint>
 #include <QtMath>
 
-#include "qscanlogging.h"
+#include "logging.h"
 #include "widgets_global.h"
 #include "basescanimage.h"
 

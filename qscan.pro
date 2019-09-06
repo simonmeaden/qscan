@@ -12,8 +12,6 @@ SUBDIRS += \
     QScanTest
 
 
-#logging.subdir = logging
-
 utilities.subdir = utilities
 utilities.depends =
 

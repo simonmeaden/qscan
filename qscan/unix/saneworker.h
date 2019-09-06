@@ -29,23 +29,37 @@
 #include <QMutexLocker>
 #include <QObject>
 #include <QtDebug>
+#include <QThread>
+#include <QQueue>
 
 #include "iscanlibrary.h"
 #include "scanoptions.h"
 
 namespace QScanner {
 
-class SaneWorker : public QObject
+struct Task;
+
+class SaneWorker : public QThread
 {
   Q_OBJECT
 public:
+  enum SaneTask
+  {
+    SET_BOOL,
+    SET_STRING,
+    DEVICE_INT,
+    DEVICE_STRING,
+    SCAN,
+    CANCEL_SCAN,
+    LOAD_OPTIONS,
+  };
   explicit SaneWorker(QObject* parent = nullptr);
 
   void scan(ScanDevice* device);
   void loadAvailableScannerOptions(ScanDevice* device);
-  void setBoolValue(ScanDevice* device, int option_id, const QString&, bool value);
-  void setIntValue(ScanDevice* device, int option_id, const QString& name, int value);
-  void setStringValue(ScanDevice* device, const QString& name, const QString& value);
+  void setDeviceBoolValue(ScanDevice* device, int option_id, const QString& descriptor, bool value);
+  void setDeviceIntValue(ScanDevice* device, int option_id, const QString& descriptor, int value);
+  void setDeviceStringValue(ScanDevice* device, const QString& name, const QString& value);
   void cancelScan();
 
 signals:
@@ -56,26 +70,59 @@ signals:
   void finished();
   //  void availableScannerOptions(ScanDevice*);
   //  void sendIntValue(ScanDevice*, int);
-  void optionsSet(ScanDevice*);
-  void sourceChanged(ScanDevice*);
-  void modeChanged(ScanDevice*);
+  void optionsSet();
+  //  void sourceChanged(ScanDevice*);
+  //  void modeChanged(ScanDevice*);
+  void optionChanged(const QString descriptor, const QVariant& value);
 
-protected:
+private:
   //  Log4Qt::Logger* m_logger;
   QMutex m_mutex;
+  bool m_running;
   SANE_Handle m_sane_handle{};
+  QQueue<Task*> m_tasks;
 
-  void getIntValue(ScanDevice* device, int option_id, const QString& name);
-  void getListValue(ScanDevice* device, int option_id, const QString& name, const SANE_Option_Descriptor* opt);
-  void setResolution(ScanDevice* device, const SANE_Option_Descriptor* current_option, SANE_Int option_id);
-  void setSource(ScanDevice* device, const SANE_Option_Descriptor* option, SANE_Int);
-  void setMode(ScanDevice* device, const SANE_Option_Descriptor* option, SANE_Int);
+  void run();
+  void do_scan(Task* task);
+  void do_loadAvailableScannerOptions(Task* task);
+  void do_setDeviceBoolValue(Task* task);
+  void do_setDeviceIntValue(Task* task);
+  void do_setDeviceStringValue(Task* task);
+
+  void storeOptionData(SANE_Handle sane_handle,
+                       ScanDevice* device,
+                       const int option_id,
+                       const SANE_Option_Descriptor* descriptor);
+  QVariant handleDescriptorType(SANE_Handle sane_handle, ScanDevice* device,
+                                const int option_id,
+                                const SANE_Option_Descriptor* descriptor);
+  QVariant handleConstraintType(const SANE_Option_Descriptor* descriptor);
+
+  //  void storeIntOption(SANE_Handle sane_handle, ScanDevice* device, int option_id, const QString& name,
+  //                      const SANE_Value_Type type);
+  //  void storeStringOption(SANE_Handle sane_handle, ScanDevice* device, const QString& descriptor,
+  //                         const SANE_Option_Descriptor* option, SANE_Int);
+  //  void getListValue(ScanDevice* device, int option_id, const QString& name, const SANE_Option_Descriptor* opt);
+  //  void storeResolution(SANE_Handle sane_handle, ScanDevice* device, const SANE_Option_Descriptor* descriptor,
+  //                       SANE_Int option_id);
+  //  void setStoredSource(SANE_Handle sane_handle, ScanDevice* device, const SANE_Option_Descriptor* option, SANE_Int);
+  //  void setStoredMode(SANE_Handle sane_handle, ScanDevice* device, const SANE_Option_Descriptor* option, SANE_Int);
+  QVariant getDeviceValue(SANE_Handle sane_handle, ScanDevice* device, const QString& option_name);
 
   static const int GUARDS_SIZE = 4; /* 4 bytes */
   void* guardedMalloc(size_t size);
   void guardedFree(void* ptr);
-  QVariant getOptionValue(ScanDevice* device, const QString& option_name);
 };
+
+struct Task
+{
+  SaneWorker::SaneTask task;
+  ScanDevice* device;
+  int option_id;
+  QString descriptor;
+  QVariant value;
+};
+
 
 } // end of namespace QScanner
 

@@ -29,14 +29,102 @@ namespace QScanner {
 
 ScanDevice::ScanDevice(QObject* parent)
   : QObject(parent)
+  , m_available_options_set(false)
 {
-  options = new ScanOptions(parent);
+  m_options = new ScanOptions(parent);
 }
 
 ScanDevice::ScanDevice(const ScanDevice& other)
   : QObject(other.parent())
+  , m_available_options_set(other.areAvailableOptionsSet())
 {
-  options = other.options;
+  m_options = other.m_options;
 }
+
+QString ScanDevice::descriptor()
+{
+  return m_descriptor;
+}
+
+void ScanDevice::setDescriptor(QString name)
+{
+  m_descriptor = name;
+}
+
+QString ScanDevice::vendor() const
+{
+  return m_vendor;
+}
+
+void ScanDevice::setVendor(const QString& vendor)
+{
+  m_vendor = vendor;
+}
+
+QString ScanDevice::model() const
+{
+  return m_model;
+}
+
+void ScanDevice::setModel(const QString& model)
+{
+  m_model = model;
+}
+
+QString ScanDevice::type() const
+{
+  return m_type;
+}
+
+void ScanDevice::setType(const QString& type)
+{
+  m_type = type;
+}
+
+ScanOptions* ScanDevice::options() const
+{
+  return m_options;
+}
+
+void ScanDevice::setOptions(ScanOptions* options)
+{
+  m_options = options;
+}
+
+bool ScanDevice::areAvailableOptionsSet() const
+{
+  return m_available_options_set;
+}
+
+void ScanDevice::setAvailableOptionsSet(bool available_options_set)
+{
+  m_available_options_set = available_options_set;
+}
+
+#if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
+
+//SANE_Handle ScanDevice::handle()
+//{
+//  return m_handle;
+//}
+
+//void ScanDevice::setHandle(const SANE_Handle& handle)
+//{
+//  m_handle = handle;
+//}
+
+void ScanDevice::setDisplayName(const QString& display_name)
+{
+  m_display_name = display_name;
+}
+
+QString ScanDevice::displayName() const
+{
+  return m_display_name;
+}
+
+#elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
+// TODO
+#endif
 
 } // end of namespace QScanner

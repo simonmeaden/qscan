@@ -42,16 +42,14 @@ SOURCES += \
         imageconverter.cpp \
         logging.cpp \
         papersize.cpp \
-        qmenuutils.cpp \
-        utillogging.cpp
+        qmenuutils.cpp
 
 HEADERS += \
         docutil.h \
         imageconverter.h \
         logging.h \
         papersize.h \
-        qmenuutils.h \
-        utillogging.h
+        qmenuutils.h
 
 
 unix|win32: LIBS += -lopencv_imgproc

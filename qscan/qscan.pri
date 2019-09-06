@@ -9,7 +9,7 @@ DEFINES += \
        "QSCAN_VERSION_BUILD=$$VERSION_BUILD"
 
 SOURCES += \
-  $$PWD/logging.cpp \
+  logging.cpp \
   book.pb.cc \
   iscanlibrary.cpp \
   qscan.cpp \
@@ -18,14 +18,14 @@ SOURCES += \
   version.cpp
 
 HEADERS += \
-  $$PWD/logging.h \
+  logging.h \
   book.pb.h \
   iscanlibrary.h \
   qscan.h \
   qscan_global.h  \
   scandevice.h \
   scanoptions.h \
-  version.h \
+  version.h
 
 TRANSLATIONS += \
   ../translations/qscan_en-GB.ts \
@@ -45,29 +45,53 @@ unix {
     HEADERS += \
         unix/saneworker.h \
         unix/sanelibrary.h
-
-    LIBS += -lsane
-
-#    target.path = /usr/lib
-#    INSTALLS += target
 }
 
 win32:win64 {
     SOURCES += \
         win/twainlibrary.cpp \
-        win/twain-dsm/apps.cpp \
-        win/twain-dsm/dsm.cpp \
-        win/twain-dsm/hook.cpp \
-        win/twain-dsm/log.cpp \
-        win/twainlibrary.cpp
 
     HEADERS += \
         win/twainlibrary.h \
-        win/twain-dsm/dsm.h \
-        win/twain-dsm/dsm.rc \
-        win/twain-dsm/resource.h \
-        win/twain-dsm/twain.h \
-        win/twainlibrary.h
+        win/twpp.hpp  \
+        win/twpp/application.hpp \
+        win/twpp/audio.hpp \
+        win/twpp/capability.hpp \
+        win/twpp/cie.hpp \
+        win/twpp/curveresponse.hpp \
+        win/twpp/customdata.hpp \
+        win/twpp/datasource.hpp \
+        win/twpp/deviceevent.hpp \
+        win/twpp/element8.hpp \
+        win/twpp/enums.hpp \
+        win/twpp/env.hpp \
+        win/twpp/event.hpp \
+        win/twpp/exception.hpp \
+        win/twpp/extimageinfo.hpp \
+        win/twpp/filesystem.hpp \
+        win/twpp/fix32.hpp \
+        win/twpp/frame.hpp \
+        win/twpp/identity.hpp \
+        win/twpp/imageinfo.hpp \
+        win/twpp/imagelayout.hpp \
+        win/twpp/imagememxfer.hpp \
+        win/twpp/imagenativexfer.hpp \
+        win/twpp/internal.hpp \
+        win/twpp/jpegcompression.hpp \
+        win/twpp/memory.hpp \
+        win/twpp/memoryops.hpp \
+        win/twpp/palette8.hpp \
+        win/twpp/passthrough.hpp \
+        win/twpp/pendingxfers.hpp \
+        win/twpp/setupfilexfer.hpp \
+        win/twpp/setupmemxfer.hpp \
+        win/twpp/status.hpp \
+        win/twpp/strings.hpp \
+        win/twpp/types.hpp \
+        win/twpp/typesops.hpp \
+        win/twpp/userinterface.hpp \
+        win/twpp/utils.hpp
+
 
     #= windows only twain library ======================================================================
     LIBS += -ltwain_32.dll

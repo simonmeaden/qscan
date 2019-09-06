@@ -36,10 +36,12 @@ RCC_DIR = $$DESTDIR/.qrc
 UI_DIR = $$DESTDIR/.ui
 
 SOURCES += \
+        logging.cpp \
         main.cpp \
         mainwindow.cpp
 
 HEADERS += \
+        logging.h \
         mainwindow.h
 
 FORMS += \
@@ -60,24 +62,9 @@ unix|win32: LIBS += -lqyaml-cpp
 unix|win32: LIBS += -ltesseract
 unix|win32: LIBS += -lopencv_core
 unix|win32: LIBS += -lopencv_photo
-unix|win32: LIBS += -L/usr/local/qwt-6.1.4/lib -lqwt
-INCLUDEPATH += /usr/local/qwt-6.1.4/include
-
-#= logging library =================================================================================
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../logging/release/ -llogging
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../logging/debug/ -llogging
-else:unix:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../logging/release -llogging
-else:unix:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../logging/debug -llogging
-
-INCLUDEPATH += $$PWD/../logging
-DEPENDPATH += $$PWD/../logging
-
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/release/liblogging.a
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/debug/liblogging.a
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/release/logging.lib
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/debug/logging.lib
-else:unix:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/release/liblogging.a
-else:unix:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../logging/debug/liblogging.a
+unix: LIBS += -lsane
+unix|win32: LIBS += -lqwt-qt5
+INCLUDEPATH += /usr/include/qt5/qwt
 
 #= utilities library ===============================================================================
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../utilities/release/ -lutilities
@@ -144,3 +131,4 @@ else:unix:CONFIG(release, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../qscan/r
 else:unix:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$OUT_PWD/../qscan/debug/libqscan.a
 
 #===================================================================================================
+

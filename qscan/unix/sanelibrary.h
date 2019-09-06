@@ -28,8 +28,6 @@
 #include <QImage>
 #include <QtDebug>
 
-#include <sane/sane.h>
-#include <sane/saneopts.h>
 
 #include "iscanlibrary.h"
 #include "saneworker.h"
@@ -54,16 +52,22 @@ public:
   void exit() override;
 
   // ScanInterface interface
+  void detectDevices() override;
   QStringList devices() override;
   ScanDevice* device(QString device_name) override;
   //  ScanOptions options(QString device_name) override;
   bool detectAvailableOptions(QString device_name) override;
+
+  ScanDevice* getCurrentDevice() override;
+  void setCurrentDevice(ScanDevice* current_device) override;
+
   bool startScan(QString device_name) override;
   bool isScanning() const override;
   void cancelScan() override;
   QRect geometry(QString device_name) override;
   const Version& version() const;
 
+  void setOption(ScanOptions::AvailableOptions option, QVariant value);
   //  void topLeftX(ScanDevice* device, int& value) override;
   void setTopLeftX(ScanDevice* device, int x) override;
   //  void topLeftY(ScanDevice* device, int& value) override;
@@ -86,7 +90,11 @@ public:
   void clearPreview(ScanDevice* device) override;
   void setMode(ScanDevice* device, const QString& value) override;
   void setSource(ScanDevice* device, const QString& value) override;
-  void getAvailableScannerOptions(QString device_name) override;
+
+  /*!
+     \brief Gets the available options for the device named by device_name.
+  */
+  void getAvailableScannerOptions(ScanDevice* device) override;
 
 signals:
   void finished();
@@ -97,19 +105,23 @@ signals:
   void setStringValue(ScanDevice*, const QString&, const QString&);
   void getIntValue(ScanDevice*, int, int);
   void cancelScanning();
+  //  void optionChanged(ScanOptions::AvailableOptions option, QVariant value);
+
 
 protected:
   DeviceMap m_scanners;
+  ScanDevice* m_current_device;
   QImage* m_image{};
   Version m_sane_version;
+  QStringList m_device_list;
   bool m_scanning;
+  SaneWorker* m_worker;
 
   //  QMutex m_mutex;
 
-  void receiveIntValue(ScanDevice* device, int value);
+  //  void receiveIntValue(ScanDevice* device, int value);
   void scanIsCompleted();
-
-  static void callbackWrapper(SANE_String_Const, SANE_Char*, SANE_Char*);
+  void receiveOptionChange(const QString descriptor, const QVariant& value);
 
 public:
 };

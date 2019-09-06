@@ -404,7 +404,7 @@ ImageListModel::canDropMimeData(
     format += f + ", ";
   }
 
-  qCDebug(QscanWidgets) << tr("Row : %1, Col : %2 Formats : %3").arg(row, column).arg(format);
+  qCDebug(LogQScanWidgets) << tr("Row : %1, Col : %2 Formats : %3").arg(row, column).arg(format);
 
   return (data->hasFormat(MIMETYPE) && (column == 0 || (column == -1 && parent.column() == 0)));
 }
@@ -417,7 +417,6 @@ ImageListModel::flags(const QModelIndex& index) const
   }
 
   return QAbstractListModel::flags(index);
-  ;
 }
 
 } // end of namespace QScanner

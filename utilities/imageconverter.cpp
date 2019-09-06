@@ -1,5 +1,5 @@
 #include "imageconverter.h"
-#include "utillogging.h"
+#include "logging.h"
 
 namespace ImageConverter {
 
@@ -46,7 +46,7 @@ cv::Mat imageToMat(const QImage& image_in, bool clone_image_data)
   // 8-bit, 3 channel
   case QImage::Format_RGB32: {
     if (!clone_image_data) {
-      qCWarning(UtilLogging) << QObject::tr("ImageConverter::imageToMat() - Conversion requires cloning so we "
+      qCWarning(LogQScanUtil) << QObject::tr("ImageConverter::imageToMat() - Conversion requires cloning so we "
                                           "don't modify the original QImage data");
     }
 
@@ -66,7 +66,7 @@ cv::Mat imageToMat(const QImage& image_in, bool clone_image_data)
   // 8-bit, 3 channel
   case QImage::Format_RGB888: {
     if (!clone_image_data) {
-      qCWarning(UtilLogging) << QObject::tr("ImageConverter::imageToMat() - Conversion requires cloning so we "
+      qCWarning(LogQScanUtil) << QObject::tr("ImageConverter::imageToMat() - Conversion requires cloning so we "
                                           "don't modify the original QImage data");
     }
 
@@ -99,7 +99,7 @@ cv::Mat imageToMat(const QImage& image_in, bool clone_image_data)
   //                CV_8UC1,)
 
   default:
-    qCWarning(UtilLogging) << QObject::tr("ImageConverter::imageToMat() - QImage format not "
+    qCWarning(LogQScanUtil) << QObject::tr("ImageConverter::imageToMat() - QImage format not "
                                         "handled in switch : %1")
                          .arg(image.format());
     break;
@@ -180,7 +180,7 @@ QImage matToImage(const cv::Mat& mat)
   }
 
   default:
-    qCWarning(UtilLogging) << QObject::tr("ASM::cvMatToQImage() - cv::Mat image type not "
+    qCWarning(LogQScanUtil) << QObject::tr("ASM::cvMatToQImage() - cv::Mat image type not "
                                         "handled in switch: %1")
                          .arg(mat.type());
     break;
@@ -284,7 +284,7 @@ QImage pixToImage(PIX* pixImage)
 
   if (result.isNull()) {
     static QImage none(0, 0, QImage::Format_Invalid);
-    qCWarning(UtilLogging) << "***Invalid format!!!";
+    qCWarning(LogQScanUtil) << "***Invalid format!!!";
     return none;
   }
 

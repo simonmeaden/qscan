@@ -26,6 +26,7 @@
 #include <qyaml-cpp/QYamlCpp>
 #include <yaml-cpp/yaml.h>
 
+#include "logging.h"
 #include "documentdata.h"
 #include "qscan.h"
 #include "scaneditor.h"
@@ -70,8 +71,8 @@ ScanEditor::ScanEditor(QWidget* parent)
   m_scan_lib->init();
 
   connect(m_scan_lib, &QScan::optionsSet, this, &ScanEditor::receiveScannerData);
-  connect(m_scan_lib, &QScan::modeChanged, this, &ScanEditor::receiveModeChange);
-  connect(m_scan_lib, &QScan::sourceChanged, this, &ScanEditor::receiveSourceChange);
+  //  connect(m_scan_lib, &QScan::modeChanged, this, &ScanEditor::receiveModeChange);
+  //  connect(m_scan_lib, &QScan::sourceChanged, this, &ScanEditor::receiveSourceChange);
   connect(m_scan_lib, &QScan::scanCompleted, this, &ScanEditor::setImage);
   connect(m_scan_lib, &QScan::scanProgress, this, &ScanEditor::setScanProgress);
   connect(m_scan_lib, &QScan::scanFailed, this, &ScanEditor::scanHasFailed);
@@ -509,7 +510,7 @@ QString ScanEditor::saveImage(int index, const QImage& image)
       path += QDir::separator() + OCR_IMAGE_NAME.arg(index);
 
       if (!image.save(path, "PNG", 100)) {
-        qCInfo(QscanOcr) << tr("Failed to save image %1").arg(path);
+        qCInfo(LogQScanWidgets) << tr("Failed to save image %1").arg(path);
       }
     }
 
@@ -517,7 +518,7 @@ QString ScanEditor::saveImage(int index, const QImage& image)
     path = m_data_dir + OCR_IMAGE_NAME.arg(index);
 
     if (!image.save(path, "PNG", 100)) {
-      qCInfo(QscanOcr) << tr("Failed to save image %1").arg(path);
+      qCInfo(LogQScanWidgets) << tr("Failed to save image %1").arg(path);
     }
   }
 
@@ -550,7 +551,7 @@ QString ScanEditor::saveDocumentImage(int index, int image_index, const QImage& 
       saveDataStore();
 
       if (!image.save(path, "PNG", 100)) {
-        qCInfo(QscanOcr) << tr("Failed to save image %1").arg(path);
+        qCInfo(LogQScanWidgets) << tr("Failed to save image %1").arg(path);
       }
     }
 
@@ -560,7 +561,7 @@ QString ScanEditor::saveDocumentImage(int index, int image_index, const QImage& 
     saveDataStore();
 
     if (!image.save(path, "PNG", 100)) {
-      qCInfo(QscanOcr) << tr("Failed to save image %1").arg(path);
+      qCInfo(LogQScanWidgets) << tr("Failed to save image %1").arg(path);
     }
   }
 
@@ -573,7 +574,7 @@ void ScanEditor::saveModifiedImage(int page_no, const QImage& image)
   QString path = doc_data->filename();
 
   if (!image.save(path, "PNG", 100)) {
-    qCInfo(QscanOcr) << tr("Failed to save image %1").arg(path);
+    qCInfo(LogQScanWidgets) << tr("Failed to save image %1").arg(path);
     return;
   }
 
@@ -598,7 +599,7 @@ void ScanEditor::movePageToCover()
       QString path = m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator() + "cover.png";
 
       if (!image.save(path, "PNG", 100)) {
-        qCInfo(QscanOcr) << tr("failed to save file path");
+        qCInfo(LogQScanWidgets) << tr("failed to save file path");
         return;
       }
     }
@@ -610,7 +611,7 @@ void ScanEditor::movePageToCover()
     QString path = m_data_dir + QDir::separator() + m_current_doc_name + QDir::separator() + "cover.png";
 
     if (!image.save(path, "PNG", 100)) {
-      qCInfo(QscanOcr) << tr("failed to save file path");
+      qCInfo(LogQScanWidgets) << tr("failed to save file path");
       return;
     }
   }
@@ -920,7 +921,7 @@ void ScanEditor::loadCurrentDocument()
 
     if (key == 0) {
       loadCover(filename);
-      qCInfo(QscanOcr) << tr("Cover file loaded)");
+      qCInfo(LogQScanWidgets) << tr("Cover file loaded)");
 
     } else {
       if (!doc_data->isCompleted()) {
@@ -935,7 +936,7 @@ void ScanEditor::loadCurrentDocument()
           }
         }
 
-        qCInfo(QscanOcr) << tr("Image file %1 loaded.").arg(doc_data->filename());
+        qCInfo(LogQScanWidgets) << tr("Image file %1 loaded.").arg(doc_data->filename());
 
       } else {
         int page_no = m_page_view->appendOcrCompleted(true);
@@ -948,7 +949,7 @@ void ScanEditor::loadCurrentDocument()
           }
         }
 
-        qCInfo(QscanOcr) << tr("File %1 is completed.").arg(doc_data->filename());
+        qCInfo(LogQScanWidgets) << tr("File %1 is completed.").arg(doc_data->filename());
       }
     }
   }
@@ -1136,9 +1137,9 @@ bool ScanEditor::eventFilter(QObject* obj, QEvent* event)
   return result;
 }
 
-void ScanEditor::receiveScannerData(ScanDevice* device)
+void ScanEditor::receiveScannerData()
 {
-  ScanOptions* options = device->options;
+  ScanOptions* options = m_scan_lib->options();
   //  m_mode_box->clear();
   QStringList list = options->modes();
   //  m_mode_box->addItems(list);
@@ -1159,21 +1160,20 @@ void ScanEditor::receiveScannerData(ScanDevice* device)
     connect(act, &QAction::triggered, this, &ScanEditor::receiveSourceChange);
   }
 
-  ScanRange scan_range = options->resolutionRange();
-  ScanUnits units = options->units();
-  QString u = (units == ScanUnits::DPI ? "dpi" : "mm");
+  QVariant scan_range = options->optionData(ScanOptions::RESOLUTION);
+  QString u = options->unitsToString(ScanOptions::RESOLUTION);
 
-  if (scan_range.range_data.canConvert<ScanRange>()) {
+  if (scan_range.canConvert<RangeData>()) {
     QString s = tr("Change ranged resolution (%1)");
     QAction* act = new QAction(s.arg(u));
-    act->setData(scan_range.range_data);
+    act->setData(scan_range);
     m_res_menu->addAction(act);
     connect(act, &QAction::triggered, this, &ScanEditor::receiveResolutionRangedChange);
 
-  } else if (scan_range.range_data.canConvert<QList<int>>()) {
+  } else if (scan_range.canConvert<QList<int>>()) {
     QString s = tr("%1%2");
 
-    for (auto res : scan_range.range_data.value<QList<int>>()) {
+    for (auto res : scan_range.value<QList<int>>()) {
       QAction* act = new QAction(s.arg(res).arg(u));
       act->setData(res);
       m_res_menu->addAction(act);
@@ -1190,18 +1190,17 @@ void ScanEditor::receiveScannerChange(bool)
   if (act) {
     QString dev_name = act->data().toString();
     m_current_scanner = dev_name;
-    m_scan_lib->openDevice(dev_name);
-    qCInfo(QscanWidgets) << "New scanner is " << act->text();
+    m_scan_lib->setDevice(dev_name);
+    qCInfo(LogQScanWidgets) << "New scanner is " << act->text();
   }
 }
 
 void ScanEditor::resolutionEdited(const QString& value)
 {
-  ScanDevice* device = m_scan_lib->device(m_current_scanner);
-  m_scan_lib->setResolution(device, value.toInt());
+  m_scan_lib->setResolution(value.toInt());
 }
 
-void ScanEditor::receiveModeChange(const bool /*triggered*/)
+void ScanEditor::receiveModeChange()
 {
   QObject* o = sender();
   QAction* act = qobject_cast<QAction*>(o);
@@ -1210,14 +1209,13 @@ void ScanEditor::receiveModeChange(const bool /*triggered*/)
     QString mode = act->text();
 
     if (!mode.isEmpty() && !m_current_scanner.isEmpty()) {
-      ScanDevice* device = m_scan_lib->device(m_current_scanner);
-      m_scan_lib->setScanMode(device, mode);
-      qCInfo(QscanWidgets) << "New mode is " << mode;
+      m_scan_lib->setScanMode(mode);
+      qCInfo(LogQScanWidgets) << "New mode is " << mode;
     }
   }
 }
 
-void ScanEditor::receiveSourceChange(bool /*triggered*/)
+void ScanEditor::receiveSourceChange()
 {
   QObject* o = sender();
   QAction* act = qobject_cast<QAction*>(o);
@@ -1226,9 +1224,8 @@ void ScanEditor::receiveSourceChange(bool /*triggered*/)
     QString source = act->text();
 
     if (!source.isEmpty() && !m_current_scanner.isEmpty()) {
-      ScanDevice* device = m_scan_lib->device(m_current_scanner);
-      m_scan_lib->setSource(device, source);
-      qCInfo(QscanWidgets) << "New source is " << source;
+      m_scan_lib->setSource(source);
+      qCInfo(LogQScanWidgets) << "New source is " << source;
     }
   }
 }
@@ -1239,14 +1236,13 @@ void ScanEditor::receiveResolutionListChange(bool)
   QAction* act = qobject_cast<QAction*>(o);
 
   if (act && !m_current_scanner.isEmpty()) {
-    ScanDevice* device = m_scan_lib->device(m_current_scanner);
     bool ok = false;
     int res = act->data().toInt(&ok);
 
     if (ok) {
-      m_scan_lib->setResolution(device, res);
+      m_scan_lib->setResolution(res);
       //      emit currentResolution(res);
-      qCInfo(QscanWidgets) << "New resolution is " << res;
+      qCInfo(LogQScanWidgets) << "New resolution is " << res;
     }
   }
 }
@@ -1257,27 +1253,26 @@ void ScanEditor::receiveResolutionRangedChange(bool)
   QAction* act = qobject_cast<QAction*>(o);
 
   if (act && !m_current_scanner.isEmpty()) {
-    ScanRange scan_range = act->data().value<ScanRange>();
+    QVariant scan_range = act->data();
 
-    if (scan_range.range_data.canConvert<RangeData>()) {
+    if (scan_range.canConvert<RangeData>()) {
       if (!m_current_scanner.isEmpty()) {
-        RangeData range_data = scan_range.range_data.value<RangeData>();
+        RangeData range_data = scan_range.value<RangeData>();
         QString s = tr("Resolution (Min %1, Max %2)");
         bool ok = false;
-        ScanDevice* device = m_scan_lib->device(m_current_scanner);
         int res = QInputDialog::getInt(this,
                                        tr("Select resolution"),
                                        s.arg(range_data.min).arg(range_data.max),
-                                       scan_range.value,
+                                       m_scan_lib->resolution(),
                                        range_data.min,
                                        range_data.max,
                                        1,
                                        &ok);
 
         if (ok) {
-          m_scan_lib->setResolution(device, res);
+          m_scan_lib->setResolution(res);
           //          emit currentResolution(res);
-          qCInfo(QscanWidgets) << "New resolution is " << res;
+          qCInfo(LogQScanWidgets) << "New resolution is " << res;
         }
       }
     }
@@ -1611,13 +1606,12 @@ void ScanEditor::initScannerMenu()
     m_scanners_menu->clear();  // may not be needed.
 
     for (int i = 0; i < scanners.size(); i++) {
-      ScanDevice* scanner = m_scan_lib->device(scanners.at(i));
       QString s("%1 %2 %3");
-      QString n = s.arg(scanner->vendor).arg(scanner->model).arg(scanner->type);
+      QString n = s.arg(m_scan_lib->vendor()).arg(m_scan_lib->model()).arg(m_scan_lib->type());
       QAction* act = new QAction(n, this);
-      act->setData(scanner->name);
+      act->setData(m_scan_lib->name());
 
-      qCDebug(QscanWidgets) << n << " : " << scanner->name;
+      qCDebug(LogQScanWidgets) << n << " : " << m_scan_lib->name();
 
       m_scanners_menu->addAction(act);
       connect(act, &QAction::triggered, this, &ScanEditor::receiveScannerChange);
@@ -1626,13 +1620,12 @@ void ScanEditor::initScannerMenu()
     m_current_scanner = scanners.at(0);
 
     if (!m_current_scanner.isEmpty()) {
-      if (m_scan_lib->openDevice(m_current_scanner)) {
-        ScanDevice* device = m_scan_lib->device(m_current_scanner);
-        receiveScannerData(device);
+      if (m_scan_lib->setDevice(m_current_scanner)) {
+        receiveScannerData();
       }
 
     } else {
-      qCDebug(QscanWidgets) << tr("Unable to open %1").arg(m_current_scanner);
+      qCDebug(LogQScanWidgets) << tr("Unable to open %1").arg(m_current_scanner);
     }
   }
 }

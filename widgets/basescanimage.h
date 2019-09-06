@@ -12,7 +12,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "qscanlogging.h"
+#include "logging.h"
 #include "widgets_global.h"
 #include "imageconverter.h"
 

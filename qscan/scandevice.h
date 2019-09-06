@@ -42,17 +42,46 @@ class ScanDevice : public QObject
 public: ScanDevice(QObject* parent = nullptr);
   ScanDevice(const ScanDevice& other);
 
-  QString name;
-  QString vendor;
-  QString model;
-  QString type;
-  QString op_name;
-  ScanOptions* options;
+  QString displayName() const;
+  void setDisplayName(const QString& displayName);
+  QString descriptor();
+  void setDescriptor(QString descriptor);
+  QString vendor() const;
+  void setVendor(const QString& vendor);
+  QString model() const;
+  void setModel(const QString& model);
+  QString type() const;
+  void setType(const QString& type);
+  ScanOptions* options() const;
+  void setOptions(ScanOptions* options);
+
+  //  QString op_name;
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
-  SANE_Handle sane_handle = nullptr;
+  //  SANE_Handle handle();
+  //  void setHandle(const SANE_Handle& handle);
 #elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
   // TODO
 #endif
+
+  bool areAvailableOptionsSet() const;
+  void setAvailableOptionsSet(bool areAvailableOptionsSet);
+
+protected:
+  QString m_display_name;
+  QString m_descriptor;
+  QString m_vendor;
+  QString m_model;
+  QString m_type;
+  ScanOptions* m_options;
+  bool m_available_options_set = false;
+
+  //  QString op_name;
+#if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
+  //  SANE_Handle m_handle = nullptr;
+#elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
+  // TODO
+#endif
+
 };
 // typedef QSharedPointer<ScanDevice> Device;
 //typedef QMap<QString, ScanDevice*> DeviceMap;

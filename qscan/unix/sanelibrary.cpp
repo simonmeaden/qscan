@@ -22,41 +22,79 @@
   SOFTWARE.
 */
 #include "sanelibrary.h"
+
 #include <QThread>
+
+#include <sane/sane.h>
+#include <sane/saneopts.h>
+
 #include "logging.h"
 
 namespace QScanner {
+
+void callbackWrapper(SANE_String_Const /*resource*/, SANE_Char* /*name*/, SANE_Char* /*password*/)
+{
+  // TODO some form of authorisation ???
+  //  std::string name_destination;
+  //  std::string password_destination;
+  //  _callback(std::string(resource), name_destination,
+  //  password_destination);
+  //  assert(name_destination.size() < SANE_MAX_USERNAME_LEN);
+  //  assert(password_destination.size() < SANE_MAX_PASSWORD_LEN);
+  //  strncpy(username, name_destination.c_str(), name_destination.size());
+  //  strncpy(password, password_destination.c_str(),
+  //  password_destination.size());
+}
+
+//static void
+//auth_callback(SANE_String_Const /*resource*/, SANE_Char* /*username*/, SANE_Char* /*password*/)
+//{
+//  // TODO some form of authorisation ???
+//  //  std::string name_destination;
+//  //  std::string password_destination;
+//  //  _callback(std::string(resource), name_destination,
+//  //  password_destination);
+//  //  assert(name_destination.size() < SANE_MAX_USERNAME_LEN);
+//  //  assert(password_destination.size() < SANE_MAX_PASSWORD_LEN);
+//  //  strncpy(username, name_destination.c_str(), name_destination.size());
+//  //  strncpy(password, password_destination.c_str(),
+//  //  password_destination.size());
+//}
 
 SaneLibrary::SaneLibrary(QObject* parent)
   : ScanLibrary(parent)
   , m_scanning(false)
 {
-  auto* thread = new QThread;
+  //  auto* thread = new QThread;
   auto* scan_worker = new SaneWorker();
 
   // cleanup
-  connect(this, &SaneLibrary::finished, thread, &QThread::quit);
-  connect(thread, &QThread::finished, scan_worker, &SaneWorker::deleteLater);
-  connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+  //  connect(this, &SaneLibrary::finished, thread, &QThread::quit);
+  //  connect(thread, &QThread::finished, scan_worker, &SaneWorker::deleteLater);
+  //  connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 
   // worker
   connect(this, &SaneLibrary::startScanning, scan_worker, &SaneWorker::scan);
   connect(this, &SaneLibrary::getAvailableOptions, scan_worker, &SaneWorker::loadAvailableScannerOptions);
   connect(this, &SaneLibrary::cancelScanning, scan_worker, &SaneWorker::cancelScan);
-  connect(this, &SaneLibrary::setBoolValue, scan_worker, &SaneWorker::setBoolValue);
-  connect(this, &SaneLibrary::setIntValue, scan_worker, &SaneWorker::setIntValue);
-  connect(this, &SaneLibrary::setStringValue, scan_worker, &SaneWorker::setStringValue);
+  connect(this, &SaneLibrary::setBoolValue, scan_worker, &SaneWorker::setDeviceBoolValue);
+  connect(this, &SaneLibrary::setIntValue, scan_worker, &SaneWorker::setDeviceIntValue);
+  connect(this, &SaneLibrary::setStringValue, scan_worker, &SaneWorker::setDeviceStringValue);
   connect(scan_worker, &SaneWorker::optionsSet, this, &ScanLibrary::optionsSet);
-  connect(scan_worker, &SaneWorker::sourceChanged, this, &ScanLibrary::sourceChanged);
-  connect(scan_worker, &SaneWorker::modeChanged, this, &ScanLibrary::modeChanged);
+  //  connect(scan_worker, &SaneWorker::sourceChanged, this, &ScanLibrary::sourceChanged);
+  //  connect(scan_worker, &SaneWorker::modeChanged, this, &ScanLibrary::modeChanged);
+  connect(scan_worker, &SaneWorker::optionChanged, this, &SaneLibrary::receiveOptionChange);
   connect(scan_worker, &SaneWorker::scanCompleted, this, &ScanLibrary::scanCompleted);
   connect(scan_worker, &SaneWorker::scanCompleted, this, &SaneLibrary::scanIsCompleted);
   connect(scan_worker, &SaneWorker::scanFailed, this, &ScanLibrary::scanFailed);
   connect(scan_worker, &SaneWorker::scanOpenFailed, this, &ScanLibrary::scanOpenFailed);
   connect(scan_worker, &SaneWorker::scanProgress, this, &ScanLibrary::scanProgress);
 
-  scan_worker->moveToThread(thread);
-  thread->start();
+  m_worker = scan_worker;
+
+  //  scan_worker->moveToThread(thread);
+  //  thread->start();
+  scan_worker->start();
 }
 
 SaneLibrary::~SaneLibrary()
@@ -82,14 +120,22 @@ bool SaneLibrary::init()
   return false;
 }
 
-QStringList SaneLibrary::devices()
+void SaneLibrary::detectDevices()
 {
-  QStringList list;
   SANE_Status sane_status = SANE_STATUS_GOOD;
   const SANE_Device** device_list = nullptr;
   sane_status = sane_get_devices(&device_list, SANE_FALSE);
 
   if (device_list) {
+    // first check if already done. Is so clear old data and redo.
+    if (!m_device_list.isEmpty()) {
+      m_device_list.clear();
+    }
+
+    if (!m_scanners.isEmpty()) {
+      m_scanners.clear();
+    }
+
     qCDebug(LogQScan) << tr("sane_get_devices status: %1").arg(sane_strstatus(sane_status));
 
     const SANE_Device* current_device;
@@ -100,20 +146,25 @@ QStringList SaneLibrary::devices()
         qCDebug(LogQScan) << tr("No devices connected");
 
       } else {
-        auto* scanner = new ScanDevice(this);
-        scanner->name = current_device->name;
-        scanner->vendor = current_device->vendor;
-        scanner->model = current_device->model;
-        scanner->type = current_device->type;
-        m_scanners.insert(scanner->name, scanner);
-        list.append(scanner->name);
+        auto* device = new ScanDevice(this);
+        QString display_name("%1 : %2");
+        device->setDescriptor(current_device->name);
+        device->setVendor(current_device->vendor);
+        device->setModel(current_device->model);
+        device->setType(current_device->type);
+        device->setDisplayName(display_name.arg(device->vendor(), device->model()));
+        m_scanners.insert(device->displayName(), device);
+        m_device_list.append(device->displayName());
       }
 
       ++current_device_index;
     }
   }
+}
 
-  return list;
+QStringList SaneLibrary::devices()
+{
+  return m_device_list;
 }
 
 ScanDevice* SaneLibrary::device(QString device_name)
@@ -124,7 +175,7 @@ ScanDevice* SaneLibrary::device(QString device_name)
 // ScanOptions
 // SaneLibrary::options(QString device_name)
 //{
-//  return device->options->value(device_name);
+//  return device->options()->value(device_name);
 //}
 
 bool SaneLibrary::detectAvailableOptions(QString device_name)
@@ -168,53 +219,86 @@ void SaneLibrary::exit()
   sane_exit();
 }
 
-void SaneLibrary::getAvailableScannerOptions(QString device_name)
+void SaneLibrary::getAvailableScannerOptions(ScanDevice* device)
 {
-  auto* device = m_scanners.value(device_name);
-
   emit getAvailableOptions(device);
 }
 
-void SaneLibrary::receiveIntValue(ScanDevice* device, int value)
+ScanDevice* SaneLibrary::getCurrentDevice()
 {
-  if (device->op_name == SANE_NAME_SCAN_TL_X) {
-    device->options->setTopLeftX(value);
+  return m_current_device;
+}
 
-  } else if (device->op_name == SANE_NAME_SCAN_TL_Y) {
-    device->options->setTopLeftY(value);
+void SaneLibrary::setCurrentDevice(ScanDevice* current_device)
+{
+  if (current_device != m_current_device) {
+    m_current_device = current_device;
 
-  } else if (device->op_name == SANE_NAME_SCAN_BR_X) {
-    device->options->setBottomRightX(value);
+    if (!m_current_device->areAvailableOptionsSet()) {
+      emit getAvailableOptions(m_current_device);
 
-  } else if (device->op_name == SANE_NAME_SCAN_BR_Y) {
-    device->options->setBottomRightY(value);
-
-  } else if (device->op_name == SANE_NAME_CONTRAST) {
-    device->options->setContrast(value);
-
-  } else if (device->op_name == SANE_NAME_BRIGHTNESS) {
-    device->options->setBrightness(value);
-
-  } else if (device->op_name == SANE_NAME_SCAN_RESOLUTION) {
-    device->options->setResolution(value);
-
-  } else if (device->op_name == SANE_NAME_SCAN_X_RESOLUTION) {
-    device->options->setResolutionX(value);
-
-  } else if (device->op_name == SANE_NAME_SCAN_Y_RESOLUTION) {
-    device->options->setResolutionY(value);
+    } else {
+      // options are already downloaded. No need to repeat.
+      emit optionsSet();
+    }
   }
 }
+
+//void SaneLibrary::receiveIntValue(ScanDevice* device, int value)
+//{
+//  if (device->op_name == SANE_NAME_SCAN_TL_X) {
+//    device->options()->setTopLeftX(value);
+
+//  } else if (device->op_name == SANE_NAME_SCAN_TL_Y) {
+//    device->options()->setTopLeftY(value);
+
+//  } else if (device->op_name == SANE_NAME_SCAN_BR_X) {
+//    device->options()->setBottomRightX(value);
+
+//  } else if (device->op_name == SANE_NAME_SCAN_BR_Y) {
+//    device->options()->setBottomRightY(value);
+
+//  } else if (device->op_name == SANE_NAME_CONTRAST) {
+//    device->options()->setContrast(value);
+
+//  } else if (device->op_name == SANE_NAME_BRIGHTNESS) {
+//    device->options()->setBrightness(value);
+
+//  } else if (device->op_name == SANE_NAME_SCAN_RESOLUTION) {
+//    device->options()->setResolution(value);
+
+//  } else if (device->op_name == SANE_NAME_SCAN_X_RESOLUTION) {
+//    device->options()->setResolutionX(value);
+
+//  } else if (device->op_name == SANE_NAME_SCAN_Y_RESOLUTION) {
+//    device->options()->setResolutionY(value);
+//  }
+//}
 
 void SaneLibrary::scanIsCompleted()
 {
   m_scanning = false;
 }
 
+/*
+   Just catches the optionChange() signal from the worker thread and
+   converts it from a QString to an enum AvailableOption value.
+*/
+void SaneLibrary::receiveOptionChange(const QString descriptor, const QVariant& value)
+{
+  ScanOptions::AvailableOptions option = ScanOptions::getAvailableOption(descriptor);
+
+  // check if the string was an available option first.
+  if (option != ScanOptions::QSCAN_OPTION_UNAVAILABLE) {
+    emit optionChanged(option, value);
+  }
+
+}
+
 QRect SaneLibrary::geometry(QString device_name)
 {
   ScanDevice* device = m_scanners.value(device_name);
-  return device->options->geometry();
+  return device->options()->geometry();
 }
 
 const Version& SaneLibrary::version() const
@@ -222,143 +306,138 @@ const Version& SaneLibrary::version() const
   return m_sane_version;
 }
 
+void SaneLibrary::setOption(ScanOptions::AvailableOptions option, QVariant value)
+{
+  // TODO setOption().
+}
+
 // void
 // SaneLibrary::topLeftX(ScanDevice* device, int& value)
 //{
-//  int option_id = device->options->optionId(SANE_NAME_SCAN_TL_X);
+//  int option_id = device->options()->optionId(SANE_NAME_SCAN_TL_X);
 //  device->op_name = QString(SANE_NAME_SCAN_TL_X);
 //  emit getIntValue(device, option_id, value);
 //}
 
 void SaneLibrary::setTopLeftX(ScanDevice* device, int value)
 {
-  int option_id = device->options->optionId(SANE_NAME_SCAN_TL_X);
+  int option_id = device->options()->optionId(ScanOptions::getAvailableOption(SANE_NAME_SCAN_TL_X));
   emit setIntValue(device, option_id, QString(SANE_NAME_SCAN_TL_X), value);
 }
 
 // void
 // SaneLibrary::topLeftY(ScanDevice* device, int& value)
 //{
-//  int option_id = device->options->optionId(SANE_NAME_SCAN_TL_Y);
+//  int option_id = device->options()->optionId(SANE_NAME_SCAN_TL_Y);
 //  device->op_name = QString(SANE_NAME_SCAN_TL_Y);
 //  emit getInt#define PAPERSIZE_H
 //}
 
 void SaneLibrary::setTopLeftY(ScanDevice* device, int value)
 {
-  int option_id = device->options->optionId(SANE_NAME_SCAN_TL_Y);
+  int option_id = device->options()->optionId(ScanOptions::getAvailableOption(SANE_NAME_SCAN_TL_Y));
   emit setIntValue(device, option_id, QString(SANE_NAME_SCAN_TL_Y), value);
 }
 
 // void
 // SaneLibrary::bottomRightX(ScanDevice* device, int& value)
 //{
-//  int option_id = device->options->optionId(SANE_NAME_SCAN_BR_X);
+//  int option_id = device->options()->optionId(SANE_NAME_SCAN_BR_X);
 //  device->op_name = QString(SANE_NAME_SCAN_BR_X);
 //  emit getIntValue(device, option_id, value);
 //}
 
 void SaneLibrary::setBottomRightX(ScanDevice* device, int value)
 {
-  int option_id = device->options->optionId(SANE_NAME_SCAN_BR_X);
+  int option_id = device->options()->optionId(ScanOptions::getAvailableOption(SANE_NAME_SCAN_TL_X));
   emit setIntValue(device, option_id, QString(SANE_NAME_SCAN_BR_X), value);
 }
 
 // void
 // SaneLibrary::bottomRightY(ScanDevice* device, int& value)
 //{
-//  int option_id = device->options->optionId(SANE_NAME_SCAN_BR_Y);
+//  int option_id = device->options()->optionId(SANE_NAME_SCAN_BR_Y);
 //  device->op_name = QString(SANE_NAME_SCAN_BR_Y);
 //  emit getIntValue(device, option_id, value);
 //}
 
 void SaneLibrary::setBottomRightY(ScanDevice* device, int value)
 {
-  int option_id = device->options->optionId(SANE_NAME_SCAN_BR_Y);
+  int option_id = device->options()->optionId(ScanOptions::getAvailableOption(SANE_NAME_SCAN_BR_Y));
   emit setIntValue(device, option_id, QString(SANE_NAME_SCAN_BR_Y), value);
 }
 
 // void
 // SaneLibrary::contrast(ScanDevice* device, int& value)
 //{
-//  int option_id = device->options->optionId(SANE_NAME_CONTRAST);
+//  int option_id = device->options()->optionId(SANE_NAME_CONTRAST);
 //  device->op_name = QString(SANE_NAME_CONTRAST);
 //  emit getIntValue(device, option_id, value);
 //}
 
 void SaneLibrary::setContrast(ScanDevice* device, int value)
 {
-  int option_id = device->options->optionId(SANE_NAME_CONTRAST);
+  int option_id = device->options()->optionId(ScanOptions::getAvailableOption(SANE_NAME_CONTRAST));
   emit setIntValue(device, option_id, QString(SANE_NAME_CONTRAST), value);
 }
 
 // void
 // SaneLibrary::brightness(ScanDevice* device, int& value)
 //{
-//  int option_id = device->options->optionId(SANE_NAME_BRIGHTNESS);
+//  int option_id = device->options()->optionId(SANE_NAME_BRIGHTNESS);
 //  device->op_name = QString(SANE_NAME_BRIGHTNESS);
 //  emit getIntValue(device, option_id, value);
 //}
 
 void SaneLibrary::setBrightness(ScanDevice* device, int value)
 {
-  int option_id = device->options->optionId(SANE_NAME_BRIGHTNESS);
+  int option_id = device->options()->optionId(ScanOptions::getAvailableOption(SANE_NAME_BRIGHTNESS));
   emit setIntValue(device, option_id, QString(SANE_NAME_BRIGHTNESS), value);
 }
 
 // void
 // SaneLibrary::resolution(ScanDevice* device, int& value)
 //{
-//  int option_id = device->options->optionId(SANE_NAME_SCAN_RESOLUTION);
+//  int option_id = device->options()->optionId(SANE_NAME_SCAN_RESOLUTION);
 //  device->op_name = QString(SANE_NAME_SCAN_RESOLUTION);
 //  emit getIntValue(device, option_id, value);
 //}
 
 void SaneLibrary::setResolution(ScanDevice* device, int value)
 {
-  int option_id = device->options->optionId(SANE_NAME_SCAN_RESOLUTION);
+  int option_id = device->options()->optionId(ScanOptions::getAvailableOption(SANE_NAME_SCAN_RESOLUTION));
   emit setIntValue(device, option_id, QString(SANE_NAME_SCAN_RESOLUTION), value);
 }
 
 // void
 // SaneLibrary::resolutionX(ScanDevice* device, int& value)
 //{
-//  int option_id = device->options->optionId(SANE_NAME_SCAN_X_RESOLUTION);
+//  int option_id = device->options()->optionId(SANE_NAME_SCAN_X_RESOLUTION);
 //  device->op_name = QString(SANE_NAME_SCAN_X_RESOLUTION);
 //  emit getIntValue(device, option_id, value);
 //}
 
 void SaneLibrary::setResolutionX(ScanDevice* device, int value)
 {
-  int option_id = device->options->optionId(SANE_NAME_SCAN_X_RESOLUTION);
+  int option_id = device->options()->optionId(ScanOptions::getAvailableOption(SANE_NAME_SCAN_X_RESOLUTION));
   emit setIntValue(device, option_id, QString(SANE_NAME_SCAN_X_RESOLUTION), value);
 }
 
-// void
-// SaneLibrary::resolutionY(ScanDevice* device, int& value)
-//{
-//  int option_id = device->options->optionId(SANE_NAME_SCAN_Y_RESOLUTION);
-//  device->op_name = QString(SANE_NAME_SCAN_Y_RESOLUTION);
-//  emit getIntValue(device, option_id, value);
-//}
-
 void SaneLibrary::setResolutionY(ScanDevice* device, int value)
 {
-  int option_id = device->options->optionId(SANE_NAME_SCAN_Y_RESOLUTION);
+  int option_id = device->options()->optionId(ScanOptions::getAvailableOption(SANE_NAME_SCAN_Y_RESOLUTION));
   emit setIntValue(device, option_id, QString(SANE_NAME_SCAN_Y_RESOLUTION), value);
 }
 
 void SaneLibrary::setPreview(ScanDevice* device)
 {
-  int option_id = device->options->optionId(SANE_NAME_PREVIEW);
-
+  int option_id = device->options()->optionId(ScanOptions::getAvailableOption(SANE_NAME_PREVIEW));
   emit setBoolValue(device, option_id, QString(SANE_NAME_PREVIEW), SANE_TRUE);
 }
 
 void SaneLibrary::clearPreview(ScanDevice* device)
 {
-  int option_id = device->options->optionId(SANE_NAME_PREVIEW);
-
+  int option_id = device->options()->optionId(ScanOptions::getAvailableOption(SANE_NAME_PREVIEW));
   emit setBoolValue(device, option_id, QString(SANE_NAME_PREVIEW), SANE_FALSE);
 }
 
@@ -369,7 +448,7 @@ void SaneLibrary::setMode(ScanDevice* device, const QString& value)
 
 void SaneLibrary::setSource(ScanDevice* device, const QString& value)
 {
-  //  int option_id = device->options->optionId(SANE_NAME_SCAN_SOURCE);
+  //  int option_id = device->options()->optionId(SANE_NAME_SCAN_SOURCE);
 
   emit setStringValue(device, QString(SANE_NAME_SCAN_SOURCE), value);
 }
@@ -379,33 +458,5 @@ bool SaneLibrary::isScanning() const
   return m_scanning;
 }
 
-void SaneLibrary::callbackWrapper(SANE_String_Const /*resource*/, SANE_Char* /*name*/, SANE_Char* /*password*/)
-{
-  // TODO some form of authorisation ???
-  //  std::string name_destination;
-  //  std::string password_destination;
-  //  _callback(std::string(resource), name_destination,
-  //  password_destination);
-  //  assert(name_destination.size() < SANE_MAX_USERNAME_LEN);
-  //  assert(password_destination.size() < SANE_MAX_PASSWORD_LEN);
-  //  strncpy(username, name_destination.c_str(), name_destination.size());
-  //  strncpy(password, password_destination.c_str(),
-  //  password_destination.size());
-}
-
-//static void
-//auth_callback(SANE_String_Const /*resource*/, SANE_Char* /*username*/, SANE_Char* /*password*/)
-//{
-//  // TODO some form of authorisation ???
-//  //  std::string name_destination;
-//  //  std::string password_destination;
-//  //  _callback(std::string(resource), name_destination,
-//  //  password_destination);
-//  //  assert(name_destination.size() < SANE_MAX_USERNAME_LEN);
-//  //  assert(password_destination.size() < SANE_MAX_PASSWORD_LEN);
-//  //  strncpy(username, name_destination.c_str(), name_destination.size());
-//  //  strncpy(password, password_destination.c_str(),
-//  //  password_destination.size());
-//}
 
 } // end of namespace QScanner

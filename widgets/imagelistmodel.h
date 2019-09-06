@@ -8,7 +8,7 @@
 #include <QFontMetrics>
 #include <QtDebug>
 
-#include "qscanlogging.h"
+#include "logging.h"
 
 namespace QScanner {
 

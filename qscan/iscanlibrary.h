@@ -28,10 +28,13 @@
 #include <QImage>
 #include <QSharedPointer>
 #include <QStringList>
+#include <QVariant>
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
   #include <sane/sane.h>
 #endif
+
+#include "scanoptions.h"
 
 //#include "iplugininterface.h"
 namespace QScanner {
@@ -65,13 +68,17 @@ public:
 
   virtual bool init() = 0;
   virtual void exit() = 0;
+  virtual void detectDevices() = 0;
+  //  virtual void retestDevices() = 0;
   virtual QStringList devices() = 0;
   virtual ScanDevice* device(QString device_name) = 0;
   virtual bool detectAvailableOptions(QString device_name) = 0;
-  virtual bool startScan(QString device_name) = 0;
+  virtual ScanDevice* getCurrentDevice() = 0;
+  virtual void setCurrentDevice(ScanDevice* current_device) = 0;
 
+  virtual bool startScan(QString device_name) = 0;
   virtual void cancelScan(/*QString device_name*/) = 0;
-  virtual void getAvailableScannerOptions(QString device_name) = 0;
+  virtual void getAvailableScannerOptions(ScanDevice* device) = 0;
   virtual QRect geometry(QString device_name) = 0;
 
   //  virtual void topLeftX(ScanDevice* device, int& value) = 0;
@@ -111,16 +118,18 @@ class ScanLibrary
   , public IScanLibrary
 {
   Q_OBJECT
-public: ScanLibrary(QObject* parent = nullptr);  //  ~ScanLibrary();
+public:
+  ScanLibrary(QObject* parent = nullptr);  //  ~ScanLibrary();
 
 signals:
   void scanCompleted(const QImage& image, const int resolution);
   void scanFailed();
   void scanOpenFailed(const QString&);
   void scanProgress(const int&);
-  void optionsSet(ScanDevice*);
-  void sourceChanged(ScanDevice*);
-  void modeChanged(ScanDevice*);
+  void optionsSet();
+  //  void sourceChanged();
+  //  void modeChanged();
+  void optionChanged(ScanOptions::AvailableOptions option, const QVariant& value);
 };
 
 } // end of namespace QScanner

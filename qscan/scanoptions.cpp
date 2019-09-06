@@ -28,9 +28,264 @@
 
 namespace QScanner {
 
+// These are only used internally to ScanOptions.
+//const QString ScanOptions::STANDARD = SANE_NAME_STANDARD;
+//const QString ScanOptions::GEOMETRY = SANE_NAME_GEOMETRY;
+//const QString ScanOptions::ENHANCEMENT = SANE_NAME_ENHANCEMENT;
+//const QString ScanOptions::ADVANCED = SANE_NAME_ADVANCED;
+//const QString ScanOptions::SENSORS = SANE_NAME_SENSORS;
+//const QString ScanOptions::PREVIEW = SANE_NAME_PREVIEW;
+//const QString ScanOptions::GRAY_PREVIEW = SANE_NAME_GRAY_PREVIEW;
+const QString ScanOptions::SCAN_DEPTH = SANE_NAME_BIT_DEPTH;
+const QString ScanOptions::SCAN_MODE = SANE_NAME_SCAN_MODE;
+//const QString ScanOptions::SPEED = SANE_NAME_SCAN_SPEED;
+const QString ScanOptions::SCAN_SOURCE = SANE_NAME_SCAN_SOURCE;
+//const QString ScanOptions::BACKTRACK = SANE_NAME_BACKTRACK;
+const QString ScanOptions::SCAN_LEFT = SANE_NAME_SCAN_TL_X;
+const QString ScanOptions::SCAN_TOP = SANE_NAME_SCAN_TL_Y;
+const QString ScanOptions::SCAN_RIGHT = SANE_NAME_SCAN_BR_X;
+const QString ScanOptions::SCAN_BOTTOM = SANE_NAME_SCAN_BR_Y;
+const QString ScanOptions::SCAN_RESOLUTION = SANE_NAME_SCAN_RESOLUTION;
+const QString ScanOptions::SCAN_X_RESOLUTION = SANE_NAME_SCAN_X_RESOLUTION;
+const QString ScanOptions::SCAN_Y_RESOLUTION = SANE_NAME_SCAN_Y_RESOLUTION;
+//const QString ScanOptions::PAGE_WIDTH = SANE_NAME_PAGE_WIDTH;
+//const QString ScanOptions::PAGE_HEIGHT = SANE_NAME_PAGE_HEIGHT;
+//const QString ScanOptions::CUSTOM_GAMMA = SANE_NAME_CUSTOM_GAMMA;
+//const QString ScanOptions::GAMMA_VECTOR = SANE_NAME_GAMMA_VECTOR;
+//const QString ScanOptions::GAMMA_VECTOR_R = SANE_NAME_GAMMA_VECTOR_R;
+//const QString ScanOptions::GAMMA_VECTOR_G = SANE_NAME_GAMMA_VECTOR_G;
+//const QString ScanOptions::GAMMA_VECTOR_B = SANE_NAME_GAMMA_VECTOR_B;
+const QString ScanOptions::SCAN_BRIGHTNESS = SANE_NAME_BRIGHTNESS;
+const QString ScanOptions::SCAN_CONTRAST = SANE_NAME_CONTRAST;
+//const QString ScanOptions::GRAIN_SIZE = SANE_NAME_GRAIN_SIZE;
+//const QString ScanOptions::HALFTONE = SANE_NAME_HALFTONE;
+//const QString ScanOptions::BLACK_LEVEL = SANE_NAME_BLACK_LEVEL;
+//const QString ScanOptions::WHITE_LEVEL = SANE_NAME_WHITE_LEVEL;
+//const QString ScanOptions::WHITE_LEVEL_R = SANE_NAME_WHITE_LEVEL_R;
+//const QString ScanOptions::WHITE_LEVEL_G = SANE_NAME_WHITE_LEVEL_G;
+//const QString ScanOptions::WHITE_LEVEL_B = SANE_NAME_WHITE_LEVEL_B;
+//const QString ScanOptions::SHADOW = SANE_NAME_SHADOW;
+//const QString ScanOptions::SHADOW_R = SANE_NAME_SHADOW_R;
+//const QString ScanOptions::SHADOW_G = SANE_NAME_SHADOW_G;
+//const QString ScanOptions::SHADOW_B = SANE_NAME_SHADOW_B;
+//const QString ScanOptions::HIGHLIGHT = SANE_NAME_HIGHLIGHT;
+//const QString ScanOptions::HIGHLIGHT_R = SANE_NAME_HIGHLIGHT_R;
+//const QString ScanOptions::HIGHLIGHT_G = SANE_NAME_HIGHLIGHT_G;
+//const QString ScanOptions::HIGHLIGHT_B = SANE_NAME_HIGHLIGHT_B;
+//const QString ScanOptions::HUE = SANE_NAME_HUE;
+//const QString ScanOptions::SATURATION = SANE_NAME_SATURATION;
+//const QString ScanOptions::FILE = SANE_NAME_FILE;
+//const QString ScanOptions::HALFTONE_DIMENSION = SANE_NAME_HALFTONE_DIMENSION;
+//const QString ScanOptions::HALFTONE_PATTERN = SANE_NAME_HALFTONE_PATTERN;
+//const QString ScanOptions::RESOLUTION_BIND = SANE_NAME_RESOLUTION_BIND;
+//const QString ScanOptions::NEGATIVE = SANE_NAME_NEGATIVE;
+//const QString ScanOptions::QUALITY_CAL = SANE_NAME_QUALITY_CAL;
+//const QString ScanOptions::DOR = SANE_NAME_DOR;
+//const QString ScanOptions::RGB_BIND = SANE_NAME_RGB_BIND;
+//const QString ScanOptions::THRESHOLD = SANE_NAME_THRESHOLD;
+//const QString ScanOptions::ANALOG_GAMMA = SANE_NAME_ANALOG_GAMMA;
+//const QString ScanOptions::ANALOG_GAMMA_R = SANE_NAME_ANALOG_GAMMA_R;
+//const QString ScanOptions::ANALOG_GAMMA_G = SANE_NAME_ANALOG_GAMMA_G;
+//const QString ScanOptions::ANALOG_GAMMA_B = SANE_NAME_ANALOG_GAMMA_B;
+//const QString ScanOptions::ANALOG_GAMMA_BIND = SANE_NAME_ANALOG_GAMMA_BIND;
+//const QString ScanOptions::WARMUP = SANE_NAME_WARMUP;
+//const QString ScanOptions::CAL_EXPOS_TIME = SANE_NAME_CAL_EXPOS_TIME;
+//const QString ScanOptions::CAL_EXPOS_TIME_R = SANE_NAME_CAL_EXPOS_TIME_R;
+//const QString ScanOptions::CAL_EXPOS_TIME_G = SANE_NAME_CAL_EXPOS_TIME_G;
+//const QString ScanOptions::CAL_EXPOS_TIME_B = SANE_NAME_CAL_EXPOS_TIME_B;
+//const QString ScanOptions::SCAN_EXPOS_TIME = SANE_NAME_SCAN_EXPOS_TIME;
+//const QString ScanOptions::SCAN_EXPOS_TIME_R = SANE_NAME_SCAN_EXPOS_TIME_R;
+//const QString ScanOptions::SCAN_EXPOS_TIME_G = SANE_NAME_SCAN_EXPOS_TIME_G;
+//const QString ScanOptions::SCAN_EXPOS_TIME_B = SANE_NAME_SCAN_EXPOS_TIME_B;
+//const QString ScanOptions::SELECT_EXPOSURE_TIME = SANE_NAME_SELECT_EXPOSURE_TIME;
+//const QString ScanOptions::CAL_LAMP_DEN = SANE_NAME_CAL_LAMP_DEN;
+//const QString ScanOptions::SCAN_LAMP_DEN = SANE_NAME_SCAN_LAMP_DEN;
+//const QString ScanOptions::SELECT_LAMP_DENSITY = SANE_NAME_SELECT_LAMP_DENSITY;
+//const QString ScanOptions::LAMP_OFF_AT_EXIT = SANE_NAME_LAMP_OFF_AT_EXIT;
+
+//const QString ScanOptions::SCAN = SANE_NAME_SCAN;
+//const QString ScanOptions::EMAIL = SANE_NAME_EMAIL;
+//const QString ScanOptions::FAX = SANE_NAME_FAX;
+//const QString ScanOptions::COPY = SANE_NAME_COPY;
+//const QString ScanOptions::PDF = SANE_NAME_PDF;
+//const QString ScanOptions::CANCEL = SANE_NAME_CANCEL;
+//const QString ScanOptions::PAGE_LOADED = SANE_NAME_PAGE_LOADED;
+//const QString ScanOptions::COVER_OPEN = SANE_NAME_COVER_OPEN;
+
+// Epson special values.
+const QString ScanOptions::DROPOUT = "dropout";
+const QString ScanOptions::BRIGHTNESS_METHOD = "brightness-method";
+
+const QMap<ScanOptions::AvailableOptions, QString> ScanOptions::m_option_to_string {
+  //  {QSCAN_STANDARD, SANE_NAME_STANDARD},
+  //  {QSCAN_GEOMETRY, SANE_NAME_GEOMETRY},
+  //  {QSCAN_ENHANCEMENT, SANE_NAME_ENHANCEMENT},
+  //  {QSCAN_ADVANCED, SANE_NAME_ADVANCED},
+  //  {QSCAN_SENSORS, SANE_NAME_SENSORS},
+  //  {QSCAN_PREVIEW, SANE_NAME_PREVIEW},
+  //  {QSCAN_GRAY_PREVIEW, SANE_NAME_GRAY_PREVIEW},
+  {BIT_DEPTH, SANE_NAME_BIT_DEPTH},
+  {MODE, SANE_NAME_SCAN_MODE},
+  //  {SPEED, SANE_NAME_SCAN_SPEED},
+  {SOURCE, SANE_NAME_SCAN_SOURCE},
+  //  {BACKTRACK, SANE_NAME_BACKTRACK},
+  {LEFT, SANE_NAME_SCAN_TL_X},
+  {TOP, SANE_NAME_SCAN_TL_Y},
+  {RIGHT, SANE_NAME_SCAN_BR_X},
+  {BOTTOM, SANE_NAME_SCAN_BR_Y},
+  {RESOLUTION, SANE_NAME_SCAN_RESOLUTION},
+  {X_RESOLUTION, SANE_NAME_SCAN_X_RESOLUTION},
+  {Y_RESOLUTION, SANE_NAME_SCAN_Y_RESOLUTION},
+  //  {PAGE_WIDTH, SANE_NAME_PAGE_WIDTH},
+  //  {PAGE_HEIGHT, SANE_NAME_PAGE_HEIGHT},
+  //  {CUSTOM_GAMMA, SANE_NAME_CUSTOM_GAMMA},
+  //  {GAMMA_VECTOR, SANE_NAME_GAMMA_VECTOR},
+  //  {GAMMA_VECTOR_R, SANE_NAME_GAMMA_VECTOR_R},
+  //  {GAMMA_VECTOR_G, SANE_NAME_GAMMA_VECTOR_G},
+  //  {GAMMA_VECTOR_B, SANE_NAME_GAMMA_VECTOR_B},
+  {BRIGHTNESS, SANE_NAME_BRIGHTNESS},
+  {CONTRAST, SANE_NAME_CONTRAST},
+  //  {QSCAN_GRAIN_SIZE, SANE_NAME_GRAIN_SIZE},
+  //  {QSCAN_HALFTONE, SANE_NAME_HALFTONE},
+  //  {QSCAN_BLACK_LEVEL, SANE_NAME_BLACK_LEVEL},
+  //  {QSCAN_WHITE_LEVEL, SANE_NAME_WHITE_LEVEL},
+  //  {QSCAN_WHITE_LEVEL_R, SANE_NAME_WHITE_LEVEL_R},
+  //  {QSCAN_WHITE_LEVEL_G, SANE_NAME_WHITE_LEVEL_G},
+  //  {QSCAN_WHITE_LEVEL_B, SANE_NAME_WHITE_LEVEL_B},
+  //  {QSCAN_SHADOW, SANE_NAME_SHADOW},
+  //  {QSCAN_SHADOW_R, SANE_NAME_SHADOW_R},
+  //  {QSCAN_SHADOW_G, SANE_NAME_SHADOW_G},
+  //  {QSCAN_SHADOW_B, SANE_NAME_SHADOW_B},
+  //  {QSCAN_HIGHLIGHT, SANE_NAME_HIGHLIGHT},
+  //  {QSCAN_HIGHLIGHT_R, SANE_NAME_HIGHLIGHT_R},
+  //  {QSCAN_HIGHLIGHT_G, SANE_NAME_HIGHLIGHT_G},
+  //  {QSCAN_HIGHLIGHT_B, SANE_NAME_HIGHLIGHT_B},
+  //  {QSCAN_HUE, SANE_NAME_HUE},
+  //  {QSCAN_SATURATION, SANE_NAME_SATURATION},
+  //  {QSCAN_FILE, SANE_NAME_FILE},
+  //  {QSCAN_HALFTONE_DIMENSION, SANE_NAME_HALFTONE_DIMENSION},
+  //  {QSCAN_HALFTONE_PATTERN, SANE_NAME_HALFTONE_PATTERN},
+  //  {QSCAN_RESOLUTION_BIND, SANE_NAME_RESOLUTION_BIND},
+  //  {QSCAN_NEGATIVE, SANE_NAME_NEGATIVE},
+  //  {QSCAN_QUALITY_CAL, SANE_NAME_QUALITY_CAL},
+  //  {QSCAN_DOR, SANE_NAME_DOR},
+  //  {QSCAN_RGB_BIND, SANE_NAME_RGB_BIND},
+  //  {QSCAN_THRESHOLD, SANE_NAME_THRESHOLD},
+  //  {QSCAN_ANALOG_GAMMA, SANE_NAME_ANALOG_GAMMA},
+  //  {QSCAN_ANALOG_GAMMA_R, SANE_NAME_ANALOG_GAMMA_R},
+  //  {QSCAN_ANALOG_GAMMA_G, SANE_NAME_ANALOG_GAMMA_G},
+  //  {QSCAN_ANALOG_GAMMA_B, SANE_NAME_ANALOG_GAMMA_B},
+  //  {QSCAN_ANALOG_GAMMA_BIND, SANE_NAME_ANALOG_GAMMA_BIND},
+  //  {QSCAN_WARMUP, SANE_NAME_WARMUP},
+  //  {QSCAN_CAL_EXPOS_TIME, SANE_NAME_CAL_EXPOS_TIME},
+  //  {QSCAN_CAL_EXPOS_TIME_R, SANE_NAME_CAL_EXPOS_TIME_R},
+  //  {QSCAN_CAL_EXPOS_TIME_G, SANE_NAME_CAL_EXPOS_TIME_G},
+  //  {QSCAN_CAL_EXPOS_TIME_B, SANE_NAME_CAL_EXPOS_TIME_B},
+  //  {QSCAN_SCAN_EXPOS_TIME, SANE_NAME_SCAN_EXPOS_TIME},
+  //  {QSCAN_SCAN_EXPOS_TIME_R, SANE_NAME_SCAN_EXPOS_TIME_R},
+  //  {QSCAN_SCAN_EXPOS_TIME_G, SANE_NAME_SCAN_EXPOS_TIME_G},
+  //  {QSCAN_SCAN_EXPOS_TIME_B, SANE_NAME_SCAN_EXPOS_TIME_B},
+  //  {QSCAN_SELECT_EXPOSURE_TIME, SANE_NAME_SELECT_EXPOSURE_TIME},
+  //  {QSCAN_CAL_LAMP_DEN, SANE_NAME_CAL_LAMP_DEN},
+  //  {QSCAN_SCAN_LAMP_DEN, SANE_NAME_SCAN_LAMP_DEN},
+  //  {QSCAN_SELECT_LAMP_DENSITY, SANE_NAME_SELECT_LAMP_DENSITY},
+  //  {QSCAN_LAMP_OFF_AT_EXIT, SANE_NAME_LAMP_OFF_AT_EXIT},
+  //  {QSCAN_SCAN, SANE_NAME_SCAN},
+  //  {QSCAN_EMAIL, SANE_NAME_EMAIL},
+  //  {QSCAN_FAX, SANE_NAME_FAX},
+  //  {QSCAN_COPY, SANE_NAME_COPY},
+  //  {QSCAN_PDF, SANE_NAME_PDF},
+  //  {QSCAN_CANCEL, SANE_NAME_CANCEL},
+  //  {QSCAN_PAGE_LOADED, SANE_NAME_PAGE_LOADED},
+  //  {QSCAN_COVER_OPEN, SANE_NAME_COVER_OPEN},
+};
+
+const QMap<QString, ScanOptions::AvailableOptions> ScanOptions::m_string_to_option{
+  //  {SANE_NAME_STANDARD, QSCAN_STANDARD},
+  //  {SANE_NAME_GEOMETRY, QSCAN_GEOMETRY},
+  //  {SANE_NAME_ENHANCEMENT, QSCAN_ENHANCEMENT},
+  //  {SANE_NAME_ADVANCED, QSCAN_ADVANCED},
+  //  {SANE_NAME_SENSORS, QSCAN_SENSORS},
+  //  {SANE_NAME_PREVIEW, QSCAN_PREVIEW},
+  //  {SANE_NAME_GRAY_PREVIEW, QSCAN_GRAY_PREVIEW},
+  {SANE_NAME_BIT_DEPTH, BIT_DEPTH},
+  {SANE_NAME_SCAN_MODE, MODE},
+  //  {SANE_NAME_SCAN_SPEED, QSCAN_SPEED,},
+  {SANE_NAME_SCAN_SOURCE, SOURCE},
+  //  {SANE_NAME_BACKTRACK, QSCAN_BACKTRACK},
+  {SANE_NAME_SCAN_TL_X, LEFT},
+  {SANE_NAME_SCAN_TL_Y, TOP},
+  {SANE_NAME_SCAN_BR_X, RIGHT},
+  {SANE_NAME_SCAN_BR_Y, BOTTOM},
+  {SANE_NAME_SCAN_RESOLUTION, RESOLUTION},
+  {SANE_NAME_SCAN_X_RESOLUTION, X_RESOLUTION},
+  {SANE_NAME_SCAN_Y_RESOLUTION, Y_RESOLUTION},
+  //  {SANE_NAME_PAGE_WIDTH, QSCAN_PAGE_WIDTH},
+  //  {SANE_NAME_PAGE_HEIGHT, QSCAN_PAGE_HEIGHT},
+  //  {SANE_NAME_CUSTOM_GAMMA, QSCAN_CUSTOM_GAMMA},
+  //  {SANE_NAME_GAMMA_VECTOR, QSCAN_GAMMA_VECTOR},
+  //  {SANE_NAME_GAMMA_VECTOR_R, QSCAN_GAMMA_VECTOR_R},
+  //  {SANE_NAME_GAMMA_VECTOR_G, QSCAN_GAMMA_VECTOR_G},
+  //  {SANE_NAME_GAMMA_VECTOR_B, QSCAN_GAMMA_VECTOR_B},
+  {SANE_NAME_BRIGHTNESS, BRIGHTNESS},
+  {SANE_NAME_CONTRAST, CONTRAST},
+  //  {SANE_NAME_GRAIN_SIZE, QSCAN_GRAIN_SIZE},
+  //  {SANE_NAME_HALFTONE, QSCAN_HALFTONE},
+  //  {SANE_NAME_BLACK_LEVEL, QSCAN_BLACK_LEVEL},
+  //  {SANE_NAME_WHITE_LEVEL, QSCAN_WHITE_LEVEL},
+  //  {SANE_NAME_WHITE_LEVEL_R, QSCAN_WHITE_LEVEL_R},
+  //  {SANE_NAME_WHITE_LEVEL_G, QSCAN_WHITE_LEVEL_G},
+  //  {SANE_NAME_WHITE_LEVEL_B, QSCAN_WHITE_LEVEL_B},
+  //  {SANE_NAME_SHADOW, QSCAN_SHADOW},
+  //  {SANE_NAME_SHADOW_R, QSCAN_SHADOW_R},
+  //  {SANE_NAME_SHADOW_G, QSCAN_SHADOW_G},
+  //  {SANE_NAME_SHADOW_B, QSCAN_SHADOW_B},
+  //  {SANE_NAME_HIGHLIGHT, QSCAN_HIGHLIGHT},
+  //  {SANE_NAME_HIGHLIGHT_R, QSCAN_HIGHLIGHT_R},
+  //  {SANE_NAME_HIGHLIGHT_G, QSCAN_HIGHLIGHT_G},
+  //  {SANE_NAME_HIGHLIGHT_B, QSCAN_HIGHLIGHT_B},
+  //  {SANE_NAME_HUE, QSCAN_HUE},
+  //  {SANE_NAME_SATURATION, QSCAN_SATURATION},
+  //  {SANE_NAME_FILE, QSCAN_FILE},
+  //  {SANE_NAME_HALFTONE_DIMENSION, QSCAN_HALFTONE_DIMENSION},
+  //  {SANE_NAME_HALFTONE_PATTERN, QSCAN_HALFTONE_PATTERN},
+  //  {SANE_NAME_RESOLUTION_BIND, QSCAN_RESOLUTION_BIND},
+  //  {SANE_NAME_NEGATIVE, QSCAN_NEGATIVE},
+  //  {SANE_NAME_QUALITY_CAL, QSCAN_QUALITY_CAL},
+  //  {SANE_NAME_DOR, QSCAN_DOR},
+  //  {SANE_NAME_RGB_BIND, QSCAN_RGB_BIND},
+  //  {SANE_NAME_THRESHOLD, QSCAN_THRESHOLD},
+  //  {SANE_NAME_ANALOG_GAMMA, QSCAN_ANALOG_GAMMA},
+  //  {SANE_NAME_ANALOG_GAMMA_R, QSCAN_ANALOG_GAMMA_R},
+  //  {SANE_NAME_ANALOG_GAMMA_G, QSCAN_ANALOG_GAMMA_G},
+  //  {SANE_NAME_ANALOG_GAMMA_B, QSCAN_ANALOG_GAMMA_B},
+  //  {SANE_NAME_ANALOG_GAMMA_BIND, QSCAN_ANALOG_GAMMA_BIND},
+  //  {SANE_NAME_WARMUP, QSCAN_WARMUP},
+  //  {SANE_NAME_CAL_EXPOS_TIME, QSCAN_CAL_EXPOS_TIME},
+  //  {SANE_NAME_CAL_EXPOS_TIME_R, QSCAN_CAL_EXPOS_TIME_R},
+  //  {SANE_NAME_CAL_EXPOS_TIME_G, QSCAN_CAL_EXPOS_TIME_G},
+  //  {SANE_NAME_CAL_EXPOS_TIME_B, QSCAN_CAL_EXPOS_TIME_B},
+  //  {SANE_NAME_SCAN_EXPOS_TIME, QSCAN_SCAN_EXPOS_TIME},
+  //  {SANE_NAME_SCAN_EXPOS_TIME_R, QSCAN_SCAN_EXPOS_TIME_R},
+  //  {SANE_NAME_SCAN_EXPOS_TIME_G, QSCAN_SCAN_EXPOS_TIME_G},
+  //  {SANE_NAME_SCAN_EXPOS_TIME_B, QSCAN_SCAN_EXPOS_TIME_B},
+  //  {SANE_NAME_SELECT_EXPOSURE_TIME, QSCAN_SELECT_EXPOSURE_TIME},
+  //  {SANE_NAME_CAL_LAMP_DEN, QSCAN_CAL_LAMP_DEN},
+  //  {SANE_NAME_SCAN_LAMP_DEN, QSCAN_SCAN_LAMP_DEN},
+  //  {SANE_NAME_SELECT_LAMP_DENSITY, QSCAN_SELECT_LAMP_DENSITY},
+  //  {SANE_NAME_LAMP_OFF_AT_EXIT, QSCAN_LAMP_OFF_AT_EXIT},
+  //  {SANE_NAME_SCAN, QSCAN_SCAN},
+  //  {SANE_NAME_EMAIL, QSCAN_EMAIL},
+  //  {SANE_NAME_FAX, QSCAN_FAX},
+  //  {SANE_NAME_COPY, QSCAN_COPY},
+  //  {SANE_NAME_PDF, QSCAN_PDF},
+  //  {SANE_NAME_CANCEL, QSCAN_CANCEL},
+  //  {SANE_NAME_PAGE_LOADED, QSCAN_PAGE_LOADED},
+  //  {SANE_NAME_COVER_OPEN, QSCAN_COVER_OPEN},
+};
+
 ScanOptions::ScanOptions(QObject* parent)
   : QObject(parent)
-  , m_units(ScanUnits::DPI)
 {
 }
 
@@ -44,76 +299,113 @@ ScanOptions::~ScanOptions() = default;
 
 void ScanOptions::copyData(const ScanOptions& other)
 {
-  m_modes = other.m_modes;
-  m_sources = other.m_sources;
-  m_depth = other.m_depth;
   //  m_type = other.m_type;
-  m_paper_width = other.m_paper_width;
-  m_paper_height = other.m_paper_height;
-  m_brightness = other.m_brightness;
-  m_contrast = other.m_contrast;
-  m_page_delay = other.m_page_delay;
-  m_geometry = other.m_geometry;
-  m_resolution = other.m_resolution;
-  m_resolution_x = other.m_resolution_x;
-  m_resolution_y = other.m_resolution_y;
   m_option_id_map = other.m_option_id_map;
-  m_units = other.m_units;
+  m_option_size_map = other.m_option_size_map;
+  m_option_type_map = other.m_option_type_map;
+  m_available_options = other.m_available_options;
+  m_ns_options_values = other.m_ns_options_values;
+  m_option_values = other.m_option_values;
 }
 
-QString ScanOptions::mode() const
+QString ScanOptions::ScanOptions::mode() const
 {
-  return m_mode;
+  return getValue(MODE).toString();
 }
 
-void ScanOptions::setMode(const QString& mode)
+QString ScanOptions::ScanOptions::source() const
 {
-  m_mode = mode;
+  return  getValue(SOURCE).toString();
 }
 
-QString ScanOptions::source() const
+ScanOptions::ScanUnits ScanOptions::units(AvailableOptions option) const
 {
-  return m_source;
+  return m_units.value(option);
 }
 
-void ScanOptions::setSource(const QString& source)
+void ScanOptions::setUnits(ScanOptions::AvailableOptions option, ScanOptions::ScanUnits units)
 {
-  m_source = source;
+  m_units.insert(option, units);
 }
 
-ScanUnits ScanOptions::units() const
+void ScanOptions::setUnits(QString option, ScanOptions::ScanUnits units)
 {
-  return m_units;
+  m_ns_units.insert(option, units);
 }
 
-void ScanOptions::setUnits(const ScanUnits& units)
+bool ScanOptions::isDpi(AvailableOptions option)
 {
-  m_units = units;
+  if (units(option) == ScanUnits::DPI) {
+    return true;
+  }
+
+  return false;
 }
 
-// int
-// ScanOptions::minResolution() const
-//{
-//  return m_min_resolution;
-//}
+bool ScanOptions::isMM(AvailableOptions option)
+{
+  if (units(option) == ScanUnits::MM) {
+    return true;
+  }
 
-// void
-// ScanOptions::setMinResolution(int min_resolution)
-//{
-//  m_min_resolution = min_resolution;
-//}
+  return false;
+}
 
-// int
-// ScanOptions::maxResolution() const
-//{
-//  return m_max_resolution;
-//}
+QString ScanOptions::unitsToString(AvailableOptions option)
+{
+  switch (units(option)) {
+  case PERCENT:
+    return QStringLiteral("%");
 
-// void
-// ScanOptions::setMaxResolution(int max_resolution)
-//{
-//  m_max_resolution = max_resolution;
-//}
+  case MM:
+    return QStringLiteral("mm");
+
+  case DPI:
+    return QStringLiteral("dpi");
+
+  case BIT:
+    return QStringLiteral("bits");
+
+  case MICROSECOND:
+    return QStringLiteral("µS");
+
+  case NONE:
+  default:
+    return QString();
+  }
+}
+
+// Generic internal methods.
+
+QVariant ScanOptions::getValue(AvailableOptions option) const
+{
+  return m_option_values.value(option);
+}
+
+QVariant ScanOptions::getValue(const QString& option) const
+{
+  return m_ns_options_values.value(option);
+}
+
+QVariant ScanOptions::getValueData(ScanOptions::AvailableOptions option) const
+{
+  return m_list_option_values.value(option);
+}
+
+QVariant ScanOptions::getValueData(const QString& option) const
+{
+  return m_list_ns_options_values.value(option);
+}
+
+void ScanOptions::setValue(ScanOptions::AvailableOptions option, const QVariant& value)
+{
+  m_option_values.insert(option, value);
+}
+
+void ScanOptions::setValue(const QString& option, const QVariant& value)
+{
+  m_ns_options_values.insert(option, value);
+}
 
 ScanOptions& ScanOptions::operator=(const ScanOptions& rhs)
 {
@@ -121,170 +413,387 @@ ScanOptions& ScanOptions::operator=(const ScanOptions& rhs)
   return *this;
 }
 
-QStringList ScanOptions::modes() const
+bool ScanOptions::isAvailable(AvailableOptions option)
 {
-  return m_modes;
+  return m_available_options.contains(option);
 }
 
-void ScanOptions::setModes(const QStringList& modes)
+bool ScanOptions::isAvailable(const QString& option)
 {
-  m_modes = modes;
+  return m_ns_options_values.contains(option);
+}
+
+
+QVariant ScanOptions::optionValue(AvailableOptions option)
+{
+  if (isAvailable(option)) {
+    return getValue(option);
+  }
+
+  return QVariant();
+}
+
+QVariant ScanOptions::optionValue(const QString& option)
+{
+  if (isAvailable(option)) {
+    return getValue(option);
+  }
+
+  return QVariant();
+}
+
+QVariant ScanOptions::optionData(ScanOptions::AvailableOptions option)
+{
+  return getValueData(option);
+}
+
+QVariant ScanOptions::optionData(const QString& option)
+{
+  return getValueData(option);
+}
+
+void ScanOptions::setOptionValue(ScanOptions::AvailableOptions option, const QVariant& value)
+{
+  if (value.isValid()) {
+    if (value.canConvert<QVariantList>()) {
+      m_list_option_values.insert(option, value);
+
+    } else if (value.canConvert<RangeData>()) {
+      m_list_option_values.insert(option, value);
+
+    } else {
+      setValue(option, value);
+    }
+
+    if (!m_available_options.contains(option)) {
+      m_available_options.append(option);
+    }
+  }
+}
+
+void ScanOptions::setOptionValue(const QString& option, const QVariant& value)
+{
+  if (value.isValid()) {
+    if (value.canConvert<QVariantList>()) {
+      m_list_ns_options_values.insert(option, value);
+
+    } else if (value.canConvert<RangeData>()) {
+      m_list_ns_options_values.insert(option, value);
+
+    } else {
+      setValue(option, value);
+    }
+
+    if (!m_ns_options.contains(option)) {
+      m_ns_options.append(option);
+    }
+  }
+}
+
+QList<ScanOptions::AvailableOptions> ScanOptions::standardOptions()
+{
+  return m_available_options;
+}
+
+QStringList ScanOptions::nonStandardOptions()
+{
+  return m_ns_options;
+}
+
+QString ScanOptions::optionDescripterString(AvailableOptions option)
+{
+  return m_option_to_string.value(option);
+}
+
+ScanOptions::AvailableOptions ScanOptions::getAvailableOption(const QString& descriptor)
+{
+  if (m_string_to_option.contains(descriptor)) {
+    return m_string_to_option.value(descriptor);
+  }
+
+  return QSCAN_OPTION_UNAVAILABLE;
+}
+
+///*!
+//   \brief Recovers the matching list value if available.
+
+//   Only certain AvailableOptions have matching lists, primarily source and mode
+//   and sometimes resolution lists.
+//*/
+//ScanOptions::AvailableOptions ScanOptions::getMatchingListOption(ScanOptions::AvailableOptions option)
+//{
+//  switch (option) {
+//  case QSCAN_SOURCE:
+//    return QSCAN_SOURCES;
+
+//  case MODE:
+//    return QSCAN_MODES;
+
+//  case QSCAN_RESOLUTION:
+//    Q_FALLTHROUGH();
+
+//  case QSCAN_X_RESOLUTION:
+//    Q_FALLTHROUGH();
+
+//  case QSCAN_Y_RESOLUTION:
+//    return QSCAN_RESOLUTION_RANGE;
+
+//  //  case QSCAN_HALFTONE:
+//  //    return QSCAN_HALFTONES;
+
+//  default:
+//    return QSCAN_OPTION_UNAVAILABLE;
+//  }
+//}
+
+ScanOptions::ScanUnits ScanOptions::getScanUnits(const int units)
+{
+  if (units == SANE_UNIT_DPI) {
+    return DPI;
+
+  } else if (units == SANE_UNIT_PIXEL) {
+    return PIXEL;
+
+  } else if (units == SANE_UNIT_PERCENT) {
+    return PERCENT;
+
+  } else if (units == SANE_UNIT_BIT) {
+    return BIT;
+
+  } else if (units == SANE_UNIT_MM) {
+    return MM;
+  }
+
+  return NONE;
+}
+
+QString ScanOptions::optionDesc(AvailableOptions option) const
+{
+  return m_option_desc.value(option);
+}
+
+void ScanOptions::setOptionDesc(AvailableOptions option, const QString& desc)
+{
+  m_option_desc.insert(option, desc);
+}
+
+QString ScanOptions::optionName(AvailableOptions option) const
+{
+  return m_option_names.value(option);
+}
+
+void ScanOptions::setOptionName(AvailableOptions option, const QString& name)
+{
+  m_option_names.insert(option, name);
+}
+
+QString ScanOptions::optionTitle(AvailableOptions option) const
+{
+  return m_option_titles.value(option);
+}
+
+void ScanOptions::setOptionTitle(AvailableOptions option, const QString& title)
+{
+  m_option_titles.insert(option, title);
+}
+
+QStringList ScanOptions::modes() const
+{
+  return getValueData(MODE).toStringList();
 }
 
 QStringList ScanOptions::sources() const
 {
-  return m_sources;
-}
-
-void ScanOptions::setSources(const QStringList& sources)
-{
-  m_sources = sources;
+  return getValueData(SOURCE).toStringList();
 }
 
 int ScanOptions::depth() const
 {
-  return m_depth;
+  QVariant v = getValue(BIT_DEPTH);
+
+  if (v.isValid() && (v.type() == QVariant::Int || v.type() == QVariant::Double)) {
+    return v.toInt();
+  }
+
+  return -1;
 }
 
 void ScanOptions::setDepth(int depth)
 {
-  m_depth = depth;
-}
-
-// ScanType
-// ScanOptions::type() const
-//{
-//  return m_type;
-//}
-
-// void
-// ScanOptions::setType(const ScanType& type)
-//{
-//  m_type = type;
-//}
-
-int ScanOptions::paperWidth() const
-{
-  return m_paper_width;
-}
-
-void ScanOptions::setPaperWidth(int paper_width)
-{
-  m_paper_width = paper_width;
-}
-
-int ScanOptions::paperHeight() const
-{
-  return m_paper_height;
-}
-
-void ScanOptions::setPaperHeight(int paper_height)
-{
-  m_paper_height = paper_height;
+  setValue(BIT_DEPTH, depth);
 }
 
 int ScanOptions::brightness() const
 {
-  return m_brightness;
+  QVariant v = getValue(BRIGHTNESS);
+
+  if (v.isValid() && (v.type() == QVariant::Int || v.type() == QVariant::Double)) {
+    return v.toInt();
+  }
+
+  return -1;
 }
 
 void ScanOptions::setBrightness(int brightness)
 {
-  m_brightness = brightness;
+  setValue(BRIGHTNESS, brightness);
 }
 
 int ScanOptions::contrast() const
 {
-  return m_contrast;
+  QVariant v = getValue(CONTRAST);
+
+  if (v.isValid() && (v.type() == QVariant::Int || v.type() == QVariant::Double)) {
+    return v.toInt();
+  }
+
+  return -1;
 }
 
 void ScanOptions::setContrast(int contrast)
 {
-  m_contrast = contrast;
+  setValue(CONTRAST, contrast);
 }
 
-int ScanOptions::pageDelay() const
+int ScanOptions::left() const
 {
-  return m_page_delay;
+  QVariant v = getValue(LEFT);
+
+  if (v.isValid() && (v.type() == QVariant::Int || v.type() == QVariant::Double)) {
+    return v.toInt();
+  }
+
+  return -1;
 }
 
-void ScanOptions::setPageDelay(int page_delay)
+void ScanOptions::setLeft(int left)
 {
-  m_page_delay = page_delay;
+  setValue(LEFT, left);
 }
 
-int ScanOptions::topLeftX() const
+int ScanOptions::top() const
 {
-  return m_geometry.x();
+  QVariant v = getValue(TOP);
+
+  if (v.isValid() && (v.type() == QVariant::Int || v.type() == QVariant::Double)) {
+    return v.toInt();
+  }
+
+  return -1;
 }
 
-void ScanOptions::setTopLeftX(int top_left_x)
+void ScanOptions::setTop(int top_left_y)
 {
-  m_geometry.setX(top_left_x);
+  setValue(TOP, top_left_y);
 }
 
-int ScanOptions::topLeftY() const
+int ScanOptions::right() const
 {
-  return m_geometry.y();
+  QVariant v = getValue(RIGHT);
+
+  if (v.isValid() && (v.type() == QVariant::Int || v.type() == QVariant::Double)) {
+    return v.toInt();
+  }
+
+  return -1;
 }
 
-void ScanOptions::setTopLeftY(int top_left_y)
+void ScanOptions::setRight(int right)
 {
-  m_geometry.setX(top_left_y);
+  setValue(RIGHT, right);
 }
 
-int ScanOptions::bottomRightX() const
+int ScanOptions::bottom() const
 {
-  return m_geometry.bottomRight().x();
+  QVariant v = getValue(BOTTOM);
+
+  if (v.isValid() && (v.type() == QVariant::Int || v.type() == QVariant::Double)) {
+    return v.toInt();
+  }
+
+  return -1;
 }
 
-void ScanOptions::setBottomRightX(int bottom_right_x)
+void ScanOptions::setBottom(int bottom)
 {
-  QPoint p = m_geometry.bottomRight();
-  p.setX(bottom_right_x);
-  m_geometry.setBottomRight(p);
+  setValue(BOTTOM, bottom);
 }
 
-int ScanOptions::bottomRightY() const
+QPoint ScanOptions::bottomRight()
 {
-  return m_geometry.bottomRight().y();
+  return QPoint(left(), right());
 }
 
-void ScanOptions::setBottomRightY(int bottom_right_y)
+QPoint ScanOptions::topLeft()
 {
-  QPoint p = m_geometry.bottomRight();
-  p.setY(bottom_right_y);
-  m_geometry.setBottomRight(p);
+  return QPoint(right(), top());
+}
+
+int ScanOptions::height() const
+{
+  return bottom() - top();
+}
+
+void ScanOptions::setHeight(const int height)
+{
+  int bottom = top() + height;
+  setValue(BOTTOM, bottom);
+}
+
+int ScanOptions::width() const
+{
+  return right() - left();
+}
+
+void ScanOptions::setWidth(const int width)
+{
+  int right = left() + width;
+  setLeft(right);
 }
 
 QRect ScanOptions::geometry()
 {
-  return m_geometry;
+  return QRect(right(), top(), width(), height());
 }
 
 void ScanOptions::setGeometry(QRect geometry)
 {
-  m_geometry = geometry;
+  setLeft(geometry.left());
+  setRight(geometry.right());
+  setTop(geometry.top());
+  setBottom(geometry.bottom());
 }
 
 int ScanOptions::resolutionX() const
 {
-  return m_resolution_x;
+  QVariant v = getValue(X_RESOLUTION);
+
+  if (v.isValid() && v.type() == QVariant::Int) {
+    return v.toInt();
+  }
+
+  return -1;
 }
 
 void ScanOptions::setResolutionX(int scan_resolution_x)
 {
-  m_resolution_x = scan_resolution_x;
+  setValue(X_RESOLUTION, scan_resolution_x);
 }
 
 int ScanOptions::resolutionY() const
 {
-  return m_resolution_y;
+  QVariant v = getValue(Y_RESOLUTION);
+
+  if (v.isValid() && v.type() == QVariant::Int) {
+    return v.toInt();
+  }
+
+  return -1;
 }
 
 void ScanOptions::setResolutionY(int scan_resolution_y)
 {
-  m_resolution_y = scan_resolution_y;
+  setValue(Y_RESOLUTION, scan_resolution_y);
 }
 
 /*!
@@ -294,7 +803,13 @@ void ScanOptions::setResolutionY(int scan_resolution_y)
 */
 int ScanOptions::resolution() const
 {
-  return m_resolution;
+  QVariant v = getValue(RESOLUTION);
+
+  if (v.isValid() && v.type() == QVariant::Int) {
+    return v.toInt();
+  }
+
+  return -1;
 }
 
 /*!
@@ -304,153 +819,98 @@ int ScanOptions::resolution() const
 */
 void ScanOptions::setResolution(int scan_resolution)
 {
-  m_resolution = scan_resolution;
-  m_resolution_range.value = scan_resolution;
-
+  setValue(RESOLUTION, scan_resolution);
   setResolutionX(scan_resolution);
   setResolutionY(scan_resolution);
 }
 
-bool ScanOptions::isResolutionRange()
-{
-  // can only be a QList<int> or RangeData
-  if (m_resolution_range.range_data.canConvert<QList<int>>()) {
-    return false;
-  }
-
-  return true;
-}
-
-void ScanOptions::setResulutionRange(ScanRange scan_range)
-{
-  m_resolution_range = scan_range;
-}
-
-ScanRange ScanOptions::resolutionRange()
-{
-  return m_resolution_range;
-}
-
-int ScanOptions::optionId(const QString& name) const
-{
-  return m_option_id_map.value(name, -1);
-}
-
-void ScanOptions::setOptionId(const QString& name, int option_id)
-{
-  m_option_id_map.insert(name, option_id);
-}
-
-int ScanOptions::optionSize(const QString& name) const
-{
-  return m_option_size_map.value(name);
-}
-
-void ScanOptions::setOptionSize(const QString& name, int size)
-{
-  m_option_size_map.insert(name, size);
-}
-
-int ScanOptions::optionType(const QString& name) const
-{
-  return m_option_type_map.value(name);
-}
-
-void ScanOptions::setOptionType(const QString& name, int type)
-{
-  m_option_type_map.insert(name, type);
-}
-
-// int
-// ScanOptions::getIntScannerValue(const ScanDevice* device,
-//                                const int option_id,
-//                                const SANE_Option_Descriptor* opt)
+//bool ScanOptions::isResolutionRange()
 //{
-//  if (option_id >= 0) {
-//    SANE_Word value;
-//    SANE_Handle sane_handle;
-//    SANE_Status status;
-//    status = sane_open(device->name.toStdString().c_str(), &sane_handle);
+//  // can only be a QList<int> or RangeData
+//  QVariant v = resolutionRange();
 
-//    sane_control_option(
-//      sane_handle, option_id, SANE_ACTION_GET_VALUE, &value, nullptr);
-
-//    if (status == SANE_STATUS_GOOD) {
-
-//      switch (opt->type) {
-//        case SANE_TYPE_INT:
-//          return value;
-
-//        case SANE_TYPE_FIXED:
-//          return SANE_Int(SANE_UNFIX(value));
-
-//        default:
-//          return -1;
-//      }
-//    }
-//    sane_close(sane_handle);
+//  if (v.canConvert<RangeData>()) {
+//    return true;
 //  }
 
-//  return -1;
+//  return false;
 //}
 
-// QStringList
-// ScanOptions::getStringScannerValue(const ScanDevice* device,
-//                                   const int option_id,
-//                                   const SANE_Option_Descriptor* opt)
+//bool ScanOptions::isResolutionList()
 //{
-//  QStringList list;
+//  // can only be a QList<int> or RangeData
+//  QVariant v = resolutionRange();
 
-//  if (option_id >= 0) {
-//    SANE_Word value;
-//    SANE_Handle sane_handle;
-//    SANE_Status status;
-//    status = sane_open(device->name.toStdString().c_str(), &sane_handle);
-
-//    status = sane_control_option(
-//      sane_handle, option_id, SANE_ACTION_GET_VALUE, &value, nullptr);
-
-//    if (status == SANE_STATUS_GOOD) {
-//      switch (opt->type) {
-//        case SANE_TYPE_STRING: {
-//          QString s;
-
-//          switch (opt->constraint_type) {
-//            case SANE_CONSTRAINT_STRING_LIST:
-//              for (int i = 0; opt->constraint.string_list[i] != nullptr; i++)
-//              {
-//                s = QString(opt->constraint.string_list[i]);
-//                list.append(s);
-//              }
-
-//              break;
-
-//            case SANE_CONSTRAINT_WORD_LIST:
-//              for (int i = 1; i <= opt->constraint.word_list[0]; i++) {
-//                s = QString(opt->constraint.word_list[i]);
-//                list.append(s);
-//              }
-
-//              break;
-
-//            default:
-//              break;
-//          }
-
-//          return list;
-//        }
-
-//        default:
-//          break;
-//      }
-//    }
-
-//    sane_close(sane_handle);
-
-//    return list;
+//  if (v.canConvert<QList<int>>()) {
+//    return true;
 //  }
 
-//  return list;
+//  return false;
 //}
+
+//void ScanOptions::setResulutionRange(RangeData scan_range)
+//{
+//  setValue(RESOLUTION_RANGE, QVariant::fromValue<RangeData>(scan_range));
+//}
+
+//void ScanOptions::setResulutionRange(QList<int> scan_range)
+//{
+//  setValue(RESOLUTION_RANGE, QVariant::fromValue<QList<int>>(scan_range));
+//}
+
+//QVariant ScanOptions::resolutionRange()
+//{
+//  return getValue(RESOLUTION_RANGE);
+//}
+
+/*!
+   \brief Recovers the option id number using it's name as a key.
+*/
+int ScanOptions::optionId(AvailableOptions option) const
+{
+  return m_option_id_map.value(option, -1);
+}
+
+/*!
+   \brief Stores the option id using it's name as a key.
+*/
+void ScanOptions::setOptionId(AvailableOptions option, int option_id)
+{
+  m_option_id_map.insert(option, option_id);
+}
+
+/*!
+   \brief Recovers the size of the option object using it's name as a key.
+
+   This is primarily used to internally assign memory for the option.
+*/
+size_t ScanOptions::optionSize(AvailableOptions option) const
+{
+  return m_option_size_map.value(option);
+}
+
+/*!
+   \brief Stores the size of the option object using it's name as a key.
+*/
+void ScanOptions::setOptionSize(AvailableOptions option, size_t size)
+{
+  m_option_size_map.insert(option, size);
+}
+
+/*!
+   \brief Recovers the option type using it's name using it's name as a key.
+*/
+int ScanOptions::optionType(AvailableOptions option) const
+{
+  return m_option_type_map.value(option);
+}
+
+/*!
+   \brief Stores the option type using it's name as a key.
+*/
+void ScanOptions::setOptionType(AvailableOptions option, int type)
+{
+  m_option_type_map.insert(option, type);
+}
 
 } // end of namespace QScanner

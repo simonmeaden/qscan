@@ -5,7 +5,7 @@
 #include <QThread>
 #include <QtDebug>
 
-#include "qscanlogging.h"
+#include "logging.h"
 #include "documentdata.h"
 
 namespace QScanner {

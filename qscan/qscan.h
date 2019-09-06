@@ -29,6 +29,7 @@
 
 #include "qscan_global.h"
 #include "iscanlibrary.h"
+#include "scanoptions.h"
 
 namespace QScanner {
 
@@ -36,58 +37,111 @@ class SCANSHARED_EXPORT QScan : public QObject
 {
   Q_OBJECT
 public:
+
   explicit QScan(QObject* parent = nullptr);
   //  ~QScan() = default;
 
   bool init();
+  void retestDevices();
+  /*!
+     \brief Get the list of avilable device name strings.
+  */
   QStringList devices();
-  ScanDevice* device(const QString& device_name);
-  bool openDevice(const QString& device_name);
+
+  bool isDeviceAvaliable();
+
+  /*!
+     \brief Opens the device named by device_name.
+
+     Opens the device returning true and setting the current device,
+     if the open was successful.
+  */
+  //  bool openDevice(const QString& device_name);
   bool startScanning(const QString& device_name);
   void cancelScan();
   bool isScanning();
-  //  ScanOptions options(const QString& device_name);
 
-  int topLeftX(ScanDevice* device);
-  void setTopLeftX(ScanDevice* device, int value);
-  int topLeftY(ScanDevice* device);
-  void setTopLeftY(ScanDevice* device, int value);
-  int bottomRightX(ScanDevice* device);
-  void setBottomRightX(ScanDevice* device, int value);
-  int bottomRightY(ScanDevice* device);
-  void setBottomRightY(ScanDevice* device, int value);
-  int contrast(ScanDevice* device);
-  void setContrast(ScanDevice* device, int value);
-  int brightness(ScanDevice* device);
-  void setBrightness(ScanDevice* device, int value);
-  int resolution(ScanDevice* device);
-  void setResolution(ScanDevice* device, int value);
-  int resolutionX(ScanDevice* device);
-  void setResolutionX(ScanDevice* device, int value);
-  int resolutionY(ScanDevice* device);
-  void setResolutionY(ScanDevice* device, int value);
-  void setPreview(ScanDevice* device);
-  void clearPreview(ScanDevice* device);
-  void setScanMode(ScanDevice* device, const QString& mode);
-  void setSource(ScanDevice* device, const QString& source);
+  /*!
+     \brief Check whether a particular AvailableOption is available on the current ScanDevice;
+  */
+  bool isAvailable(ScanOptions::AvailableOptions option);
+
+  /*!
+     \brief Get the value of a particular AvailableOption on the current device.
+
+     Returns the current value as a QVariant. If the option is not available
+     the an invalid QVariant is returned.
+  */
+  QVariant value(ScanOptions::AvailableOptions option);
+
+  //  /*!
+  //   * \brief
+  //   */
+  //  static QString optionName(AvailableOptions option);
+  //  ScanOptions options(const QString& device_name);
+  /*!
+     \brief Get the scanner device vendor's name.
+  */
+  QString vendor();
+  /*!
+     \brief Get the scanner device model name.
+  */
+  QString model();
+  /*!
+     \brief Get the scanner device type.
+  */
+  QString type();
+
+  QString name();
+  QString displayName();
+  ScanOptions* options();
+  bool setDevice(const QString& name);
+
+  int topLeftX();
+  void setTopLeftX(int value);
+  int topLeftY();
+  void setTopLeftY(int value);
+  int bottomRightX();
+  void setBottomRightX(int value);
+  int bottomRightY();
+  void setBottomRightY(int value);
+  int contrast();
+  void setContrast(int value);
+  int brightness();
+  void setBrightness(int value);
+  int resolution();
+  void setResolution(int value);
+  int resolutionX();
+  void setResolutionX(int value);
+  int resolutionY();
+  void setResolutionY(int value);
+  void setPreview();
+  void clearPreview();
+  void setScanMode(const QString& mode);
+  void setSource(const QString& source);
 
 signals:
   void scanCompleted(const QImage&, const int resolution);
   void scanFailed();
   void scanOpenFailed();
   void scanProgress(const int&);
-  void optionsSet(ScanDevice*);
-  void sourceChanged(ScanDevice*);
-  void modeChanged(ScanDevice*);
+  void optionsSet();
+  //  void sourceChanged();
+  //  void modeChanged();
+  void optionChanged(ScanOptions::AvailableOptions option, QVariant value);
+
 
 protected:
-#if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
   IScanLibrary* m_scan_lib;
+  ScanDevice* m_current_device;
+
+#if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
 
 #elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
-#include "win/scantwain.h"
+  //#include "win/scantwain.h"
   // TODO handle special twain shit
 #endif
+
 };
 
 } // end of namespace QScanner

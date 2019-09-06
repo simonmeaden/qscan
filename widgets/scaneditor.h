@@ -51,7 +51,6 @@
 #include "documentdata.h"
 #include "iscanwidgetinterface.h"
 #include "pageview.h"
-#include "qscanlogging.h"
 #include "widgets_global.h"
 #include "scanimage.h"
 #include "iscanlibrary.h"
@@ -145,7 +144,7 @@ signals:
   void ocrImage(const DocumentData& documentData);
 
   void sendOcrRequest(int);
-  void optionsSet(ScanDevice*);
+  void optionsSet();
   void sendWorkData(int page_no,
                     QImage image,
                     DocumentData doc_data,
@@ -198,13 +197,13 @@ protected:
   int m_image_resolution;
 
   bool eventFilter(QObject* obj, QEvent* event) override;
-  void receiveScannerData(ScanDevice* device);
+  void receiveScannerData();
   void receiveScannerChange(bool);
   //  void receiveModeChange(ScanDevice* device);
   //  void receiveSourceChange(ScanDevice* device);
   void resolutionEdited(const QString& value);
-  void receiveModeChange(const bool);
-  void receiveSourceChange(bool);
+  void receiveModeChange();
+  void receiveSourceChange();
   void receiveResolutionListChange(bool);
   void receiveResolutionRangedChange(bool);
   //  void receiveScannerChange(int index);
