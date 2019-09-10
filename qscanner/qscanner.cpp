@@ -21,7 +21,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 */
-#include "qscan.h"
+#include "qscanner.h"
 #include "scandevice.h"
 #include "logging.h"
 
@@ -33,35 +33,94 @@
 
 namespace QScanner {
 
+const int QScanner::m_major_version = QSCAN_VERSION_MAJOR;
+const int QScanner::m_minor_version = QSCAN_VERSION_MINOR;
+const int QScanner::m_build_version = QSCAN_VERSION_BUILD;
+const QString QScanner::m_version = QString("%1.%2.%3")
+                                    .arg(QScanner::m_major_version)
+                                    .arg(QScanner::m_minor_version)
+                                    .arg(QScanner::m_build_version);
 
-QScan::QScan(QObject* parent)
+QScanner::QScanner(QObject* parent)
   : QObject(parent)
-  , m_current_device(nullptr)
+  , m_manufacturer(MANUFACTURER)
+  , m_product(PRODUCT)
+  , m_product_name(PRODUCT_NAME)
+{
+  initLib();
+}
+
+QScanner::QScanner(const QString& manufacturer,
+                   const QString& product,
+                   const QString& product_name,
+                   QObject* parent)
+  : QObject(parent)
+  , m_manufacturer(manufacturer)
+  , m_product(product)
+  , m_product_name(product_name)
+{
+  initLib();
+}
+
+void QScanner::initLib()
 {
   qRegisterMetaType<ScanOptions>();
   qRegisterMetaType<ScanDevice>();
   qRegisterMetaType<RangeData>();
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
-  m_scan_lib = new SaneLibrary(this);
+  m_scan_lib = new SaneLibrary(m_manufacturer, m_product, m_product_name, this);
 #elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
-  m_scan_lib = new ScanTwain(this);
+  m_scan_lib = new TwainLibrary(m_manufacturer, m_product, m_product_name, this);
 #endif
   auto* scan_lib = dynamic_cast<ScanLibrary*>(m_scan_lib);
 
   if (scan_lib) {
-    connect(scan_lib, &ScanLibrary::scanCompleted, this, &QScan::scanCompleted);
-    connect(scan_lib, &ScanLibrary::scanFailed, this, &QScan::scanFailed);
-    connect(scan_lib, &ScanLibrary::scanOpenFailed, this, &QScan::scanOpenFailed);
-    connect(scan_lib, &ScanLibrary::scanProgress, this, &QScan::scanProgress);
-    connect(scan_lib, &ScanLibrary::optionsSet, this, &QScan::optionsSet);
+    connect(scan_lib, &ScanLibrary::scanCompleted, this, &QScanner::scanCompleted);
+    connect(scan_lib, &ScanLibrary::scanFailed, this, &QScanner::scanFailed);
+    connect(scan_lib, &ScanLibrary::scanOpenFailed, this, &QScanner::scanOpenFailed);
+    connect(scan_lib, &ScanLibrary::scanProgress, this, &QScanner::scanProgress);
+    connect(scan_lib, &ScanLibrary::optionsSet, this, &QScanner::optionsSet);
     //    connect(scan_lib, &ScanLibrary::sourceChanged, this, &QScan::sourceChanged);
     //    connect(scan_lib, &ScanLibrary::modeChanged, this, &QScan::modeChanged);
-    connect(scan_lib, &ScanLibrary::optionChanged, this, &QScan::optionChanged);
+    connect(scan_lib, &ScanLibrary::optionChanged, this, &QScanner::optionChanged);
   }
 }
 
-bool QScan::init()
+QString QScanner::product_name() const
+{
+  return m_product_name;
+}
+
+void QScanner::setProduct_name(const QString& product_name)
+{
+  m_product_name = product_name;
+  m_scan_lib->setProductName(product_name);
+}
+
+QString QScanner::product() const
+{
+  return m_product;
+}
+
+void QScanner::setProduct(const QString& product)
+{
+  m_product = product;
+  m_scan_lib->setProduct(product);
+}
+
+QString QScanner::manufacturer() const
+{
+  return m_manufacturer;
+}
+
+void QScanner::setManufacturer(const QString& manufacturer)
+{
+  m_manufacturer = manufacturer;
+  m_scan_lib->setManufacturer(manufacturer);
+}
+
+bool QScanner::init()
 {
   bool success = m_scan_lib->init();
 
@@ -72,17 +131,17 @@ bool QScan::init()
   return success;
 }
 
-void QScan::retestDevices()
+void QScanner::retestDevices()
 {
   m_scan_lib->detectDevices();
 }
 
-QStringList QScan::devices()
+QStringList QScanner::devices()
 {
   return m_scan_lib->devices();
 }
 
-bool QScan::isDeviceAvaliable()
+bool QScanner::isDeviceAvaliable()
 {
   if (m_current_device) {
     return true;
@@ -91,25 +150,7 @@ bool QScan::isDeviceAvaliable()
   return false;
 }
 
-//ScanDevice* QScan::device(const QString& device_name)
-//{
-//  return m_scan_lib->device(device_name);
-//}
-
-//bool QScan::openDevice(const QString& device_name)
-//{
-//  bool open = m_scan_lib->detectAvailableOptions(device_name);
-
-//  if (open) {
-//    qCInfo(LogQScan) << tr("Scanner %1 open.").arg(device_name);
-//    ScanDevice* device = m_scan_lib->getAvailableScannerOptions(device_name);
-//    m_current_device = device;
-//  }
-
-//  return open;
-//}
-
-bool QScan::startScanning(const QString& device_name)
+bool QScanner::startScanning(const QString& device_name)
 {
   bool open = m_scan_lib->detectAvailableOptions(device_name);
 
@@ -121,18 +162,18 @@ bool QScan::startScanning(const QString& device_name)
   return false;
 }
 
-void QScan::cancelScan(/*const QString& device_name*/)
+void QScanner::cancelScan(/*const QString& device_name*/)
 {
   qCInfo(LogQScan) << tr("Cancelled scan");
   m_scan_lib->cancelScan(/*device_name*/);
 }
 
-bool QScan::isScanning()
+bool QScanner::isScanning()
 {
   return m_scan_lib->isScanning();
 }
 
-bool QScan::isAvailable(ScanOptions::AvailableOptions option)
+bool QScanner::isAvailable(ScanOptions::AvailableOptions option)
 {
   if (m_current_device) {
     return m_current_device->options()->isAvailable(option);
@@ -141,7 +182,7 @@ bool QScan::isAvailable(ScanOptions::AvailableOptions option)
   return false;
 }
 
-QVariant QScan::value(ScanOptions::AvailableOptions option)
+QVariant QScanner::value(ScanOptions::AvailableOptions option)
 {
   if (isAvailable(option)) {
     return m_current_device->options()->optionValue(option);
@@ -150,7 +191,7 @@ QVariant QScan::value(ScanOptions::AvailableOptions option)
   return QVariant();
 }
 
-QString QScan::vendor()
+QString QScanner::vendor()
 {
   if (m_current_device) {
     return m_current_device->vendor();
@@ -159,7 +200,7 @@ QString QScan::vendor()
   return QString();
 }
 
-QString QScan::model()
+QString QScanner::model()
 {
   if (m_current_device) {
     return m_current_device->model();
@@ -168,7 +209,7 @@ QString QScan::model()
   return QString();
 }
 
-QString QScan::type()
+QString QScanner::type()
 {
   if (m_current_device) {
     return m_current_device->type();
@@ -177,7 +218,7 @@ QString QScan::type()
   return QString();
 }
 
-QString QScan::name()
+QString QScanner::name()
 {
   if (m_current_device) {
     return m_current_device->descriptor();
@@ -186,7 +227,7 @@ QString QScan::name()
   return QString();
 }
 
-QString QScan::displayName()
+QString QScanner::displayName()
 {
   if (m_current_device) {
     return m_current_device->displayName();
@@ -195,7 +236,7 @@ QString QScan::displayName()
   return nullptr;
 }
 
-ScanOptions* QScan::options()
+ScanOptions* QScanner::options()
 {
   if (m_current_device) {
     return m_current_device->options();
@@ -204,7 +245,7 @@ ScanOptions* QScan::options()
   return nullptr;
 }
 
-bool QScan::setDevice(const QString& name)
+bool QScanner::setDevice(const QString& name)
 {
   ScanDevice* device = m_scan_lib->device(name);
 
@@ -217,112 +258,112 @@ bool QScan::setDevice(const QString& name)
   return false;
 }
 
-int QScan::topLeftX()
+int QScanner::topLeftX()
 {
-  return m_current_device->options()->right();
+  return m_scan_lib->currentDevice()->options()->right();
 }
 
-void QScan::setTopLeftX(int value)
+void QScanner::setTopLeftX(int value)
 {
   m_scan_lib->setTopLeftX(m_current_device, value);
 }
 
-int QScan::topLeftY()
+int QScanner::topLeftY()
 {
   return m_current_device->options()->top();
 }
 
-void QScan::setTopLeftY(int value)
+void QScanner::setTopLeftY(int value)
 {
   m_scan_lib->setTopLeftY(m_current_device, value);
 }
 
-int QScan::bottomRightX()
+int QScanner::bottomRightX()
 {
   return m_current_device->options()->left();
 }
 
-void QScan::setBottomRightX(int value)
+void QScanner::setBottomRightX(int value)
 {
   m_scan_lib->setBottomRightX(m_current_device, value);
 }
 
-int QScan::bottomRightY()
+int QScanner::bottomRightY()
 {
   return m_current_device->options()->right();
 }
 
-void QScan::setBottomRightY(int value)
+void QScanner::setBottomRightY(int value)
 {
   m_scan_lib->setBottomRightY(m_current_device, value);
 }
 
-int QScan::contrast()
+int QScanner::contrast()
 {
   return m_current_device->options()->contrast();
 }
 
-void QScan::setContrast(int value)
+void QScanner::setContrast(int value)
 {
   m_scan_lib->setContrast(m_current_device, value);
 }
 
-int QScan::brightness()
+int QScanner::brightness()
 {
   return m_current_device->options()->brightness();
 }
 
-void QScan::setBrightness(int value)
+void QScanner::setBrightness(int value)
 {
   m_scan_lib->setBrightness(m_current_device, value);
 }
 
-int QScan::resolution()
+int QScanner::resolution()
 {
   return m_current_device->options()->resolution();
 }
 
-void QScan::setResolution(int value)
+void QScanner::setResolution(int value)
 {
   m_scan_lib->setResolution(m_current_device, value);
 }
 
-int QScan::resolutionX()
+int QScanner::resolutionX()
 {
   return m_current_device->options()->resolutionX();
 }
 
-void QScan::setResolutionX(int value)
+void QScanner::setResolutionX(int value)
 {
   m_scan_lib->setResolutionX(m_current_device, value);
 }
 
-int QScan::resolutionY()
+int QScanner::resolutionY()
 {
   return m_current_device->options()->resolutionY();
 }
 
-void QScan::setResolutionY(int value)
+void QScanner::setResolutionY(int value)
 {
   m_scan_lib->setResolutionY(m_current_device, value);
 }
 
-void QScan::setPreview()
+void QScanner::setPreview()
 {
   m_scan_lib->setPreview(m_current_device);
 }
 
-void QScan::clearPreview()
+void QScanner::clearPreview()
 {
   m_scan_lib->clearPreview(m_current_device);
 }
 
-void QScan::setScanMode(const QString& mode)
+void QScanner::setScanMode(const QString& mode)
 {
   m_scan_lib->setMode(m_current_device, mode);
 }
 
-void QScan::setSource(const QString& source)
+void QScanner::setSource(const QString& source)
 {
   m_scan_lib->setSource(m_current_device, source);
 }

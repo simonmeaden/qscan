@@ -25,12 +25,18 @@
 
 #include <QThread>
 
-#include <sane/sane.h>
-#include <sane/saneopts.h>
+#if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
+  #include <sane/sane.h>
+  #include <sane/saneopts.h>
+#elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
+  // TODO
+#endif
 
 #include "logging.h"
 
 namespace QScanner {
+
+#if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
 
 void callbackWrapper(SANE_String_Const /*resource*/, SANE_Char* /*name*/, SANE_Char* /*password*/)
 {
@@ -65,6 +71,23 @@ SaneLibrary::SaneLibrary(QObject* parent)
   : ScanLibrary(parent)
   , m_scanning(false)
 {
+  initLib();
+}
+
+SaneLibrary::SaneLibrary(QObject* parent)
+  : ScanLibrary(parent)
+  , m_scanning(false)
+{
+  initLib();
+}
+
+SaneLibrary::~SaneLibrary()
+{
+  emit finished();
+}
+
+void SaneLibrary::initLib()
+{
   //  auto* thread = new QThread;
   auto* scan_worker = new SaneWorker();
 
@@ -75,7 +98,7 @@ SaneLibrary::SaneLibrary(QObject* parent)
 
   // worker
   connect(this, &SaneLibrary::startScanning, scan_worker, &SaneWorker::scan);
-  connect(this, &SaneLibrary::getAvailableOptions, scan_worker, &SaneWorker::loadAvailableScannerOptions);
+  connect(this, &ScanLibrary::getAvailableOptions, scan_worker, &SaneWorker::loadAvailableScannerOptions);
   connect(this, &SaneLibrary::cancelScanning, scan_worker, &SaneWorker::cancelScan);
   connect(this, &SaneLibrary::setBoolValue, scan_worker, &SaneWorker::setDeviceBoolValue);
   connect(this, &SaneLibrary::setIntValue, scan_worker, &SaneWorker::setDeviceIntValue);
@@ -95,11 +118,6 @@ SaneLibrary::SaneLibrary(QObject* parent)
   //  scan_worker->moveToThread(thread);
   //  thread->start();
   scan_worker->start();
-}
-
-SaneLibrary::~SaneLibrary()
-{
-  emit finished();
 }
 
 bool SaneLibrary::init()
@@ -219,15 +237,15 @@ void SaneLibrary::exit()
   sane_exit();
 }
 
-void SaneLibrary::getAvailableScannerOptions(ScanDevice* device)
-{
-  emit getAvailableOptions(device);
-}
+//void SaneLibrary::getAvailableScannerOptions(ScanDevice* device)
+//{
+//  emit getAvailableOptions(device);
+//}
 
-ScanDevice* SaneLibrary::getCurrentDevice()
-{
-  return m_current_device;
-}
+//ScanDevice* SaneLibrary::currentDevice()
+//{
+//  return m_current_device;
+//}
 
 void SaneLibrary::setCurrentDevice(ScanDevice* current_device)
 {
@@ -458,5 +476,6 @@ bool SaneLibrary::isScanning() const
   return m_scanning;
 }
 
+#endif // Unix check
 
 } // end of namespace QScanner

@@ -33,12 +33,20 @@
 
 namespace QScanner {
 
-class SCANSHARED_EXPORT QScan : public QObject
+#define MANUFACTURER "Simon Meaden"
+#define PRODUCT "QScanner Library"
+#define PRODUCT_NAME "QScanner"
+
+class QSCANSHARED_EXPORT QScanner : public QObject
 {
   Q_OBJECT
 public:
 
-  explicit QScan(QObject* parent = nullptr);
+  explicit QScanner(QObject* parent = nullptr);
+  explicit QScanner(const QString& manufacturer,
+                    const QString& product,
+                    const QString& product_name,
+                    QObject* parent = nullptr);
   //  ~QScan() = default;
 
   bool init();
@@ -120,6 +128,13 @@ public:
   void setScanMode(const QString& mode);
   void setSource(const QString& source);
 
+  QString manufacturer() const;
+  void setManufacturer(const QString& manufacturer);
+  QString product() const;
+  void setProduct(const QString& product);
+  QString product_name() const;
+  void setProduct_name(const QString& product_name);
+
 signals:
   void scanCompleted(const QImage&, const int resolution);
   void scanFailed();
@@ -131,9 +146,8 @@ signals:
   void optionChanged(ScanOptions::AvailableOptions option, QVariant value);
 
 
-protected:
+private:
   IScanLibrary* m_scan_lib;
-  ScanDevice* m_current_device;
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
 
@@ -141,6 +155,17 @@ protected:
   //#include "win/scantwain.h"
   // TODO handle special twain shit
 #endif
+
+  void initLib();
+
+  QString m_manufacturer;
+  QString m_product;
+  QString m_product_name;
+
+  static const QString m_version;
+  static const int m_major_version;
+  static const int m_minor_version;
+  static const int m_build_version;
 
 };
 

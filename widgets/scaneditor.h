@@ -57,7 +57,7 @@
 
 namespace QScanner {
 
-class QScan;
+class QScanner;
 class OcrEditor;
 class DocumentDataStore;
 // class ScanImage;
@@ -152,7 +152,7 @@ signals:
   void goToOcrEditor();
 
 protected:
-  QScan* m_scan_lib{};
+  QScanner* m_scan_lib{};
   int m_main_id, m_ocr_stack_id;
   QStackedLayout* m_scan_layout;
   QGridLayout* m_editor_layout;

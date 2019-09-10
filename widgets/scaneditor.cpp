@@ -67,15 +67,15 @@ ScanEditor::ScanEditor(QWidget* parent)
   OPTIONS_FILE = QStringLiteral("scanoptions.yaml");
   m_options_file = m_config_dir + QDir::separator() + OPTIONS_FILE;
 
-  m_scan_lib = new QScan(this);
+  m_scan_lib = new QScanner(this);
   m_scan_lib->init();
 
-  connect(m_scan_lib, &QScan::optionsSet, this, &ScanEditor::receiveScannerData);
+  connect(m_scan_lib, &QScanner::optionsSet, this, &ScanEditor::receiveScannerData);
   //  connect(m_scan_lib, &QScan::modeChanged, this, &ScanEditor::receiveModeChange);
   //  connect(m_scan_lib, &QScan::sourceChanged, this, &ScanEditor::receiveSourceChange);
-  connect(m_scan_lib, &QScan::scanCompleted, this, &ScanEditor::setImage);
-  connect(m_scan_lib, &QScan::scanProgress, this, &ScanEditor::setScanProgress);
-  connect(m_scan_lib, &QScan::scanFailed, this, &ScanEditor::scanHasFailed);
+  connect(m_scan_lib, &QScanner::scanCompleted, this, &ScanEditor::setImage);
+  connect(m_scan_lib, &QScanner::scanProgress, this, &ScanEditor::setScanProgress);
+  connect(m_scan_lib, &QScanner::scanFailed, this, &ScanEditor::scanHasFailed);
 
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   initGui();

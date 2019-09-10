@@ -22,7 +22,7 @@
 #include <QVariant>
 
 namespace QScanner {
-class QScan;
+class QScanner;
 class ScanDevice;
 }
 
@@ -40,7 +40,7 @@ protected:
 
 private:
   QList<QString> m_loaded_plugins;
-  QScanner::QScan* m_scan_lib;
+  QScanner::QScanner* m_scan_lib;
 
   QListWidget* m_device_list;
   QStackedLayout* m_res_stack;

@@ -6,7 +6,7 @@ SUBDIRS += \
     utilities \
     interface \
     plugins \
-    qscan \
+    qscanner \
     widgets \
 #    Scanner \
     QScanTest
@@ -21,20 +21,20 @@ document.depends = utilities
 interface.subdir = interface
 interface.depends = utilities document
 
-qscan.subdir = qscan
-qscan.depends = utilities document interface
+qscanner.subdir = qscanner
+qscanner.depends = utilities document interface
 
 widgets.subdir = widgets
-widgets.depends = utilities document interface qscan
+widgets.depends = utilities document interface qscanner
 
 plugins.subdir = plugins
 plugins.depends = utilities document interface
 
 QScanTest.subdir = QScanTest
-QScanTest.depends = utilities document interface qscan widgets
+QScanTest.depends = utilities document interface qscanner widgets
 
 Scanner.subdir = Scanner
-Scanner.depends = utilities document interface qscan widgets
+Scanner.depends = utilities document interface qscanner widgets
 
 # not much has tests yet
 tests.subdir = tests

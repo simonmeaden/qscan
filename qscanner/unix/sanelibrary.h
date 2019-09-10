@@ -41,11 +41,18 @@
 
 namespace QScanner {
 
+#if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
+// TODO
+
 class SaneLibrary final : public ScanLibrary
 {
   Q_OBJECT
 public:
   explicit SaneLibrary(QObject* parent = nullptr);
+  explicit SaneLibrary(const QString& manufacturer,
+                       const QString& product,
+                       const QString& product_name,
+                       QObject* parent = nullptr);
   ~SaneLibrary() override;
 
   bool init() override;
@@ -58,8 +65,8 @@ public:
   //  ScanOptions options(QString device_name) override;
   bool detectAvailableOptions(QString device_name) override;
 
-  ScanDevice* getCurrentDevice() override;
-  void setCurrentDevice(ScanDevice* current_device) override;
+  //  ScanDevice* getCurrentDevice() override;
+  //  void setCurrentDevice(ScanDevice* current_device) override;
 
   bool startScan(QString device_name) override;
   bool isScanning() const override;
@@ -94,12 +101,11 @@ public:
   /*!
      \brief Gets the available options for the device named by device_name.
   */
-  void getAvailableScannerOptions(ScanDevice* device) override;
+  //  void getAvailableScannerOptions(ScanDevice* device) override;
 
 signals:
   void finished();
   void startScanning(ScanDevice*);
-  void getAvailableOptions(ScanDevice*);
   void setBoolValue(ScanDevice*, int, const QString&, bool);
   void setIntValue(ScanDevice*, int, const QString&, int);
   void setStringValue(ScanDevice*, const QString&, const QString&);
@@ -108,9 +114,7 @@ signals:
   //  void optionChanged(ScanOptions::AvailableOptions option, QVariant value);
 
 
-protected:
-  DeviceMap m_scanners;
-  ScanDevice* m_current_device;
+private:
   QImage* m_image{};
   Version m_sane_version;
   QStringList m_device_list;
@@ -119,12 +123,14 @@ protected:
 
   //  QMutex m_mutex;
 
+  void initLib();
   //  void receiveIntValue(ScanDevice* device, int value);
   void scanIsCompleted();
   void receiveOptionChange(const QString descriptor, const QVariant& value);
 
 public:
 };
+#endif // Windoze test
 
 } // end of namespace QScanner
 

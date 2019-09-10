@@ -34,6 +34,7 @@
   #include <sane/sane.h>
 #endif
 
+#include "scandevice.h"
 #include "scanoptions.h"
 
 //#include "iplugininterface.h"
@@ -73,7 +74,7 @@ public:
   virtual QStringList devices() = 0;
   virtual ScanDevice* device(QString device_name) = 0;
   virtual bool detectAvailableOptions(QString device_name) = 0;
-  virtual ScanDevice* getCurrentDevice() = 0;
+  virtual ScanDevice* currentDevice() = 0;
   virtual void setCurrentDevice(ScanDevice* current_device) = 0;
 
   virtual bool startScan(QString device_name) = 0;
@@ -105,6 +106,14 @@ public:
   virtual void setSource(ScanDevice* device, const QString& source) = 0;
   virtual bool isScanning() const = 0;
 
+  virtual QString manufacturer() const = 0;
+  virtual void setManufacturer(const QString& manufacturer) = 0;
+  virtual QString product() const = 0;
+  virtual void setProduct(const QString& product) = 0;
+  virtual QString productName() const = 0;
+  virtual void setProductName(const QString& productName) = 0;
+
+
 protected:
 };
 
@@ -120,6 +129,21 @@ class ScanLibrary
   Q_OBJECT
 public:
   ScanLibrary(QObject* parent = nullptr);  //  ~ScanLibrary();
+public:
+  ScanLibrary(const QString& manufacturer,
+              const QString& product,
+              const QString& productName,
+              QObject* parent = nullptr);  //  ~ScanLibrary();
+
+  ScanDevice* currentDevice() override;
+  void setCurrentDevice(ScanDevice* current_device) override;
+
+  QString manufacturer() const override;
+  void setManufacturer(const QString& manufacturer) override;
+  QString product() const override;
+  void setProduct(const QString& product) override;
+  QString productName() const override;
+  void setProductName(const QString& productName) override;
 
 signals:
   void scanCompleted(const QImage& image, const int resolution);
@@ -130,6 +154,15 @@ signals:
   //  void sourceChanged();
   //  void modeChanged();
   void optionChanged(ScanOptions::AvailableOptions option, const QVariant& value);
+  void getAvailableOptions(ScanDevice*);
+
+protected:
+  QString m_manufacturer;
+  QString m_product;
+  QString m_product_name;
+  DeviceMap m_scanners;
+  ScanDevice* m_current_device;
+
 };
 
 } // end of namespace QScanner

@@ -9,19 +9,19 @@ DEFINES += \
        "QSCAN_VERSION_BUILD=$$VERSION_BUILD"
 
 SOURCES += \
+  $$PWD/qscanner.cpp \
   logging.cpp \
   book.pb.cc \
   iscanlibrary.cpp \
-  qscan.cpp \
   scandevice.cpp \
   scanoptions.cpp \
   version.cpp
 
 HEADERS += \
+  $$PWD/qscanner.h \
   logging.h \
   book.pb.h \
   iscanlibrary.h \
-  qscan.h \
   qscan_global.h  \
   scandevice.h \
   scanoptions.h \

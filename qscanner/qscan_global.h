@@ -26,10 +26,10 @@
 
 #include <QtCore/qglobal.h>
 
-#if defined(SCAN_LIBRARY)
-  #define SCANSHARED_EXPORT Q_DECL_EXPORT
+#if defined(QSCAN_LIBRARY)
+  #define QSCANSHARED_EXPORT Q_DECL_EXPORT
 #else
-  #define SCANSHARED_EXPORT Q_DECL_IMPORT
+  #define QSCANSHARED_EXPORT Q_DECL_IMPORT
 #endif
 
 #endif // SCAN_GLOBAL_H

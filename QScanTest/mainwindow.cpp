@@ -33,9 +33,9 @@ MainWindow::MainWindow(QWidget* parent)
         << tr("  Plugin : %1").arg(s);
   }
 
-  m_scan_lib = new QScan(this);
-  connect(m_scan_lib, &QScan::optionsSet, this, &MainWindow::receiveScannerData);
-  connect(m_scan_lib, &QScan::optionChanged, this, &MainWindow::receiveOptionChange);
+  m_scan_lib = new QScanner(this);
+  connect(m_scan_lib, &QScanner::optionsSet, this, &MainWindow::receiveScannerData);
+  connect(m_scan_lib, &QScanner::optionChanged, this, &MainWindow::receiveOptionChange);
   m_scan_lib->init();
 
   QStringList devices = m_scan_lib->devices();

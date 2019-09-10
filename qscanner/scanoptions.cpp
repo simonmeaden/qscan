@@ -28,6 +28,8 @@
 
 namespace QScanner {
 
+#if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
+
 // These are only used internally to ScanOptions.
 //const QString ScanOptions::STANDARD = SANE_NAME_STANDARD;
 //const QString ScanOptions::GEOMETRY = SANE_NAME_GEOMETRY;
@@ -284,6 +286,11 @@ const QMap<QString, ScanOptions::AvailableOptions> ScanOptions::m_string_to_opti
   //  {SANE_NAME_COVER_OPEN, QSCAN_COVER_OPEN},
 };
 
+#elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
+// TODO
+
+#endif
+
 ScanOptions::ScanOptions(QObject* parent)
   : QObject(parent)
 {
@@ -513,38 +520,6 @@ ScanOptions::AvailableOptions ScanOptions::getAvailableOption(const QString& des
 
   return QSCAN_OPTION_UNAVAILABLE;
 }
-
-///*!
-//   \brief Recovers the matching list value if available.
-
-//   Only certain AvailableOptions have matching lists, primarily source and mode
-//   and sometimes resolution lists.
-//*/
-//ScanOptions::AvailableOptions ScanOptions::getMatchingListOption(ScanOptions::AvailableOptions option)
-//{
-//  switch (option) {
-//  case QSCAN_SOURCE:
-//    return QSCAN_SOURCES;
-
-//  case MODE:
-//    return QSCAN_MODES;
-
-//  case QSCAN_RESOLUTION:
-//    Q_FALLTHROUGH();
-
-//  case QSCAN_X_RESOLUTION:
-//    Q_FALLTHROUGH();
-
-//  case QSCAN_Y_RESOLUTION:
-//    return QSCAN_RESOLUTION_RANGE;
-
-//  //  case QSCAN_HALFTONE:
-//  //    return QSCAN_HALFTONES;
-
-//  default:
-//    return QSCAN_OPTION_UNAVAILABLE;
-//  }
-//}
 
 ScanOptions::ScanUnits ScanOptions::getScanUnits(const int units)
 {

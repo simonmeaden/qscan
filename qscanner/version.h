@@ -25,6 +25,7 @@
 #define VERSION_H
 
 #include <QObject>
+
 #if defined(Q_OS_UNIX) || defined(Q_OS_LINUX)
   #include <sane/sane.h>
 #elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)

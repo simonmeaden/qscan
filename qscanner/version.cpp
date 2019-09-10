@@ -41,16 +41,6 @@ Version::Version(SANE_Int version_code)
   , m_build_version(SANE_VERSION_BUILD(version_code))
 {}
 
-quint16 Version::buildVersion() const
-{
-  return m_build_version;
-}
-
-quint8 Version::minorVersion() const
-{
-  return m_minor_version;
-}
-
 #elif defined(Q_OS_WIN32) || defined(Q_OS_WIN64)
 
 Version::Version(int version_code = 0) {}
@@ -60,6 +50,16 @@ Version::Version(int version_code = 0) {}
 quint8 Version::majorVersion() const
 {
   return m_major_version;
+}
+
+quint8 Version::minorVersion() const
+{
+  return m_minor_version;
+}
+
+quint16 Version::buildVersion() const
+{
+  return m_build_version;
 }
 
 bool operator<=(const Version& lhs, const Version& rhs)

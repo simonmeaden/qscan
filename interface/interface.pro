@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui svg widgets
+QT       += core gui widgets
 
 TARGET = interface
 TEMPLATE = lib
